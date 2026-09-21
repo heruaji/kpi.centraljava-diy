@@ -150,6 +150,20 @@ export async function buildRegionDashboard(env:EnvSource){
   const overallFm=fmScore(fmSelected);
   // Baseline v1 intentionally follows current Result MM behavior: positive MM score is regional/global.
   const overallMm=mmScore(mmSelected);
+  const dayKeys=[...new Set(selected.map(r=>r.__date as string))].sort();
+  const trend=dayKeys.map(date=>{
+    const slaDay=selected.filter(r=>r.__date===date);
+    const lmDay=lmSelected.filter(r=>r.__date===date);
+    const fmDay=fmSelected.filter(r=>r.__date===date);
+    const mmDay=mmSelected.filter(r=>r.__date===date);
+    return {
+      date,
+      sla:aggregate(slaDay).sla,
+      kpiLm:lmScore(lmDay),
+      kpiFm:fmScore(fmDay),
+      kpiMm:mmScore(mmDay),
+    };
+  });
   const penalties={lm:lmPenalty(lmSelected),fm:fmPenalty(fmSelected),mm:mmPenalty(mmSelected)};
   const districts=[...new Set(sto.map(r=>String(r.District||'')).filter(Boolean))].sort();
   const areas=districts.map((name,index)=>{
@@ -173,6 +187,7 @@ export async function buildRegionDashboard(env:EnvSource){
       {key:'mm',label:'KPI MM',value:overallMm,unit:'percent'}
     ],
     penalties,
+    trend,
     areas
   };
 }
