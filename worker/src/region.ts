@@ -13,6 +13,17 @@ const excelDate=(v:unknown)=>{
 const ratio=(a:number,b:number)=>b>0?a/b:null;
 const pct=(v:number|null)=>v===null?null:v*100;
 
+const MM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
+  {num:'VOLUME_SDOB04',den:'VOLUME_ALL_MM',rule:{direction:'HIGHER',tier1:.80,tier2:.50},weight:15},
+  {num:'VOLUME_SDOB06',den:'VOLUME_ALL_MM',rule:{direction:'HIGHER',tier1:.98,tier2:.90},weight:15},
+  {num:'VOLUME_SDOB10',den:'VOLUME_ALL_MM',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
+  {num:'VOLUME_INBOUND_LEAD_TIME_MEET',den:'VOLUME_INBOUND_LEAD_TIME_ALL',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
+  {num:'VOLUME_SCANNING_COMPLIANCE_MEET',den:'VOLUME_SCANNING_COMPLIANCE_ALL',rule:{direction:'HIGHER',tier1:.99,tier2:.90},weight:15},
+  {num:'VOLUME_LOST_MM',den:'VOLUME_LOST_ALL_MM',rule:{direction:'LOWER',tier1:.0001,tier2:.0002},weight:10},
+  {num:'VOLUME_CC',den:'VOLUME_CC_ALL',rule:{direction:'LOWER',tier1:.005,tier2:.008},weight:10},
+  {num:'VOLUME_TICKET_COMPLY',den:'VOLUME_TICKET_COMPLAINT',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:5},
+];
+
 const FM_POSITIVE:{num?:string;den?:string;calc?:(items:Row[])=>number|null;rule:TierRule;weight:number}[]=[
   {num:'VOLUME_SDOB22',den:'VOLUME_ALL_FM',rule:{direction:'HIGHER',tier1:.85,tier2:.50},weight:20},
   {num:'VOLUME_SDOB00',den:'VOLUME_ALL_FM',rule:{direction:'HIGHER',tier1:.99,tier2:.90},weight:20},
@@ -39,6 +50,14 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 ];
 
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
+function mmScore(items:Row[]){
+  if(!items.length) return null;
+  return MM_POSITIVE.reduce((total,kpi)=>{
+    const actual=ratio(sum(items,kpi.num),sum(items,kpi.den));
+    return total+positiveScore(tier(actual,kpi.rule),kpi.weight);
+  },0);
+}
+
 function fmScore(items:Row[]){
   if(!items.length) return null;
   return FM_POSITIVE.reduce((total,kpi)=>{
@@ -56,11 +75,12 @@ function lmScore(items:Row[]){
 }
 
 export async function buildRegionDashboard(env:EnvSource){
-  const [sla,sto,lm,fm]=await Promise.all([
+  const [sla,sto,lm,fm,mm]=await Promise.all([
     readSheet(env,'SLA','A:AC'),
     readSheet(env,'STO','A:I'),
     readSheet(env,'KPI LM','A:AQ'),
-    readSheet(env,'KPI FM','A:AO')
+    readSheet(env,'KPI FM','A:AO'),
+    readSheet(env,'KPI MM','A:AJ')
   ]);
   const dated=sla.map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
   const stoAreaByHub=new Map<string,string>();
@@ -75,14 +95,17 @@ export async function buildRegionDashboard(env:EnvSource){
     const area=String(r['District Area']||'').trim()||stoAreaByHub.get(hub)||stoAreaByHub.get(hub.replace(/^\d+\s*-\s*/,''))||'';
     return {...r,__date:excelDate(r.GRANULAR_DATE),__area:area};
   }).filter(r=>r.__date);
+  const mmDated=mm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE)})).filter(r=>r.__date);
   const maxDate=dated.map(r=>r.__date as string).sort().at(-1) || null;
   const lmMaxDate=lmDated.map(r=>r.__date as string).sort().at(-1) || null;
   const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
+  const mmMaxDate=mmDated.map(r=>r.__date as string).sort().at(-1) || null;
   if(!maxDate) throw new Error('No valid SLA date');
   const range=defaultPeriod(maxDate);
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const mmSelected=mmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
 
   const aggregate=(items:Row[])=>{
     const s=(key:string)=>sum(items,key);
@@ -95,6 +118,8 @@ export async function buildRegionDashboard(env:EnvSource){
   const overall=aggregate(selected);
   const overallLm=lmScore(lmSelected);
   const overallFm=fmScore(fmSelected);
+  // Baseline v1 intentionally follows current Result MM behavior: positive MM score is regional/global.
+  const overallMm=mmScore(mmSelected);
   const districts=[...new Set(sto.map(r=>String(r.District||'')).filter(Boolean))].sort();
   const areas=districts.map((name,index)=>{
     const items=selected.filter(r=>String(r.District||'')===name);
@@ -104,17 +129,17 @@ export async function buildRegionDashboard(env:EnvSource){
     const kpiLm=lmScore(lmItems);
     const kpiFm=fmScore(fmItems);
     const health=kpiLm??kpiFm;
-    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:null,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory'};
+    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory'};
   });
 
   return {
     connected:true,range,
-    freshness:[{source:'SLA',maxDate},{source:'LM',maxDate:lmMaxDate},{source:'FM',maxDate:fmMaxDate},{source:'MM',maxDate:null}],
+    freshness:[{source:'SLA',maxDate},{source:'LM',maxDate:lmMaxDate},{source:'FM',maxDate:fmMaxDate},{source:'MM',maxDate:mmMaxDate}],
     metrics:[
       {key:'sla',label:'SLA Performance',value:overall.sla,unit:'percent'},
       {key:'lm',label:'KPI LM',value:overallLm,unit:'percent'},
       {key:'fm',label:'KPI FM',value:overallFm,unit:'percent'},
-      {key:'mm',label:'KPI MM',value:null,unit:'percent'}
+      {key:'mm',label:'KPI MM',value:overallMm,unit:'percent'}
     ],
     areas
   };
