@@ -3,7 +3,7 @@ import { buildRegionDashboard } from './region';
 export interface Env {
   ALLOWED_ORIGIN?: string;
   SHEET_ID?: string;
-  GOOGLE_SHEETS_API_KEY?: string;
+  GOOGLE_SERVICE_ACCOUNT_EMAIL?: string;\n  GOOGLE_PRIVATE_KEY?: string;
 }
 const json=(body:unknown,status=200,origin='*')=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':origin}});
 export default {
