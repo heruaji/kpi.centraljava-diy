@@ -174,6 +174,13 @@ export async function buildRegionDashboard(env:EnvSource){
     const kpiLm=lmScore(lmItems);
     const kpiFm=fmScore(fmItems);
     const health=kpiLm??kpiFm;
+    const branches=sto.filter(r=>String(r.District||'')===name).map((r,branchIndex)=>({
+      id:String(r['Kode Analytic']||`branch-${index+1}-${branchIndex+1}`),
+      code:String(r['Kode Analytic']||''),
+      name:String(r['Nama Cabang/Gerai']||r.Nama||'—'),
+      function:String(r.Fungsi||'—'),
+      city:String(r['KAB/ KOTA']||'—'),
+    }));
     const areaDayKeys=[...new Set(items.map(r=>r.__date as string))].sort();
     const areaTrend=areaDayKeys.map(date=>{
       const slaDay=items.filter(r=>r.__date===date);
@@ -182,7 +189,7 @@ export async function buildRegionDashboard(env:EnvSource){
       const mmDay=mmSelected.filter(r=>r.__date===date);
       return {date,sla:aggregate(slaDay).sla,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
-    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend};
+    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
   });
 
   return {
