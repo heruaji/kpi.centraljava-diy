@@ -174,7 +174,15 @@ export async function buildRegionDashboard(env:EnvSource){
     const kpiLm=lmScore(lmItems);
     const kpiFm=fmScore(fmItems);
     const health=kpiLm??kpiFm;
-    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory'};
+    const areaDayKeys=[...new Set(items.map(r=>r.__date as string))].sort();
+    const areaTrend=areaDayKeys.map(date=>{
+      const slaDay=items.filter(r=>r.__date===date);
+      const lmDay=lmItems.filter(r=>r.__date===date);
+      const fmDay=fmItems.filter(r=>r.__date===date);
+      const mmDay=mmSelected.filter(r=>r.__date===date);
+      return {date,sla:aggregate(slaDay).sla,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
+    });
+    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend};
   });
 
   return {
