@@ -31,6 +31,10 @@ export default function App() {
 
   const cards = dashboard?.metrics ?? [];
   const freshDate = latestFreshness(dashboard);
+  const activeRange = dashboard?.range ?? null;
+  const periodLabel = activeRange
+    ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
+    : 'MTD • Memuat...';
 
   return (
     <div className="app-shell">
@@ -65,7 +69,7 @@ export default function App() {
           </div>
           <div className="period-wrap">
             <button className="period-button" onClick={() => setPeriodOpen(v => !v)}>
-              <CalendarDays size={18}/><span>{dashboard ? `${dashboard.range.label} • ${fmtDate(dashboard.range.start)}–${fmtDate(dashboard.range.end)}` : 'MTD • Memuat...'}</span>
+              <CalendarDays size={18}/><span>{periodLabel}</span>
             </button>
             {periodOpen && (
               <div className="period-popover">
@@ -90,7 +94,7 @@ export default function App() {
               <article className="metric-card" key={metric.key}>
                 <span>{metric.label}</span>
                 <strong>{fmtPercent(metric.value)}</strong>
-                <small>{metric.value == null ? 'Data belum terhubung' : dashboard?.range.label}</small>
+                <small>{metric.value == null ? 'Data belum terhubung' : (activeRange?.label ?? 'Periode aktif')}</small>
               </article>
             )) : ['SLA Performance','KPI LM','KPI FM','KPI MM'].map(label => (
               <article className="metric-card" key={label}><span>{label}</span><strong>—</strong><small>{error || 'Memuat data...'}</small></article>
