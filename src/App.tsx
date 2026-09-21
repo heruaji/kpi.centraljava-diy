@@ -19,6 +19,7 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [trendMetric, setTrendMetric] = useState<'sla'|'kpiLm'|'kpiFm'|'kpiMm'>('sla');
+  const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -39,6 +40,14 @@ export default function App() {
   const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
   const trendValues=trend.map(p=>p[trendMetric]).filter((v):v is number=>v!=null);
   const trendMax=Math.max(100,...trendValues);
+  const selectedArea = dashboard?.areas.find(area => area.id === selectedAreaId) ?? null;
+  const visibleCards = selectedArea ? [
+    {key:'sla',label:'SLA Performance',value:selectedArea.sla,unit:'percent' as const},
+    {key:'lm',label:'KPI LM',value:selectedArea.kpiLm,unit:'percent' as const},
+    {key:'fm',label:'KPI FM',value:selectedArea.kpiFm,unit:'percent' as const},
+    {key:'mm',label:'KPI MM',value:selectedArea.kpiMm,unit:'percent' as const},
+    {key:'productivity',label:'Productivity',value:selectedArea.productivity,unit:'percent' as const},
+  ] : cards;
   const periodLabel = activeRange
     ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
     : 'MTD • Memuat...';
@@ -70,8 +79,8 @@ export default function App() {
           <div className="title-row">
             <button className="mobile-menu" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
             <div>
-              <div className="breadcrumb">Central Java - DIY / Region</div>
-              <h1>Region Control Tower</h1>
+              <div className="breadcrumb">{selectedArea ? `Central Java - DIY / Region / ${selectedArea.name}` : 'Central Java - DIY / Region'}</div>
+              <h1>{selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1>
             </div>
           </div>
           <div className="period-wrap">
@@ -92,12 +101,12 @@ export default function App() {
 
         <section className="content">
           <div className="section-heading">
-            <div><p className="eyebrow">EXECUTIVE OVERVIEW</p><h2>Performance Summary</h2></div>
+            <div><p className="eyebrow">EXECUTIVE OVERVIEW</p><h2>{selectedArea ? selectedArea.name : 'Performance Summary'}</h2>{selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
             <span className="freshness">{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data terakhir: ${fmtDate(freshDate)}`}</span>
           </div>
 
           <div className="metric-grid">
-            {cards.length ? cards.map(metric => (
+            {visibleCards.length ? visibleCards.map(metric => (
               <article className="metric-card" key={metric.key}>
                 <span>{metric.label}</span>
                 <strong>{fmtPercent(metric.value)}</strong>
@@ -109,7 +118,7 @@ export default function App() {
           </div>
 
           <div className="dashboard-grid">
-            <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>Region Trend</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
+            <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
               {trend.length ? <div className="trend-chart" aria-label={`${trendLabels[trendMetric]} daily trend`}>
                 {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}
               </div> : <div className="placeholder">Data trend belum tersedia</div>}
@@ -124,13 +133,13 @@ export default function App() {
                 <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
               </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
             </article>
-            <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
-              <tr key={area.id}>
-                <td>{area.name}</td><td>{fmtPercent(area.sla)}</td><td>{fmtPercent(area.kpiLm)}</td>
+            {!selectedArea && <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
+              <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
+                <td><button className="area-link" onClick={()=>setSelectedAreaId(area.id)}>{area.name}</button></td><td>{fmtPercent(area.sla)}</td><td>{fmtPercent(area.kpiLm)}</td>
                 <td>{fmtPercent(area.kpiFm)}</td><td>{fmtPercent(area.kpiMm)}</td>
                 <td>{fmtPercent(area.productivity)}</td><td>{area.status}</td>
               </tr>
-            )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>
+            )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
           </div>
         </section>
       </main>
