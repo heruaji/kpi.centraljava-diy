@@ -20,6 +20,7 @@ export default function App() {
   const [periodOpen, setPeriodOpen] = useState(false);
   const [trendMetric, setTrendMetric] = useState<'sla'|'kpiLm'|'kpiFm'|'kpiMm'>('sla');
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,11 +38,17 @@ export default function App() {
   const freshDate = latestFreshness(dashboard);
   const activeRange = dashboard?.range ?? null;
   const selectedArea = dashboard?.areas.find(area => area.id === selectedAreaId) ?? null;
-  const trend = selectedArea?.trend ?? dashboard?.trend ?? [];
+  const selectedBranch = selectedArea?.branches?.find(branch => branch.id === selectedBranchId) ?? null;
+  const trend = selectedBranch?.trend ?? selectedArea?.trend ?? dashboard?.trend ?? [];
   const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
   const trendValues=trend.map(p=>p[trendMetric]).filter((v):v is number=>v!=null);
   const trendMax=Math.max(100,...trendValues);
-  const visibleCards = selectedArea ? [
+  const visibleCards = selectedBranch ? [
+    {key:'sla',label:'SLA Performance',value:selectedBranch.sla ?? null,unit:'percent' as const},
+    {key:'kpi',label:`KPI ${selectedBranch.function}`,value:selectedBranch.kpiScore ?? null,unit:'percent' as const},
+    {key:'penalty',label:'Pengurang KPI',value:selectedBranch.penalty ?? null,unit:'percent' as const},
+    {key:'productivity',label:'Productivity',value:selectedBranch.productivity ?? null,unit:'percent' as const},
+  ] : selectedArea ? [
     {key:'sla',label:'SLA Performance',value:selectedArea.sla,unit:'percent' as const},
     {key:'lm',label:'KPI LM',value:selectedArea.kpiLm,unit:'percent' as const},
     {key:'fm',label:'KPI FM',value:selectedArea.kpiFm,unit:'percent' as const},
@@ -79,8 +86,8 @@ export default function App() {
           <div className="title-row">
             <button className="mobile-menu" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
             <div>
-              <div className="breadcrumb">{selectedArea ? `Central Java - DIY / Region / ${selectedArea.name}` : 'Central Java - DIY / Region'}</div>
-              <h1>{selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1>
+              <div className="breadcrumb">{selectedBranch ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch.name}` : selectedArea ? `Central Java - DIY / Region / ${selectedArea.name}` : 'Central Java - DIY / Region'}</div>
+              <h1>{selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1>
             </div>
           </div>
           <div className="period-wrap">
@@ -101,7 +108,7 @@ export default function App() {
 
         <section className="content">
           <div className="section-heading">
-            <div><p className="eyebrow">EXECUTIVE OVERVIEW</p><h2>{selectedArea ? selectedArea.name : 'Performance Summary'}</h2>{selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
+            <div><p className="eyebrow">EXECUTIVE OVERVIEW</p><h2>{selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Performance Summary'}</h2>{selectedBranch ? <button className="back-scope" onClick={()=>setSelectedBranchId(null)}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
             <span className="freshness">{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data terakhir: ${fmtDate(freshDate)}`}</span>
           </div>
 
@@ -118,7 +125,7 @@ export default function App() {
           </div>
 
           <div className="dashboard-grid">
-            <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
+            <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `${selectedBranch.name} Trend` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
               {trend.length ? <div className="trend-chart" aria-label={`${trendLabels[trendMetric]} daily trend`}>
                 {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}
               </div> : <div className="placeholder">Data trend belum tersedia</div>}
@@ -133,16 +140,16 @@ export default function App() {
                 <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
               </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
             </article>
-            {!selectedArea && <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
+            {!selectedArea && !selectedBranch && <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
               <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
                 <td><button className="area-link" onClick={()=>setSelectedAreaId(area.id)}>{area.name}</button></td><td>{fmtPercent(area.sla)}</td><td>{fmtPercent(area.kpiLm)}</td>
                 <td>{fmtPercent(area.kpiFm)}</td><td>{fmtPercent(area.kpiMm)}</td>
                 <td>{fmtPercent(area.productivity)}</td><td>{area.status}</td>
               </tr>
             )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
-            {selectedArea && <article className="panel full"><div className="panel-title"><div><span>BRANCH / GERAI</span><h3>Branch Directory</h3></div><span className="branch-count">{selectedArea.branches?.length ?? 0} unit</span></div>
+            {selectedArea && !selectedBranch && <article className="panel full"><div className="panel-title"><div><span>BRANCH / GERAI</span><h3>Branch Directory</h3></div><span className="branch-count">{selectedArea.branches?.length ?? 0} unit</span></div>
               <div className="table-wrap"><table><thead><tr><th>Kode</th><th>Branch / Gerai</th><th>Fungsi</th><th>Kab/Kota</th><th></th></tr></thead><tbody>
-                {selectedArea.branches?.length ? selectedArea.branches.map(branch=><tr key={branch.id} className="clickable-row"><td>{branch.code}</td><td><strong>{branch.name}</strong></td><td>{branch.function}</td><td>{branch.city}</td><td><button className="area-link">Buka →</button></td></tr>) : <tr><td colSpan={5}>Master branch belum tersedia.</td></tr>}
+                {selectedArea.branches?.length ? selectedArea.branches.map(branch=><tr key={branch.id} className="clickable-row" onClick={()=>setSelectedBranchId(branch.id)}><td>{branch.code}</td><td><strong>{branch.name}</strong></td><td>{branch.function}</td><td>{branch.city}</td><td><button className="area-link" onClick={()=>setSelectedBranchId(branch.id)}>Buka →</button></td></tr>) : <tr><td colSpan={5}>Master branch belum tersedia.</td></tr>}
               </tbody></table></div>
             </article>}
           </div>
