@@ -4,4 +4,5 @@ export interface DateRange { start: string; end: string; label: string; preset: 
 export interface SourceFreshness { source: 'SLA'|'LM'|'FM'|'MM'; maxDate: string|null }
 export interface MetricSummary { key:string; label:string; value:number|null; unit:'percent'|'number'; target?:number|null; previous?:number|null }
 export interface AreaPerformance { id:string; name:string; sla:number|null; kpiLm:number|null; kpiFm:number|null; kpiMm:number|null; productivity:number|null; status:string }
-export interface RegionDashboard { range:DateRange|null; freshness:SourceFreshness[]; metrics:MetricSummary[]; areas:AreaPerformance[] }
+export interface KpiPenalties { lm:number|null; fm:number|null; mm:number|null }
+export interface RegionDashboard { range:DateRange|null; freshness:SourceFreshness[]; metrics:MetricSummary[]; penalties?:KpiPenalties; areas:AreaPerformance[] }
