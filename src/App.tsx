@@ -36,7 +36,7 @@ export default function App() {
   const healthCounts = (dashboard?.areas ?? []).reduce<Record<string, number>>((acc, area) => { acc[area.status] = (acc[area.status] || 0) + 1; return acc; }, {});
   const freshDate = latestFreshness(dashboard);
   const activeRange = dashboard?.range ?? null;
-  const trend = dashboard?.trend ?? [];
+  const trend = selectedArea?.trend ?? dashboard?.trend ?? [];
   const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
   const trendValues=trend.map(p=>p[trendMetric]).filter((v):v is number=>v!=null);
   const trendMax=Math.max(100,...trendValues);
