@@ -18,6 +18,7 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
+  const [trendMetric, setTrendMetric] = useState<'sla'|'kpiLm'|'kpiFm'|'kpiMm'>('sla');
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +35,10 @@ export default function App() {
   const healthCounts = (dashboard?.areas ?? []).reduce<Record<string, number>>((acc, area) => { acc[area.status] = (acc[area.status] || 0) + 1; return acc; }, {});
   const freshDate = latestFreshness(dashboard);
   const activeRange = dashboard?.range ?? null;
+  const trend = dashboard?.trend ?? [];
+  const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
+  const trendValues=trend.map(p=>p[trendMetric]).filter((v):v is number=>v!=null);
+  const trendMax=Math.max(100,...trendValues);
   const periodLabel = activeRange
     ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
     : 'MTD • Memuat...';
@@ -104,7 +109,11 @@ export default function App() {
           </div>
 
           <div className="dashboard-grid">
-            <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>Region Trend</h3></div><button>SLA ▾</button></div><div className="placeholder">Chart akan terisi dari calculation engine</div></article>
+            <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>Region Trend</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
+              {trend.length ? <div className="trend-chart" aria-label={`${trendLabels[trendMetric]} daily trend`}>
+                {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}
+              </div> : <div className="placeholder">Data trend belum tersedia</div>}
+            </article>
             <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
               <div className="health-list">
                 {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status => <div className="health-row" key={status}><span>{status}</span><strong>{healthCounts[status] || 0}</strong></div>)}
