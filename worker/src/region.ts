@@ -1,6 +1,6 @@
 import { readSheet, type EnvSource, type Row } from './data-source';
 import { defaultPeriod } from './period';
-import { positiveScore, tier, type TierRule } from './calculation';
+import { penaltyScore, positiveScore, tier, type TierRule } from './calculation';
 
 const n=(v:unknown)=>typeof v==='number'?v:Number(v)||0;
 const excelDate=(v:unknown)=>{
@@ -14,13 +14,14 @@ const ratio=(a:number,b:number)=>b>0?a/b:null;
 const pct=(v:number|null)=>v===null?null:v*100;
 
 const MM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
-  {num:'VOLUME_SDOB04',den:'VOLUME_ALL_MM',rule:{direction:'HIGHER',tier1:.80,tier2:.50},weight:15},
-  {num:'VOLUME_SDOB06',den:'VOLUME_ALL_MM',rule:{direction:'HIGHER',tier1:.98,tier2:.90},weight:15},
-  {num:'VOLUME_SDOB10',den:'VOLUME_ALL_MM',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
-  {num:'VOLUME_INBOUND_LEAD_TIME_MEET',den:'VOLUME_INBOUND_LEAD_TIME_ALL',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
-  {num:'VOLUME_SCANNING_COMPLIANCE_MEET',den:'VOLUME_SCANNING_COMPLIANCE_ALL',rule:{direction:'HIGHER',tier1:.99,tier2:.90},weight:15},
-  {num:'VOLUME_LOST_MM',den:'VOLUME_LOST_ALL_MM',rule:{direction:'LOWER',tier1:.0001,tier2:.0002},weight:10},
-  {num:'VOLUME_CC',den:'VOLUME_CC_ALL',rule:{direction:'LOWER',tier1:.005,tier2:.008},weight:10},
+  {num:'MIDDLE_MILE_SERVICE_VOLUME_SDOB04',den:'MIDDLE_MILE_SERVICE_VOLUME_INBOUND_04',rule:{direction:'HIGHER',tier1:.80,tier2:.50},weight:15},
+  {num:'MIDDLE_MILE_SERVICE_VOLUME_SDOB06',den:'MIDDLE_MILE_SERVICE_VOLUME_INBOUND_06',rule:{direction:'HIGHER',tier1:.98,tier2:.90},weight:15},
+  // Result MM baseline uses Detail MM I/J for SDOB10.
+  {num:'MIDDLE_MILE_SERVICE_VOLUME_SDOB10',den:'MIDDLE_MILE_SERVICE_VOLUME_INBOUND_00_06',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
+  {num:'MIDDLE_MILE_QUALITY_VOLUME_LEADTIME_06HR',den:'MIDDLE_MILE_QUALITY_VOLUME_DO',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
+  {num:'MIDDLE_MILE_QUALITY_VOLUME_SCAN_BY_APPS',den:'MIDDLE_MILE_QUALITY_VOLUME_SCAN_MM',rule:{direction:'HIGHER',tier1:.99,tier2:.90},weight:15},
+  {num:'MIDDLE_MILE_COST_VOLUME_LOST_MM',den:'MIDDLE_MILE_COST_VOLUME_H28',rule:{direction:'LOWER',tier1:.0001,tier2:.0002},weight:10},
+  {num:'MIDDLE_MILE_QUALITY_VOLUME_CC_MM',den:'MIDDLE_MILE_QUALITY_VOLUME_H1',rule:{direction:'LOWER',tier1:.005,tier2:.008},weight:10},
   {num:'VOLUME_TICKET_COMPLY',den:'VOLUME_TICKET_COMPLAINT',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:5},
 ];
 
@@ -50,6 +51,35 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 ];
 
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
+function lmPenalty(items:Row[]){
+  if(!items.length) return null;
+  const so=penaltyScore(tier(ratio(sum(items,'LAST_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'LAST_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
+  const stuck=penaltyScore(tier(ratio(sum(items,'LAST_MILE_QUALITY_STUCK_IN_WEDNESDAY'),sum(items,'LAST_MILE_QUALITY_VOLUME')),{direction:'LOWER',tier1:0,tier2:.0005}),20);
+  const rosteringRaw=ratio(sum(items,'IDEAL_SORTER'),sum(items,'ACTUAL_SORTER'));
+  const rostering=penaltyScore(tier(rosteringRaw===null?1:Math.min(1,rosteringRaw),{direction:'HIGHER',tier1:1,tier2:.90}),20);
+  const unloading=penaltyScore(tier(ratio(sum(items,'AVG_LOADING_TIME'),sum(items,'VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}),20);
+  return so+stuck+rostering+unloading;
+}
+
+function fmPenalty(items:Row[]){
+  if(!items.length) return null;
+  const so=penaltyScore(tier(ratio(sum(items,'VOLUME_SO_DONE_FM'),sum(items,'VOLUME_NOB')),{direction:'HIGHER',tier1:.75,tier2:.70}),50);
+  const rr=ratio(sum(items,'IDEAL_SORTER'),sum(items,'ACTUAL_SORTER'));
+  const rostering=penaltyScore(tier(rr===null?1:Math.min(1,rr),{direction:'HIGHER',tier1:1,tier2:.90}),30);
+  return so+rostering;
+}
+
+function mmPenalty(items:Row[]){
+  if(!items.length) return null;
+  const unloading=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_COST_AVERAGE_LOADING_TIME'),sum(items,'MIDDLE_MILE_COST_VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}),20);
+  const so=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
+  // Result MM uses AVERAGE(Detail MM!AF:AF), equivalent to the raw stuck-rate column.
+  const rates=items.map(r=>Number(r.KPI_MM_STUCK_RATE)).filter(Number.isFinite);
+  const stuckActual=rates.length?rates.reduce((a,b)=>a+b,0)/rates.length:null;
+  const stuck=penaltyScore(tier(stuckActual,{direction:'LOWER',tier1:0,tier2:.0005}),20);
+  return unloading+so+stuck;
+}
+
 function mmScore(items:Row[]){
   if(!items.length) return null;
   return MM_POSITIVE.reduce((total,kpi)=>{
@@ -120,6 +150,7 @@ export async function buildRegionDashboard(env:EnvSource){
   const overallFm=fmScore(fmSelected);
   // Baseline v1 intentionally follows current Result MM behavior: positive MM score is regional/global.
   const overallMm=mmScore(mmSelected);
+  const penalties={lm:lmPenalty(lmSelected),fm:fmPenalty(fmSelected),mm:mmPenalty(mmSelected)};
   const districts=[...new Set(sto.map(r=>String(r.District||'')).filter(Boolean))].sort();
   const areas=districts.map((name,index)=>{
     const items=selected.filter(r=>String(r.District||'')===name);
@@ -141,6 +172,7 @@ export async function buildRegionDashboard(env:EnvSource){
       {key:'fm',label:'KPI FM',value:overallFm,unit:'percent'},
       {key:'mm',label:'KPI MM',value:overallMm,unit:'percent'}
     ],
+    penalties,
     areas
   };
 }
