@@ -30,6 +30,8 @@ export default function App() {
   }, []);
 
   const cards = dashboard?.metrics ?? [];
+  const penalties = dashboard?.penalties;
+  const healthCounts = (dashboard?.areas ?? []).reduce<Record<string, number>>((acc, area) => { acc[area.status] = (acc[area.status] || 0) + 1; return acc; }, {});
   const freshDate = latestFreshness(dashboard);
   const activeRange = dashboard?.range ?? null;
   const periodLabel = activeRange
@@ -103,7 +105,16 @@ export default function App() {
 
           <div className="dashboard-grid">
             <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>Region Trend</h3></div><button>SLA ▾</button></div><div className="placeholder">Chart akan terisi dari calculation engine</div></article>
-            <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div><div className="placeholder compact">Excellent · Good · Fair · Bad</div></article>
+            <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
+              <div className="health-list">
+                {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status => <div className="health-row" key={status}><span>{status}</span><strong>{healthCounts[status] || 0}</strong></div>)}
+              </div>
+              <div className="penalty-block"><span>PENGURANG KPI</span><div className="penalty-grid">
+                <div><small>LM</small><strong>{fmtPercent(penalties?.lm ?? null)}</strong></div>
+                <div><small>FM</small><strong>{fmtPercent(penalties?.fm ?? null)}</strong></div>
+                <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
+              </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
+            </article>
             <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
               <tr key={area.id}>
                 <td>{area.name}</td><td>{fmtPercent(area.sla)}</td><td>{fmtPercent(area.kpiLm)}</td>
