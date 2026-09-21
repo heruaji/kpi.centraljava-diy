@@ -140,6 +140,11 @@ export default function App() {
                 <td>{fmtPercent(area.productivity)}</td><td>{area.status}</td>
               </tr>
             )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
+            {selectedArea && <article className="panel full"><div className="panel-title"><div><span>BRANCH / GERAI</span><h3>Branch Directory</h3></div><span className="branch-count">{selectedArea.branches?.length ?? 0} unit</span></div>
+              <div className="table-wrap"><table><thead><tr><th>Kode</th><th>Branch / Gerai</th><th>Fungsi</th><th>Kab/Kota</th><th></th></tr></thead><tbody>
+                {selectedArea.branches?.length ? selectedArea.branches.map(branch=><tr key={branch.id} className="clickable-row"><td>{branch.code}</td><td><strong>{branch.name}</strong></td><td>{branch.function}</td><td>{branch.city}</td><td><button className="area-link">Buka →</button></td></tr>) : <tr><td colSpan={5}>Master branch belum tersedia.</td></tr>}
+              </tbody></table></div>
+            </article>}
           </div>
         </section>
       </main>
