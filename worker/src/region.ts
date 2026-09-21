@@ -13,6 +13,19 @@ const excelDate=(v:unknown)=>{
 const ratio=(a:number,b:number)=>b>0?a/b:null;
 const pct=(v:number|null)=>v===null?null:v*100;
 
+const FM_POSITIVE:{num?:string;den?:string;calc?:(items:Row[])=>number|null;rule:TierRule;weight:number}[]=[
+  {num:'VOLUME_SDOB22',den:'VOLUME_ALL_FM',rule:{direction:'HIGHER',tier1:.85,tier2:.50},weight:20},
+  {num:'VOLUME_SDOB00',den:'VOLUME_ALL_FM',rule:{direction:'HIGHER',tier1:.99,tier2:.90},weight:20},
+  {num:'VOLUME_SDOB02',den:'VOLUME_ALL_FM',rule:{direction:'HIGHER',tier1:.999,tier2:.90},weight:15},
+  {num:'VOLUME_N0_ATTEMPT',den:'VOLUME_RPU',rule:{direction:'HIGHER',tier1:.999,tier2:.99},weight:10},
+  {num:'VOLUME_N0_PICK',den:'VOLUME_RPU',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:10},
+  {num:'VOLUME_LOST_FM',den:'LOST_VOLUME_ALL_FM',rule:{direction:'LOWER',tier1:.0001,tier2:.0002},weight:5},
+  {num:'VOLUME_RETURN_LESS_1_DAY',den:'VOLUME_RETURN',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:5},
+  {calc:(items)=>{const a=ratio(sum(items,'VOLUME_POP_BY_APPS'),sum(items,'VOLUME_PICK'));const b=ratio(sum(items,'VOLUME_OUTBRANCH_BY_APPS'),sum(items,'VOLUME_SCAN_FM'));return a===null||b===null?null:(a+b)/2},rule:{direction:'HIGHER',tier1:.98,tier2:.95},weight:5},
+  {num:'VOLUME_TICKET_COMPLY',den:'VOLUME_TICKET_COMPLAINT',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:5},
+  {num:'VOLUME_TMT_RTS',den:'VOLUME_RTS',rule:{direction:'LOWER',tier1:.005,tier2:.009},weight:5},
+];
+
 const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
   {num:'LAST_MILE_SERVICE_COD_VOLUME_FAS_DLV',den:'LAST_MILE_SERVICE_COD_VOLUME_ANT',rule:{direction:'HIGHER',tier1:.95,tier2:.92},weight:20},
   {num:'LAST_MILE_SERVICE_NON_COD_VOLUME_FAS_DLV',den:'LAST_MILE_SERVICE_NON_COD_VOLUME_ANT',rule:{direction:'HIGHER',tier1:.98,tier2:.96},weight:20},
@@ -26,6 +39,14 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 ];
 
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
+function fmScore(items:Row[]){
+  if(!items.length) return null;
+  return FM_POSITIVE.reduce((total,kpi)=>{
+    const actual=kpi.calc?kpi.calc(items):ratio(sum(items,kpi.num!),sum(items,kpi.den!));
+    return total+positiveScore(tier(actual,kpi.rule),kpi.weight);
+  },0);
+}
+
 function lmScore(items:Row[]){
   if(!items.length) return null;
   return LM_POSITIVE.reduce((total,kpi)=>{
@@ -35,19 +56,33 @@ function lmScore(items:Row[]){
 }
 
 export async function buildRegionDashboard(env:EnvSource){
-  const [sla,sto,lm]=await Promise.all([
+  const [sla,sto,lm,fm]=await Promise.all([
     readSheet(env,'SLA','A:AC'),
     readSheet(env,'STO','A:I'),
-    readSheet(env,'KPI LM','A:AQ')
+    readSheet(env,'KPI LM','A:AQ'),
+    readSheet(env,'KPI FM','A:AO')
   ]);
   const dated=sla.map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
+  const stoAreaByHub=new Map<string,string>();
+  for(const r of sto){
+    const area=String(r.District||'').trim();
+    const names=[r['Nama Cabang/Gerai'],r.Nama].map(v=>String(v||'').trim()).filter(Boolean);
+    for(const name of names){stoAreaByHub.set(name,area);stoAreaByHub.set(name.replace(/^\d+\s*-\s*/,''),area)}
+  }
   const lmDated=lm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE)})).filter(r=>r.__date);
+  const fmDated=fm.map(r=>{
+    const hub=String(r['Hub Name']||r['Nama Hub']||'').trim();
+    const area=String(r['District Area']||'').trim()||stoAreaByHub.get(hub)||stoAreaByHub.get(hub.replace(/^\d+\s*-\s*/,''))||'';
+    return {...r,__date:excelDate(r.GRANULAR_DATE),__area:area};
+  }).filter(r=>r.__date);
   const maxDate=dated.map(r=>r.__date as string).sort().at(-1) || null;
   const lmMaxDate=lmDated.map(r=>r.__date as string).sort().at(-1) || null;
+  const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
   if(!maxDate) throw new Error('No valid SLA date');
   const range=defaultPeriod(maxDate);
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
 
   const aggregate=(items:Row[])=>{
     const s=(key:string)=>sum(items,key);
@@ -59,22 +94,26 @@ export async function buildRegionDashboard(env:EnvSource){
   };
   const overall=aggregate(selected);
   const overallLm=lmScore(lmSelected);
+  const overallFm=fmScore(fmSelected);
   const districts=[...new Set(sto.map(r=>String(r.District||'')).filter(Boolean))].sort();
   const areas=districts.map((name,index)=>{
     const items=selected.filter(r=>String(r.District||'')===name);
     const lmItems=lmSelected.filter(r=>String(r['District Area']||'')===name);
+    const fmItems=fmSelected.filter(r=>String(r.__area||'')===name);
     const a=aggregate(items);
     const kpiLm=lmScore(lmItems);
-    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm:null,kpiMm:null,productivity:a.productivityLm??a.productivityFm,status:kpiLm===null?'—':kpiLm>=95?'Excellent':kpiLm>=85?'Good':kpiLm>=60?'Fair':kpiLm>=40?'Bad':'Unsatisfactory'};
+    const kpiFm=fmScore(fmItems);
+    const health=kpiLm??kpiFm;
+    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:null,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory'};
   });
 
   return {
     connected:true,range,
-    freshness:[{source:'SLA',maxDate},{source:'LM',maxDate:lmMaxDate},{source:'FM',maxDate:null},{source:'MM',maxDate:null}],
+    freshness:[{source:'SLA',maxDate},{source:'LM',maxDate:lmMaxDate},{source:'FM',maxDate:fmMaxDate},{source:'MM',maxDate:null}],
     metrics:[
       {key:'sla',label:'SLA Performance',value:overall.sla,unit:'percent'},
       {key:'lm',label:'KPI LM',value:overallLm,unit:'percent'},
-      {key:'fm',label:'KPI FM',value:null,unit:'percent'},
+      {key:'fm',label:'KPI FM',value:overallFm,unit:'percent'},
       {key:'mm',label:'KPI MM',value:null,unit:'percent'}
     ],
     areas
