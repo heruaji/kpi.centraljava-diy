@@ -51,6 +51,13 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 ];
 
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
+const normHub=(v:unknown)=>String(v||'').trim().toLowerCase().replace(/^t?\d+\s*-\s*/,'');
+const matchesBranch=(r:Row,name:string,code:string)=>{
+  const candidates=[r['Hub Name'],r['Nama Hub'],r.GRANULAR_AREA,r['Sortation Name']].map(normHub).filter(Boolean);
+  const target=normHub(name);
+  const codeKey=String(code||'').toLowerCase();
+  return candidates.some(v=>v===target||v.includes(target)||target.includes(v)||(codeKey&&String(r['Hub Name']||r['Nama Hub']||r['Sortation Name']||'').toLowerCase().includes(codeKey)));
+};
 function lmPenalty(items:Row[]){
   if(!items.length) return null;
   const so=penaltyScore(tier(ratio(sum(items,'LAST_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'LAST_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
@@ -174,13 +181,28 @@ export async function buildRegionDashboard(env:EnvSource){
     const kpiLm=lmScore(lmItems);
     const kpiFm=fmScore(fmItems);
     const health=kpiLm??kpiFm;
-    const branches=sto.filter(r=>String(r.District||'')===name).map((r,branchIndex)=>({
-      id:String(r['Kode Analytic']||`branch-${index+1}-${branchIndex+1}`),
-      code:String(r['Kode Analytic']||''),
-      name:String(r['Nama Cabang/Gerai']||r.Nama||'—'),
-      function:String(r.Fungsi||'—'),
-      city:String(r['KAB/ KOTA']||'—'),
-    }));
+    const branches=sto.filter(r=>String(r.District||'')===name).map((r,branchIndex)=>{
+      const code=String(r['Kode Analytic']||'');
+      const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'—');
+      const fn=String(r.Fungsi||'—').toUpperCase();
+      const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
+      const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
+      const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
+      const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
+      const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
+      const score=fn==='LM'?lmScore(lmBranch):fn==='FM'?fmScore(fmBranch):fn==='MM'?mmScore(mmBranch):null;
+      const penalty=fn==='LM'?lmPenalty(lmBranch):fn==='FM'?fmPenalty(fmBranch):fn==='MM'?mmPenalty(mmBranch):null;
+      const branchDayKeys=[...new Set(sourceItems.map(x=>x.__date as string))].sort();
+      const branchTrend=branchDayKeys.map(date=>{
+        const day=sourceItems.filter(x=>x.__date===date);
+        return {date,sla:null,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
+      });
+      return {
+        id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
+        sla:aggregate(slaItems).sla,kpiScore:score,penalty,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,
+        trend:branchTrend
+      };
+    });
     const areaDayKeys=[...new Set(items.map(r=>r.__date as string))].sort();
     const areaTrend=areaDayKeys.map(date=>{
       const slaDay=items.filter(r=>r.__date===date);
