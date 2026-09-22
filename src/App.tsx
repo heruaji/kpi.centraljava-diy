@@ -48,6 +48,14 @@ export default function App() {
   const cards = dashboard?.metrics ?? [];
   const penalties = dashboard?.penalties;
   const healthCounts = (dashboard?.areas ?? []).reduce<Record<string, number>>((acc, area) => { acc[area.status] = (acc[area.status] || 0) + 1; return acc; }, {});
+  const healthTotal = Math.max(1, Object.values(healthCounts).reduce((sum, count) => sum + count, 0));
+  const healthMeta: Record<string,{label:string;tone:string}> = {
+    Excellent:{label:'Prima',tone:'excellent'},
+    Good:{label:'Baik',tone:'good'},
+    Fair:{label:'Cukup',tone:'fair'},
+    Bad:{label:'Kritis',tone:'bad'},
+    Unsatisfactory:{label:'Unsatisfactory',tone:'poor'},
+  };
   const freshDate = latestFreshness(dashboard);
   const activeRange = dashboard?.range ?? null;
   const selectedArea = dashboard?.areas.find(area => area.id === selectedAreaId) ?? null;
