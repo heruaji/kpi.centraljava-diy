@@ -1,4 +1,5 @@
 import { buildRegionDashboard } from './region';
+import type { PeriodPreset } from './period';
 
 export interface Env {
   ALLOWED_ORIGIN?: string;
@@ -13,7 +14,7 @@ export default {
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
     if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api'},200,origin);
     if(url.pathname==='/api/dashboard/region'){
-      try{return json(await buildRegionDashboard(env),200,origin)}
+      try{const preset=url.searchParams.get('period') as PeriodPreset|null;return json(await buildRegionDashboard(env,preset||undefined),200,origin)}
       catch(error){return json({ok:false,error:error instanceof Error?error.message:'Unknown error'},500,origin)}
     }
     return json({ok:false,error:'Not found'},404,origin);
