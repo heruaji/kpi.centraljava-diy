@@ -58,6 +58,30 @@ const matchesBranch=(r:Row,name:string,code:string)=>{
   const codeKey=String(code||'').toLowerCase();
   return candidates.some(v=>v===target||v.includes(target)||target.includes(v)||(codeKey&&String(r['Hub Name']||r['Nama Hub']||r['Sortation Name']||'').toLowerCase().includes(codeKey)));
 };
+type KpiDetail={key:string;label:string;actual:number|null;target:number;targetLabel:string;tier:string;weight:number;score:number};
+const tierLabel=(v:ReturnType<typeof tier>)=>v===1?'T1':v===2?'T2':v===3?'T3':'—';
+function lmDetails(items:Row[]):KpiDetail[]{
+  const defs=[
+    ['codFas','COD FAS','LAST_MILE_SERVICE_COD_VOLUME_FAS_DLV','LAST_MILE_SERVICE_COD_VOLUME_ANT',{direction:'HIGHER',tier1:.95,tier2:.92},20,'≥95%'],
+    ['nonCodFas','Non-COD FAS','LAST_MILE_SERVICE_NON_COD_VOLUME_FAS_DLV','LAST_MILE_SERVICE_NON_COD_VOLUME_ANT',{direction:'HIGHER',tier1:.98,tier2:.96},20,'≥98%'],
+    ['edc','Early Delivery Completion','LAST_MILE_SERVICE_VOLUME_EARLY_DELIVERY_COMPLETION','LAST_MILE_SERVICE_VOLUME_AWB_INBOUND',{direction:'HIGHER',tier1:.85,tier2:.80},20,'≥85%'],
+    ['codFd','COD FD','LAST_MILE_SERVICE_VOLUME_COD_FD','LAST_MILE_SERVICE_VOLUME_COD_IN_LM',{direction:'LOWER',tier1:.045,tier2:.05},15,'≤4.5%'],
+    ['hd','HD Completion','LAST_MILE_SERVICE_VOLUME_TICKET_COMPLY','LAST_MILE_SERVICE_VOLUME_TICKET_COMPLAINT',{direction:'HIGHER',tier1:.95,tier2:.90},5,'≥95%'],
+    ['lost','Lost Rate','LAST_MILE_QUALITY_VOLUME_LOST_LM','LAST_MILE_QUALITY_VOLUME_FIRST_INLM',{direction:'LOWER',tier1:.0001,tier2:.0002},5,'≤0.01%'],
+    ['tmt','TMT DLV','LAST_MILE_QUALITY_VOLUME_TMT_DLV','LAST_MILE_QUALITY_VOLUME_DLV',{direction:'LOWER',tier1:.0005,tier2:.0008},5,'≤0.05%'],
+    ['fraud','Fraud COD','LAST_MILE_QUALITY_VOLUME_COD_FRAUD','LAST_MILE_QUALITY_VOLUME_COD_DLV_FRAUD',{direction:'LOWER',tier1:0,tier2:.0005},5,'0%'],
+    ['remittance','COD Remittance','LAST_MILE_QUALITY_VOLUME_COD_TERIMA_ADMIN_H0','LAST_MILE_QUALITY_VOLUME_COD_DLV',{direction:'HIGHER',tier1:.98,tier2:.95},5,'≥98%'],
+  ] as const;
+  return defs.map(([key,label,num,den,rule,weight,targetLabel])=>{const actual=ratio(sum(items,num),sum(items,den));const tr=tier(actual,rule as TierRule);return {key,label,actual:pct(actual),target:pct(rule.tier1)!,targetLabel,tier:tierLabel(tr),weight,score:positiveScore(tr,weight)}});
+}
+function fmDetails(items:Row[]):KpiDetail[]{
+  return FM_POSITIVE.map((kpi,i)=>{const labels=['SDOB 10 PM','SDOB 00 AM','SDOB 02 AM','N0 Pickup Attempt','N0 Pickup Success','Lost Rate','FAS Retur','Scanning Compliance','HD Completion','TMT RTS'];const actual=kpi.calc?kpi.calc(items):ratio(sum(items,kpi.num!),sum(items,kpi.den!));const tr=tier(actual,kpi.rule);return {key:`fm-${i}`,label:labels[i],actual:pct(actual),target:pct(kpi.rule.tier1)!,targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,tier:tierLabel(tr),weight:kpi.weight,score:positiveScore(tr,kpi.weight)}});
+}
+function mmDetails(items:Row[]):KpiDetail[]{
+  const labels=['SDOB 04','SDOB 06','SDOB 10','Inbound Lead Time','Scanning Compliance','Lost Rate','CC Rate','HD Completion'];
+  return MM_POSITIVE.map((kpi,i)=>{const actual=ratio(sum(items,kpi.num),sum(items,kpi.den));const tr=tier(actual,kpi.rule);return {key:`mm-${i}`,label:labels[i],actual:pct(actual),target:pct(kpi.rule.tier1)!,targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,tier:tierLabel(tr),weight:kpi.weight,score:positiveScore(tr,kpi.weight)}});
+}
+
 function lmPenalty(items:Row[]){
   if(!items.length) return null;
   const so=penaltyScore(tier(ratio(sum(items,'LAST_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'LAST_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
@@ -200,7 +224,7 @@ export async function buildRegionDashboard(env:EnvSource){
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
         sla:aggregate(slaItems).sla,kpiScore:score,penalty,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,
-        trend:branchTrend
+        kpiDetails:fn==='LM'?lmDetails(lmBranch):fn==='FM'?fmDetails(fmBranch):fn==='MM'?mmDetails(mmBranch):[],trend:branchTrend
       };
     });
     const areaDayKeys=[...new Set(items.map(r=>r.__date as string))].sort();
