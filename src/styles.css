@@ -407,7 +407,7 @@ body{background:#f4f6f9;color:#0f172a}
 
 /* Operational driver comparison rates */
 .driver-card>small{display:flex!important;align-items:center!important;justify-content:space-between!important;gap:8px!important;padding-bottom:0!important;white-space:nowrap!important}
-.driver-compare{display:inline-flex!important;align-items:center!important;gap:3px!important;margin-left:auto!important;font-size:8px!important;font-style:normal!important;font-weight:700!important;white-space:nowrap!important}
+.driver-compare{display:inline-flex!important;align-items:center!important;gap:4px!important;margin-left:auto!important;font-size:10px!important;font-style:normal!important;font-weight:750!important;line-height:1.2!important;letter-spacing:.005em!important;white-space:nowrap!important}
 .driver-compare.good{color:#10b981!important}.driver-compare.review{color:#f59e0b!important}
 .theme-light .driver-compare.good{color:#059669!important}.theme-light .driver-compare.review{color:#b45309!important}
 @media(max-width:560px){.driver-card>small{white-space:normal!important;flex-wrap:wrap!important}.driver-compare{margin-left:0!important}}
