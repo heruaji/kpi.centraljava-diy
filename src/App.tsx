@@ -19,6 +19,9 @@ export default function App() {
   const [mobileOpen, setMobileOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [periodPreset, setPeriodPreset] = useState<DashboardPeriod>(() => (localStorage.getItem('kpi-dashboard-period') as DashboardPeriod) || 'MTD');
+  const [customRange, setCustomRange] = useState<{start:string;end:string}|null>(null);
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
   const [trendMetric, setTrendMetric] = useState<'sla'|'kpiLm'|'kpiFm'|'kpiMm'>('sla');
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
@@ -32,11 +35,11 @@ export default function App() {
   useEffect(() => {
     setLoading(true);
     setError(null);
-    getRegionDashboard(periodPreset)
+    getRegionDashboard(periodPreset, customRange ?? undefined)
       .then(setDashboard)
       .catch(err => setError(err instanceof Error ? err.message : 'Gagal memuat dashboard'))
       .finally(() => setLoading(false));
-  }, [periodPreset]);
+  }, [periodPreset, customRange]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
 
@@ -118,9 +121,10 @@ export default function App() {
                 {([
                   ['TODAY','Hari Ini'],['YESTERDAY','Kemarin'],['LAST_7','7 Hari Terakhir'],['LAST_30','30 Hari Terakhir'],['WTD','WTD'],['MTD','MTD'],['YTD','YTD']
                 ] as [DashboardPeriod,string][]).map(([value,label]) =>
-                  <button key={value} className={value === periodPreset ? 'selected' : ''} onClick={() => {setPeriodPreset(value);setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>{label}</button>
+                  <button key={value} className={value === periodPreset ? 'selected' : ''} onClick={() => {setCustomRange(null);setPeriodPreset(value);setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>{label}</button>
                 )}
-                <small>Periode dihitung terhadap tanggal data terbaru, bukan tanggal perangkat.</small>
+                <div className="custom-range"><span>Custom Range</span><div><input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)}/><span>—</span><input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)}/></div><button disabled={!customStart||!customEnd||customStart>customEnd} onClick={()=>{setCustomRange({start:customStart,end:customEnd});setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>Terapkan</button></div>
+                <small>Preset dihitung terhadap tanggal data terbaru. Custom Range memakai tanggal yang dipilih.</small>
               </div>
             )}
           </div>
