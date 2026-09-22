@@ -288,6 +288,16 @@ body{background:#f4f6f9;color:#0f172a}
 @media(prefers-reduced-motion:reduce){.sidebar,.main,.brand-copy,.nav-section-label,.nav-item,.nav-label,.collapse-btn,.collapse-label{transition:none!important}}
 
 
+/* Collapsed rail alignment correction */
+@media(min-width:901px){
+.sidebar.collapsed{width:72px!important;padding-right:4px!important}
+.sidebar.collapsed~.main{margin-left:72px!important}
+.sidebar.collapsed .brand{padding-left:24px!important;padding-right:4px!important;border-bottom-color:var(--ct-border)!important}
+.sidebar.collapsed nav{padding-right:4px!important}
+.sidebar.collapsed .collapse-btn{margin-right:4px!important}
+.sidebar.collapsed .nav-item{max-width:44px!important}
+}
+
 /* ===== BRANCH COMMAND CENTER — operational cards ===== */
 .branch-operations-panel .panel-title,.branch-kpi-panel .panel-title{align-items:flex-start}.branch-operations-panel .panel-title small,.branch-kpi-panel .panel-title small{display:block;margin-top:3px;font-size:9px;color:var(--ct-muted)}
 .branch-function-chip{display:inline-flex;align-items:center;justify-content:center;min-width:34px;height:25px;padding:0 9px;border:1px solid var(--ct-border);border-radius:999px;background:var(--ct-card2);color:var(--ct-text);font-size:9px;font-weight:700}
