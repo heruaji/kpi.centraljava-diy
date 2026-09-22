@@ -63,3 +63,34 @@ body{font-family:'Plus Jakarta Sans',Inter,system-ui,-apple-system,sans-serif;ba
 .tier-badge{background:rgba(148,163,184,.12);color:#cbd5e1}.tier-t1{background:rgba(16,185,129,.12);color:#34d399}.tier-t2{background:rgba(245,158,11,.12);color:#fbbf24}.tier-t3{background:rgba(244,63,94,.12);color:#fb7185}
 .period-popover{background:#1c2232;border:1px solid var(--ui-border);box-shadow:0 18px 50px rgba(0,0,0,.45);color:var(--ui-text)}.period-popover-head{border-color:var(--ui-border)}.period-icon{background:rgba(244,63,94,.12);color:#fb7185}.period-popover-head small,.custom-range-title small,.period-presets>button>small{color:var(--ui-muted)}.period-presets>button>span{color:var(--ui-text)}.period-presets>button:hover{background:var(--ui-subtle)}.period-presets>button.selected{background:var(--ui-primary-soft);box-shadow:inset 3px 0 #818cf8}.period-presets>button.selected>span,.period-presets>button.selected>small{color:#a5b4fc}.custom-range{border-color:var(--ui-border)}.custom-range input{background:var(--ui-panel);border-color:var(--ui-border);color:var(--ui-text);color-scheme:dark}.custom-range>button{background:#6366f1}.period-note{background:var(--ui-subtle);color:var(--ui-muted)}
 @media(max-width:760px){.main{margin-left:0}.content{padding:16px 12px 28px}.topbar{padding-left:12px;padding-right:12px}.metric-card,.panel{border-radius:10px}}
+
+
+/* ===== REFERENCE UI — light control tower skin ===== */
+:root{
+  --ui-bg:#f4f6f9;--ui-sidebar:#fff;--ui-topbar:rgba(255,255,255,.96);--ui-card:#fff;--ui-card-hover:#f8fafc;
+  --ui-panel:#fff;--ui-subtle:#f1f5f9;--ui-border:#e2e8f0;--ui-text:#0f172a;--ui-muted:#475569;--ui-subtle-text:#8b95a5;
+  --ui-primary:#6366f1;--ui-primary-soft:rgba(99,102,241,.11);--ui-green:#10b981;--ui-amber:#f59e0b;--ui-red:#f43f5e;
+  --ui-shadow:0 2px 8px rgba(15,23,42,.05),0 1px 2px rgba(15,23,42,.03)
+}
+body{background:#f4f6f9;color:#0f172a}
+.app-shell,.main{background:#f4f6f9}
+.sidebar{background:#fff;border-right:1px solid #e2e8f0;box-shadow:none}
+.brand{border-bottom:1px solid #e2e8f0}.brand strong{color:#0f172a}.brand span{color:#64748b}
+.sidebar nav{padding-top:18px}.nav-item{color:#475569}.nav-item:hover{background:#f8fafc;color:#0f172a}.nav-item.active{background:#eeedff;color:#5b5ff5}.collapse-btn{border-color:#e2e8f0;color:#94a3b8}
+.topbar{background:rgba(255,255,255,.96);border-bottom:1px solid #e2e8f0;box-shadow:none;backdrop-filter:blur(12px)}
+.breadcrumb{color:#94a3b8}.topbar h1,.section-heading h2{color:#0f172a}.eyebrow{color:#6366f1}.freshness{background:#fff;border-color:#e2e8f0;color:#64748b}
+.period-button{background:#fff;border-color:#dfe5ec;color:#1e293b;box-shadow:0 1px 3px rgba(15,23,42,.04)}
+.period-button:hover{background:#f8fafc;border-color:#cbd5e1}
+.metric-card,.panel{background:#fff;border:1px solid #e2e8f0;box-shadow:0 2px 8px rgba(15,23,42,.05),0 1px 2px rgba(15,23,42,.03)}
+.metric-card:hover{background:#fff;border-color:#d7dee8;box-shadow:0 6px 16px rgba(15,23,42,.07)}
+.metric-card span,.metric-card small,.panel-title span{color:#64748b}.metric-card strong,.panel h3{color:#0f172a}
+.panel-title{border-color:#edf2f7}.panel-title span,.eyebrow{color:#6366f1}
+.trend-select,.branch-function-filter,.branch-search-input{background:#fff;border-color:#dfe5ec;color:#334155}.trend-select option{background:#fff;color:#334155}
+.trend-column-track,.kpi-detail-track,.driver-trend-track{background:#f1f5f9}.trend-bar,.trend-column-bar,.kpi-detail-bar,.driver-trend-bar{color:#6366f1}
+.table-wrap{border-color:#e2e8f0;background:#fff}thead th{background:#f1f5f9;color:#475569;border-color:#e2e8f0}tbody td{color:#334155;border-color:#edf2f7}tbody tr:hover td{background:#f8fafc}tbody strong{color:#0f172a}
+.area-link,.back-scope{color:#6366f1}.branch-count{background:#f8fafc;border-color:#e2e8f0;color:#64748b}
+.branch-function-filter{background:#f8fafc}.branch-function-filter button{color:#64748b}.branch-function-filter button.active{background:#eeedff;color:#5b5ff5}
+.driver-card,.health-row,.penalty-block{background:#fff;border-color:#e2e8f0;color:#0f172a}.driver-card:hover{background:#f8fafc;border-color:#d7dee8}.driver-card span,.driver-card small,.penalty-note{color:#64748b}.driver-card strong{color:#0f172a}
+.penalty-total{background:#fff1f2;color:#e11d48;border-color:#fecdd3}.tier-badge{background:#f1f5f9;color:#475569}.tier-t1{background:#ecfdf5;color:#059669}.tier-t2{background:#fffbeb;color:#d97706}.tier-t3{background:#fff1f2;color:#e11d48}
+.period-popover{background:#fff;border:1px solid #e2e8f0;box-shadow:0 16px 42px rgba(15,23,42,.14);color:#0f172a}.period-popover-head{border-color:#edf2f7}.period-icon{background:#fff1f2;color:#e11d48}.period-popover-head small,.custom-range-title small,.period-presets>button>small{color:#94a3b8}.period-presets>button>span{color:#1e293b}.period-presets>button:hover{background:#f8fafc}.period-presets>button.selected{background:#f1f0ff;box-shadow:inset 3px 0 #6366f1}.period-presets>button.selected>span,.period-presets>button.selected>small{color:#5b5ff5}.custom-range{border-color:#edf2f7}.custom-range input{background:#fff;border-color:#dfe5ec;color:#334155;color-scheme:light}.custom-range>button{background:#6366f1;color:#fff}.period-note{background:#f8fafc;color:#64748b}
+@media(max-width:760px){.app-shell,.main,body{background:#f4f6f9}.sidebar{background:#fff}}
