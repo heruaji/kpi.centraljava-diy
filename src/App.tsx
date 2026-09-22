@@ -85,15 +85,20 @@ export default function App() {
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="brand">
           <div className="brand-mark">K</div>
-          {!collapsed && <div><strong>KPI</strong><span>Central Java - DIY</span></div>}
+          {!collapsed && <div><strong>Control Tower</strong><span>Central Java - DIY</span></div>}
           <button className="mobile-close" onClick={() => setMobileOpen(false)}><X size={20}/></button>
         </div>
         <nav>
+          {!collapsed && <span className="nav-section-label">CORE MODULES</span>}
           {navigation.map(({ label, icon: Icon, active }) => (
             <button key={label} className={active ? 'nav-item active' : 'nav-item'} title={collapsed ? label : undefined}>
-              <Icon size={19}/>{!collapsed && <span>{label}</span>}
+              <Icon size={18}/>{!collapsed && <span>{label}</span>}
             </button>
           ))}
+          {!collapsed && <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>}
+          <button className={!selectedArea ? 'nav-item active' : 'nav-item'}><BarChart3 size={18}/>{!collapsed && <span>Region Overview</span>}</button>
+          <button className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'}><Target size={18}/>{!collapsed && <span>Area Control Tower</span>}</button>
+          <button className={selectedBranch ? 'nav-item active' : 'nav-item'}><Route size={18}/>{!collapsed && <span>Branch Command</span>}</button>
         </nav>
         <button className="collapse-btn" onClick={() => setCollapsed(v => !v)}>
           {collapsed ? <ChevronRight size={18}/> : <><ChevronLeft size={18}/><span>Collapse</span></>}
@@ -134,7 +139,7 @@ export default function App() {
 
         <section className="content">
           <div className="section-heading">
-            <div><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Performance Summary'}</h2>{selectedKpi ? <button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Branch</button> : selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
+            <div><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Control Tower Performance Summary'}</h2>{selectedKpi ? <button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Branch</button> : selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
             <span className="freshness">{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data terakhir: ${fmtDate(freshDate)}`}</span>
           </div>
 
