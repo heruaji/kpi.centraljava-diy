@@ -155,7 +155,7 @@ export default function App() {
         <section className="content">
           <div className="section-heading">
             <div><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Control Tower Performance Summary'}</h2>{selectedKpi ? <button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Branch</button> : selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
-            <span className="freshness"><i></i>{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data Freshness: ${fmtDate(freshDate)}`}{!error&&!loading&&<b>Live</b>}</span>
+            <span className="freshness" title="Tanggal data terbaru yang tersedia"><i></i>{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data Freshness: ${fmtDate(freshDate)}`}{!error&&!loading&&<b>Live</b>}</span>
           </div>
 
           {!selectedKpi && <div className="metric-grid">
@@ -195,12 +195,12 @@ export default function App() {
                 <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
               </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
             </article>}
-            {!selectedArea && !selectedBranch && <article className="panel full area-comparison"><div className="panel-title"><div><span>PERBANDINGAN KINERJA AREA</span><h3>Area Performance Comparison</h3><small>Daftar kinerja area di wilayah Central Java – DIY</small></div><div className="area-table-hint">KLIK AREA UNTUK MEMBUKA CONTROL TOWER PER AREA</div></div><div className="table-wrap area-performance-table"><table><thead><tr><th>No</th><th>Nama Area</th><th>SLA (≥ 98%)</th><th>KPI Last Mile</th><th>KPI First Mile</th><th>KPI Middle Mile</th><th>Productivity</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map((area,index) => (
+            {!selectedArea && !selectedBranch && <article className="panel full area-comparison"><div className="panel-title"><div><span>PERBANDINGAN KINERJA AREA</span><h3>Area Performance Comparison</h3><small>Daftar kinerja area di wilayah Central Java – DIY</small></div><div className="area-table-hint">PILIH AREA UNTUK DRILL-DOWN</div></div><div className="table-wrap area-performance-table"><table><thead><tr><th>No</th><th>Nama Area</th><th>SLA (≥ 98%)</th><th>KPI Last Mile</th><th>KPI First Mile</th><th>KPI Middle Mile</th><th>Productivity</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map((area,index) => (
                <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
                  <td>{index+1}</td><td><strong>{area.name}</strong></td><td className={area.sla!=null&&area.sla>=98?'metric-good':''}>{fmtPercent(area.sla)}</td><td>{fmtPercent(area.kpiLm)}</td>
                  <td>{fmtPercent(area.kpiFm)}</td><td>{fmtPercent(area.kpiMm)}</td>
                  <td>{fmtPercent(area.productivity)}</td><td><span className={`status-pill status-${area.status.toLowerCase()}`}>{area.status}</span></td>
-                 <td><button className="open-area-btn" onClick={(e)=>{e.stopPropagation();setSelectedAreaId(area.id)}}>Buka Area →</button></td>
+                 <td><button className="open-area-btn" onClick={(e)=>{e.stopPropagation();setSelectedAreaId(area.id)}}>Detail →</button></td>
                </tr>
              )) : <tr><td colSpan={9}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
             {selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>OPERATIONAL DRIVERS</span><h3>Branch Operations</h3></div></div>
