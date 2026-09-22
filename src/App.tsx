@@ -174,7 +174,7 @@ export default function App() {
           </div>}
 
           <div className="dashboard-grid">
-            {!selectedKpi && <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `KPI ${selectedBranch.function} — ${selectedBranch.name}` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div>{!selectedBranch && <select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select>}</div>
+            {!selectedKpi && <article className={`panel wide performance-trend-panel ${selectedArea ? 'scope-wide' : ''}`}><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `KPI ${selectedBranch.function} — ${selectedBranch.name}` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div>{!selectedBranch && <select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select>}</div>
               {trend.length ? <div className="trend-chart-shell">
                 <div className="trend-plot" aria-label={`${selectedBranch ? `KPI ${selectedBranch.function}` : trendLabels[trendMetric]} daily trend`}>
                   <div className="trend-y-label y100">100%</div><div className="trend-y-label y75">75%</div><div className="trend-y-label y50">50%</div><div className="trend-y-label y25">25%</div><div className="trend-y-label y0">0%</div>
@@ -185,15 +185,15 @@ export default function App() {
                 <div className="trend-legend"><span><i className="legend-actual"/>Aktual Harian</span><span><i className="legend-target"/>Target ({trendTarget}%)</span></div>
               </div> : <div className="placeholder">Data trend belum tersedia</div>}
             </article>}
-            {!selectedKpi && <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
+            {!selectedArea && !selectedBranch && !selectedKpi && <article className="panel performance-health-panel"><div className="panel-title"><div><span>REGION HEALTH</span><h3>Performance Health</h3><small>Distribusi status seluruh area pada periode aktif</small></div><span className="health-scope-chip">{dashboard?.areas?.length ?? 0} area</span></div>
               <div className="health-list">
                 {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status=>{const count=healthCounts[status]||0;const meta=healthMeta[status];return <div className={`health-row health-${meta.tone}`} key={status}><span className="health-name"><i/>{meta.label} <small>({status})</small></span><span className="health-stat"><strong>{count}</strong><small>area</small><b>{((count/healthTotal)*100).toFixed(1)}%</b><em>›</em></span></div>})}
               </div>
-              <div className="penalty-block"><span>PENGURANG KPI</span><div className="penalty-grid">
+              <div className="penalty-block"><div className="penalty-block-head"><span>PENGURANG KPI REGION</span><small>Terpisah dari KPI Score</small></div><div className="penalty-grid">
                 <div><small>LM</small><strong>{fmtPercent(penalties?.lm ?? null)}</strong></div>
                 <div><small>FM</small><strong>{fmtPercent(penalties?.fm ?? null)}</strong></div>
                 <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
-              </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
+              </div></div>
             </article>}
             {!selectedArea && !selectedBranch && <article className="panel full area-comparison"><div className="panel-title"><div><span>PERBANDINGAN KINERJA AREA</span><h3>Area Performance Comparison</h3><small>Daftar kinerja area di wilayah Central Java – DIY</small></div><div className="area-table-hint">PILIH AREA UNTUK DRILL-DOWN</div></div><div className="table-wrap area-performance-table"><table><thead><tr><th>No</th><th>Nama Area</th><th>SLA (≥ 98%)</th><th>KPI Last Mile</th><th>KPI First Mile</th><th>KPI Middle Mile</th><th>Productivity</th><th>Status</th><th>Aksi</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map((area,index) => (
                <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
