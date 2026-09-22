@@ -42,6 +42,7 @@ export default function App() {
   const selectedBranch = selectedArea?.branches?.find(branch => branch.id === selectedBranchId) ?? null;
   const selectedKpi = selectedBranch?.kpiDailyDetails?.find(kpi => kpi.key === selectedKpiKey) ?? null;
   const trend = selectedBranch?.trend ?? selectedArea?.trend ?? dashboard?.trend ?? [];
+  const kpiTrendMax = selectedKpi ? Math.max(100,...selectedKpi.daily.map(d=>d.actual ?? 0),selectedKpi.daily[0]?.target ?? 0) : 100;
   const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
   const trendValues=trend.map(p=>p[trendMetric]).filter((v):v is number=>v!=null);
   const trendMax=Math.max(100,...trendValues);
@@ -154,7 +155,11 @@ export default function App() {
                 {selectedBranch.kpiDetails?.length ? selectedBranch.kpiDetails.map(kpi=><tr key={kpi.key} className="clickable-row" onClick={()=>setSelectedKpiKey(kpi.key)}><td><strong>{kpi.label}</strong></td><td>{fmtPercent(kpi.actual)}</td><td>{kpi.targetLabel}</td><td><span className={`tier-badge tier-${kpi.tier.toLowerCase()}`}>{kpi.tier}</span></td><td>{kpi.weight}%</td><td><strong>{kpi.score.toFixed(1)}</strong></td></tr>) : <tr><td colSpan={6}>Detail KPI belum tersedia untuk unit ini.</td></tr>}
               </tbody></table></div>
             </article>}
-            {selectedKpi && <article className="panel full"><div className="panel-title"><div><span>KPI DETAIL</span><h3>{selectedKpi.label} — Daily Performance</h3></div><button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← KPI Summary</button></div>
+            {selectedKpi && <article className="panel full kpi-detail-panel"><div className="panel-title"><div><span>KPI DETAIL</span><h3>{selectedKpi.label} — Daily Performance</h3></div><button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← KPI Summary</button></div>
+              <div className="kpi-detail-chart" aria-label={`${selectedKpi.label} daily chart`}>
+                {selectedKpi.daily.map(day=><div className="kpi-detail-col" key={day.date} title={`${fmtDate(day.date)}: ${fmtPercent(day.actual)}`}><div className="kpi-detail-value">{day.actual==null?'—':day.actual.toFixed(1)}</div><div className="kpi-detail-track"><div className="kpi-target-line" style={{bottom:`${Math.min(100,(day.target/kpiTrendMax)*100)}%`}}/><div className="kpi-detail-bar" style={{height:day.actual==null?'0%':`${Math.max(2,(day.actual/kpiTrendMax)*100)}%`}}/></div><small>{new Date(`${day.date}T00:00:00`).getDate()}</small></div>)}
+              </div>
+              <div className="kpi-chart-legend"><span>Bar = Actual</span><span>Line = Target T1 ({selectedKpi.targetLabel})</span></div>
               <div className="table-wrap"><table><thead><tr><th>Tanggal</th><th>Numerator</th><th>Denominator</th><th>Actual</th><th>Target</th><th>Gap</th><th>Tier</th></tr></thead><tbody>
                 {selectedKpi.daily.map(day=><tr key={day.date}><td>{fmtDate(day.date)}</td><td>{day.numerator.toLocaleString('id-ID')}</td><td>{day.denominator.toLocaleString('id-ID')}</td><td><strong>{fmtPercent(day.actual)}</strong></td><td>{day.targetLabel}</td><td>{day.gap==null?'—':`${day.gap>=0?'+':''}${day.gap.toFixed(2)} pp`}</td><td><span className={`tier-badge tier-${day.tier.toLowerCase()}`}>{day.tier}</span></td></tr>)}
               </tbody></table></div>
