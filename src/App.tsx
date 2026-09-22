@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { RegionDashboard } from './types/dashboard';
 import { getRegionDashboard, latestFreshness, type DashboardPeriod } from './services/dashboard';
-import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, Gauge, Menu, Route, Target, TrendingUp, X } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, Gauge, Menu, Moon, Route, Sun, Target, TrendingUp, X } from 'lucide-react';
 
 const navigation = [
   { label: 'Control Tower', icon: Gauge, active: true },
@@ -16,6 +16,7 @@ const fmtDate = (value: string | null) => value ? new Intl.DateTimeFormat('id-ID
 
 export default function App() {
   const [collapsed, setCollapsed] = useState(false);
+  const [theme, setTheme] = useState<'light'|'dark'>(() => (localStorage.getItem('kpi-dashboard-theme') as 'light'|'dark') || 'dark');
   const [mobileOpen, setMobileOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
   const [periodPreset, setPeriodPreset] = useState<DashboardPeriod>(() => (localStorage.getItem('kpi-dashboard-period') as DashboardPeriod) || 'MTD');
@@ -42,6 +43,7 @@ export default function App() {
   }, [periodPreset, customRange]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
+  useEffect(() => { localStorage.setItem('kpi-dashboard-theme', theme); }, [theme]);
 
   const cards = dashboard?.metrics ?? [];
   const penalties = dashboard?.penalties;
@@ -81,7 +83,7 @@ export default function App() {
     : 'MTD • Memuat...';
 
   return (
-    <div className="app-shell">
+    <div className={`app-shell theme-${theme}`}>
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
         <div className="brand">
           <div className="brand-mark">K</div>
@@ -113,10 +115,10 @@ export default function App() {
             <button className="mobile-menu" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
             <div>
               <div className="breadcrumb">{selectedKpi ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch?.name} / ${selectedKpi.label}` : selectedBranch ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch.name}` : selectedArea ? `Central Java - DIY / Region / ${selectedArea.name}` : 'Central Java - DIY / Region'}</div>
-              <h1>{selectedKpi ? 'KPI Detail' : selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1>
+              <h1>{selectedKpi ? 'KPI Detail' : selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1><p className="page-subtitle">{selectedKpi ? 'Detail performa KPI berdasarkan periode aktif' : selectedBranch ? 'Pantau performa operasional dan KPI unit terpilih' : selectedArea ? 'Pantau performa seluruh branch dalam area' : 'Pantau kinerja seluruh wilayah dalam satu tampilan'}</p>
             </div>
           </div>
-          <div className="period-wrap">
+          <div className="topbar-actions"><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><div className="period-wrap">
             <button className="period-button" onClick={() => setPeriodOpen(v => !v)}>
               <CalendarDays size={18}/><span>{periodLabel}</span>
             </button>
@@ -134,13 +136,13 @@ export default function App() {
                 <div className="period-note">Preset dihitung terhadap tanggal data terbaru. Custom Range memakai tanggal yang dipilih.</div>
               </div>
             )}
-          </div>
+          </div></div>
         </header>
 
         <section className="content">
           <div className="section-heading">
             <div><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Control Tower Performance Summary'}</h2>{selectedKpi ? <button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Branch</button> : selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
-            <span className="freshness">{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data terakhir: ${fmtDate(freshDate)}`}</span>
+            <span className="freshness"><i></i>{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data Freshness: ${fmtDate(freshDate)}`}{!error&&!loading&&<b>Live</b>}</span>
           </div>
 
           {!selectedKpi && <div className="metric-grid">
