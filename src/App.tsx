@@ -100,23 +100,23 @@ export default function App() {
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Navigasi utama">
         <div className="brand">
           <div className="brand-mark"><img src="/sicepat-icon.svg" alt="SiCepat"/></div>
-          {!collapsed && <div><strong>Control Tower</strong><span>Central Java - DIY</span></div>}
+          <div className="brand-copy" aria-hidden={collapsed}><strong>Control Tower</strong><span>Central Java - DIY</span></div>}
           <button className="mobile-close" onClick={() => setMobileOpen(false)}><X size={20}/></button>
         </div>
         <nav>
-          {!collapsed && <span className="nav-section-label">CORE MODULES</span>}
+          <span className="nav-section-label">CORE MODULES</span>
           {navigation.map(({ label, icon: Icon, active }) => (
             <button key={label} className={active ? 'nav-item active' : 'nav-item'} title={collapsed ? label : undefined}>
-              <Icon size={18}/>{!collapsed && <span>{label}</span>}
+              <Icon size={18}/><span className="nav-label">{label}</span>
             </button>
           ))}
-          {!collapsed && <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>}
-          <button title={collapsed?'Region Overview':undefined} className={!selectedArea ? 'nav-item active' : 'nav-item'} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setMobileOpen(false)}}><BarChart3 size={18}/>{!collapsed && <span>Region Overview</span>}</button>
-          <button title={collapsed?'Area Control Tower':undefined} className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedArea} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setMobileOpen(false)}}><Target size={18}/>{!collapsed && <span>Area Control Tower</span>}</button>
-          <button title={collapsed?'Branch Command':undefined} className={selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedBranch} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setMobileOpen(false)}}><Route size={18}/>{!collapsed && <span>Branch Command</span>}</button>
+          <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>
+          <button title={collapsed?'Region Overview':undefined} className={!selectedArea ? 'nav-item active' : 'nav-item'} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setMobileOpen(false)}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
+          <button title={collapsed?'Area Control Tower':undefined} className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedArea} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setMobileOpen(false)}}><Target size={18}/><span className="nav-label">Area Control Tower</span></button>
+          <button title={collapsed?'Branch Command':undefined} className={selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedBranch} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setMobileOpen(false)}}><Route size={18}/><span className="nav-label">Branch Command</span></button>
         </nav>
         <button className="collapse-btn" aria-label={collapsed?'Buka menu':'Tutup menu'} title={collapsed?'Buka menu':'Tutup menu'} onClick={() => setCollapsed(v => !v)}>
-          {collapsed ? <ChevronRight size={17}/> : <><ChevronLeft size={17}/><span>Collapse Menu</span></>}
+          <span className="collapse-icon">{collapsed ? <ChevronRight size={17}/> : <ChevronLeft size={17}/>}</span><span className="collapse-label">Collapse Menu</span>
         </button>
       </aside>
 
