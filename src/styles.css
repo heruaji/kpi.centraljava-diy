@@ -310,3 +310,17 @@ body{background:#f4f6f9;color:#0f172a}
 .kpi-daily-table-head{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;margin:18px 0 8px}.kpi-daily-table-head>div{display:flex;flex-direction:column;gap:2px}.kpi-daily-table-head strong{font-size:11px;color:var(--ct-text)}.kpi-daily-table-head small{font-size:8.5px;color:var(--ct-muted)}.kpi-daily-table-head>span{padding:4px 8px;border:1px solid var(--ct-border);border-radius:999px;background:var(--ct-card2);font-size:8.5px;color:var(--ct-muted)}
 .kpi-daily-table{margin-top:0!important;border:1px solid var(--ct-border);border-radius:8px;max-height:360px;overflow:auto}.kpi-daily-table table{min-width:820px}.kpi-daily-table th{position:sticky;top:0;z-index:2}.kpi-daily-table td,.kpi-daily-table th{font-variant-numeric:tabular-nums}.kpi-daily-table tbody tr:hover td{background:var(--ct-card2)!important}
 @media(max-width:760px){.kpi-detail-panel .panel-title{gap:10px}.kpi-detail-actions{width:100%;justify-content:space-between}.kpi-detail-chart{height:220px!important}.kpi-daily-table-head{align-items:flex-start}.kpi-daily-table{overflow:auto}}
+
+
+/* KPI Daily Detail table — compact audit view */
+.kpi-daily-table{max-height:430px!important;background:var(--ct-card)!important}
+.kpi-daily-table table{width:100%;min-width:760px!important;border-collapse:separate!important;border-spacing:0!important}
+.kpi-daily-table thead th{height:34px!important;padding:0 12px!important;background:var(--ct-card2)!important;border-bottom:1px solid var(--ct-border)!important;font-size:8.5px!important;font-weight:700!important;letter-spacing:.035em;text-transform:uppercase;color:var(--ct-muted)!important}
+.kpi-daily-table tbody td{height:39px!important;padding:7px 12px!important;border-bottom:1px solid var(--ct-border)!important;font-size:9.5px!important;color:var(--ct-text)!important;background:var(--ct-card)!important}
+.kpi-daily-table tbody tr:last-child td{border-bottom:0!important}.kpi-daily-table tbody tr:hover td{background:var(--ct-card2)!important}
+.kpi-daily-table th:first-child,.kpi-daily-table td:first-child{position:sticky;left:0;z-index:1;min-width:116px;text-align:left!important}.kpi-daily-table thead th:first-child{z-index:4}
+.kpi-daily-table .num-col{text-align:right!important;font-variant-numeric:tabular-nums}.kpi-daily-table .tier-col{width:76px;text-align:center!important}
+.kpi-daily-table .daily-actual strong{font-size:10px!important}.kpi-daily-table .actual-good,.kpi-daily-table .gap-good{color:#059669!important;font-weight:700}.kpi-daily-table .actual-review,.kpi-daily-table .gap-review{color:#b45309!important;font-weight:700}
+.kpi-daily-table .tier-badge{min-width:34px;justify-content:center}
+.theme-dark .kpi-daily-table,.theme-dark .kpi-daily-table tbody td{background:#0f1e2c!important}.theme-dark .kpi-daily-table thead th{background:#172b3c!important;color:#b8c7d6!important}.theme-dark .kpi-daily-table tbody tr:hover td{background:#152839!important}.theme-dark .kpi-daily-table .actual-good,.theme-dark .kpi-daily-table .gap-good{color:#34d399!important}.theme-dark .kpi-daily-table .actual-review,.theme-dark .kpi-daily-table .gap-review{color:#fbbf24!important}
+@media(max-width:760px){.kpi-daily-table{max-height:390px!important}.kpi-daily-table table{min-width:700px!important}.kpi-daily-table th:first-child,.kpi-daily-table td:first-child{min-width:105px}}
