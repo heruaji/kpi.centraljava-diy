@@ -97,7 +97,7 @@ export default function App() {
 
   return (
     <div className={`app-shell theme-${theme}`}>
-      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`}>
+      <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Navigasi utama">
         <div className="brand">
           <div className="brand-mark">K</div>
           {!collapsed && <div><strong>Control Tower</strong><span>Central Java - DIY</span></div>}
@@ -115,8 +115,8 @@ export default function App() {
           <button className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'}><Target size={18}/>{!collapsed && <span>Area Control Tower</span>}</button>
           <button className={selectedBranch ? 'nav-item active' : 'nav-item'}><Route size={18}/>{!collapsed && <span>Branch Command</span>}</button>
         </nav>
-        <button className="collapse-btn" onClick={() => setCollapsed(v => !v)}>
-          {collapsed ? <ChevronRight size={18}/> : <><ChevronLeft size={18}/><span>Collapse</span></>}
+        <button className="collapse-btn" aria-label={collapsed?'Buka menu':'Tutup menu'} title={collapsed?'Buka menu':'Tutup menu'} onClick={() => setCollapsed(v => !v)}>
+          {collapsed ? <ChevronRight size={17}/> : <><ChevronLeft size={17}/><span>Collapse Menu</span></>}
         </button>
       </aside>
 
