@@ -394,3 +394,12 @@ body{background:#f4f6f9;color:#0f172a}
 .branch-directory-table .branch-function-chip{height:22px!important;min-width:31px!important;padding:0 7px!important}.branch-directory-table .detail-row-btn,.penalty-detail-table .detail-row-btn{white-space:nowrap}
 .theme-dark .penalty-total-card{background:rgba(255,255,255,.04)!important}
 @media(max-width:760px){.branch-penalty-panel .panel-title,.branch-directory-panel .panel-title{gap:10px!important}.penalty-total-card{min-width:96px}.branch-directory-tools{width:100%;justify-content:space-between!important;overflow-x:auto}.branch-function-filter{flex:0 0 auto}}
+
+
+/* ===== BATCH 06: Contextual health + drilldown trend + region penalty ===== */
+.performance-trend-panel.scope-wide{grid-column:1/-1!important}.performance-health-panel .panel-title{align-items:flex-start!important}.performance-health-panel .panel-title small{display:block;margin-top:3px;font-size:9px;color:var(--ct-muted)}
+.health-scope-chip{display:inline-flex!important;align-items:center!important;height:25px!important;padding:0 9px!important;margin:0!important;border:1px solid var(--ct-border)!important;border-radius:999px!important;background:var(--ct-card2)!important;color:var(--ct-muted)!important;font-size:8.5px!important;font-weight:700!important;letter-spacing:0!important}
+.performance-health-panel .health-list{gap:6px!important;margin-top:14px!important}.performance-health-panel .health-row{min-height:38px!important;padding:8px 10px!important}.performance-health-panel .health-name{min-width:0}.performance-health-panel .health-stat{font-variant-numeric:tabular-nums}
+.penalty-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.penalty-block-head>span{font-size:8.5px!important;font-weight:700!important;letter-spacing:.06em!important;color:var(--ct-muted)!important}.penalty-block-head>small{font-size:8px!important;color:var(--ct-soft)!important}.performance-health-panel .penalty-grid{margin-top:8px!important}.performance-health-panel .penalty-grid>div{padding:9px 10px!important}
+.theme-dark .health-scope-chip{background:rgba(255,255,255,.04)!important}
+@media(max-width:760px){.performance-trend-panel.scope-wide{grid-column:auto!important}.penalty-block-head{align-items:flex-start;flex-direction:column;gap:2px}}
