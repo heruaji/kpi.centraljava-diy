@@ -185,3 +185,18 @@ body{background:#f4f6f9;color:#0f172a}
 .panel.wide:has(.trend-chart-shell){min-height:405px}.panel.wide:has(.trend-chart-shell) .panel-title{margin-bottom:4px}
 .theme-dark .trend-grid-line{border-color:rgba(148,163,184,.14)}.theme-dark .trend-track{background:rgba(148,163,184,.08)}
 @media(max-width:900px){.trend-plot{height:245px;margin-left:34px}.trend-bars{overflow-x:auto}.trend-column{min-width:28px}.panel.wide:has(.trend-chart-shell){min-height:360px}}
+
+
+/* Trend chart v3 — fix legacy grid collision */
+.trend-plot{position:relative!important;height:292px!important;margin:8px 10px 0 42px!important;overflow:visible!important}
+.trend-plot>.trend-bars{position:absolute!important;inset:0!important;display:flex!important;flex-direction:row!important;align-items:stretch!important;gap:6px!important;z-index:2!important;overflow-x:auto!important;overflow-y:hidden!important}
+.trend-plot .trend-column{position:relative!important;min-width:28px!important;flex:1 0 28px!important;height:100%!important;display:grid!important;grid-template-rows:20px minmax(0,1fr) 22px!important;grid-template-columns:1fr!important;gap:4px!important;text-align:center!important}
+.trend-plot .trend-value{grid-row:1!important;display:block!important;position:static!important;width:auto!important;height:auto!important;align-self:end!important;font-size:9px!important;line-height:1!important;color:var(--ct-soft)!important}
+.trend-plot .trend-track{grid-row:2!important;position:relative!important;width:100%!important;height:100%!important;display:flex!important;align-items:flex-end!important;background:rgba(148,163,184,.10)!important;border-radius:6px 6px 2px 2px!important;overflow:hidden!important}
+.trend-plot .trend-bar{position:static!important;width:100%!important;display:block!important;margin:0!important;align-self:flex-end!important}
+.trend-plot .trend-column>small{grid-row:3!important;display:block!important;position:static!important;width:auto!important;margin:0!important;padding-top:2px!important;font-size:9px!important;line-height:1!important;color:var(--ct-soft)!important}
+.trend-plot>.trend-grid-line{position:absolute!important;left:0!important;right:0!important;z-index:0!important}.trend-plot>.grid100{top:20px!important}.trend-plot>.grid75{top:25%!important}.trend-plot>.grid50{top:50%!important}.trend-plot>.grid25{top:75%!important}.trend-plot>.grid0{bottom:22px!important}
+.trend-plot>.trend-y-label{position:absolute!important;left:auto!important;right:calc(100% + 9px)!important;width:auto!important;height:auto!important;z-index:3!important}.trend-plot>.y100{top:20px!important}.trend-plot>.y75{top:25%!important}.trend-plot>.y50{top:50%!important}.trend-plot>.y25{top:75%!important}.trend-plot>.y0{top:auto!important;bottom:16px!important}
+.trend-plot>.trend-target-line{position:absolute!important;left:0!important;right:0!important;width:auto!important;height:0!important;z-index:6!important;transform:none!important}
+.trend-chart-shell>.trend-legend{display:flex!important;flex-direction:row!important;justify-content:flex-end!important;align-items:center!important;gap:20px!important;min-height:32px!important;margin:0!important;padding:10px 12px 0 42px!important}
+@media(max-width:900px){.trend-plot{height:245px!important;margin-left:38px!important}.trend-plot>.trend-bars{gap:5px!important}.trend-plot .trend-column{flex-basis:25px!important;min-width:25px!important}}
