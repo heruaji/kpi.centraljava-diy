@@ -290,11 +290,11 @@ body{background:#f4f6f9;color:#0f172a}
 
 /* Collapsed rail alignment correction */
 @media(min-width:901px){
-.sidebar.collapsed{width:72px!important;padding-right:4px!important}
-.sidebar.collapsed~.main{margin-left:72px!important}
-.sidebar.collapsed .brand{padding-left:24px!important;padding-right:4px!important;border-bottom-color:var(--ct-border)!important}
-.sidebar.collapsed nav{padding-right:4px!important}
-.sidebar.collapsed .collapse-btn{margin-right:4px!important}
+.sidebar.collapsed{width:76px!important;padding-right:8px!important}
+.sidebar.collapsed~.main{margin-left:76px!important}
+.sidebar.collapsed .brand{height:68px!important;min-height:68px!important;padding-left:24px!important;padding-right:8px!important;border-bottom:1px solid var(--ct-border)!important}
+.sidebar.collapsed nav{padding-right:8px!important}
+.sidebar.collapsed .collapse-btn{margin-right:8px!important}
 .sidebar.collapsed .nav-item{max-width:44px!important}
 }
 
