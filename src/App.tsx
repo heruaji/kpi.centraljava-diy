@@ -117,14 +117,16 @@ export default function App() {
             </button>
             {periodOpen && (
               <div className="period-popover">
-                <strong>Pilih Periode</strong>
+                <div className="period-popover-head"><div className="period-icon"><CalendarDays size={19}/></div><div><strong>Pilih Periode</strong><small>Data dihitung berdasarkan tanggal data terbaru</small></div></div>
+                <div className="period-presets">
                 {([
-                  ['TODAY','Hari Ini'],['YESTERDAY','Kemarin'],['LAST_7','7 Hari Terakhir'],['LAST_30','30 Hari Terakhir'],['WTD','WTD'],['MTD','MTD'],['YTD','YTD']
-                ] as [DashboardPeriod,string][]).map(([value,label]) =>
-                  <button key={value} className={value === periodPreset ? 'selected' : ''} onClick={() => {setCustomRange(null);setPeriodPreset(value);setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>{label}</button>
+                  ['TODAY','Hari Ini','Hanya tanggal terbaru'],['YESTERDAY','Kemarin','1 hari sebelumnya'],['LAST_7','7 Hari Terakhir','7 hari terakhir'],['LAST_30','30 Hari Terakhir','30 hari terakhir'],['WTD','WTD','Week to Date'],['MTD','MTD','Month to Date'],['YTD','YTD','Year to Date']
+                ] as [DashboardPeriod,string,string][]).map(([value,label,desc]) =>
+                  <button key={value} className={value === periodPreset && !customRange ? 'selected' : ''} onClick={() => {setCustomRange(null);setPeriodPreset(value);setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}><span>{label}</span><small>{desc}</small></button>
                 )}
-                <div className="custom-range"><span>Custom Range</span><div><input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)}/><span>—</span><input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)}/></div><button disabled={!customStart||!customEnd||customStart>customEnd} onClick={()=>{setCustomRange({start:customStart,end:customEnd});setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>Terapkan</button></div>
-                <small>Preset dihitung terhadap tanggal data terbaru. Custom Range memakai tanggal yang dipilih.</small>
+                </div>
+                <div className="custom-range"><div className="custom-range-title"><CalendarDays size={17}/><div><strong>Custom Range</strong><small>Pilih tanggal awal dan akhir secara manual</small></div></div><div className="custom-date-fields"><label><span>Tanggal Awal</span><input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)}/></label><b>—</b><label><span>Tanggal Akhir</span><input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)}/></label></div><button disabled={!customStart||!customEnd||customStart>customEnd} onClick={()=>{setCustomRange({start:customStart,end:customEnd});setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>Terapkan</button></div>
+                <div className="period-note">Preset dihitung terhadap tanggal data terbaru. Custom Range memakai tanggal yang dipilih.</div>
               </div>
             )}
           </div>
