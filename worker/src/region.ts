@@ -304,8 +304,11 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
           backlog:sum(slaItems,'VOLUME_BACKLOG'),
+          backlogRate:pct(ratio(sum(slaItems,'VOLUME_BACKLOG'),sum(slaItems,'VOLUME_BACKLOG_ALL'))),
           failedDelivery:sum(slaItems,'VOLUME_FD'),
+          failedDeliveryRate:pct(ratio(sum(slaItems,'VOLUME_FD'),sum(slaItems,'VOLUME_FD_ALL'))),
           codTransfer:sum(slaItems,'VOLUME_COD_TF'),
+          codTransferRate:pct(ratio(sum(slaItems,'VOLUME_COD_TF'),sum(slaItems,'VOLUME_COD_ALL'))),
         },
         kpiDetails:fn==='LM'?lmDetails(lmBranch):fn==='FM'?fmDetails(fmBranch):fn==='MM'?mmDetails(mmBranch):[],
         penaltyDetails:fn==='LM'?lmPenaltyDetails(lmBranch):fn==='FM'?fmPenaltyDetails(fmBranch):fn==='MM'?mmPenaltyDetails(mmBranch):[],
