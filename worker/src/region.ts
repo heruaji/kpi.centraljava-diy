@@ -208,7 +208,7 @@ function lmScore(items:Row[]){
   },0);
 }
 
-export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset){
+export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
   const [sla,sto,lm,fm,mm]=await Promise.all([
     readSheet(env,'SLA','A:AC'),
     readSheet(env,'STO','A:I'),
@@ -235,7 +235,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset){
   const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
   const mmMaxDate=mmDated.map(r=>r.__date as string).sort().at(-1) || null;
   if(!maxDate) throw new Error('No valid SLA date');
-  const range=preset?resolvePreset(preset,maxDate):defaultPeriod(maxDate);
+  const range=customRange?{start:customRange.start,end:customRange.end,label:'Custom',preset:'CUSTOM' as const}:preset?resolvePreset(preset,maxDate):defaultPeriod(maxDate);
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
