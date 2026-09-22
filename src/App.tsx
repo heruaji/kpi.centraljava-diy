@@ -147,6 +147,11 @@ export default function App() {
                 <td>{fmtPercent(area.productivity)}</td><td>{area.status}</td>
               </tr>
             )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
+            {selectedBranch && <article className="panel full"><div className="panel-title"><div><span>KPI PERFORMANCE</span><h3>KPI ${selectedBranch.function} Breakdown</h3></div></div>
+              <div className="table-wrap"><table><thead><tr><th>KPI</th><th>Actual</th><th>Target T1</th><th>Tier</th><th>Weight</th><th>Score</th></tr></thead><tbody>
+                {selectedBranch.kpiDetails?.length ? selectedBranch.kpiDetails.map(kpi=><tr key={kpi.key}><td><strong>{kpi.label}</strong></td><td>{fmtPercent(kpi.actual)}</td><td>{kpi.targetLabel}</td><td><span className={`tier-badge tier-${kpi.tier.toLowerCase()}`}>{kpi.tier}</span></td><td>{kpi.weight}%</td><td><strong>{kpi.score.toFixed(1)}</strong></td></tr>) : <tr><td colSpan={6}>Detail KPI belum tersedia untuk unit ini.</td></tr>}
+              </tbody></table></div>
+            </article>}
             {selectedArea && !selectedBranch && <article className="panel full"><div className="panel-title"><div><span>BRANCH / GERAI</span><h3>Branch Directory</h3></div><span className="branch-count">{selectedArea.branches?.length ?? 0} unit</span></div>
               <div className="table-wrap"><table><thead><tr><th>Kode</th><th>Branch / Gerai</th><th>Fungsi</th><th>Kab/Kota</th><th></th></tr></thead><tbody>
                 {selectedArea.branches?.length ? selectedArea.branches.map(branch=><tr key={branch.id} className="clickable-row" onClick={()=>setSelectedBranchId(branch.id)}><td>{branch.code}</td><td><strong>{branch.name}</strong></td><td>{branch.function}</td><td>{branch.city}</td><td><button className="area-link" onClick={()=>setSelectedBranchId(branch.id)}>Buka →</button></td></tr>) : <tr><td colSpan={5}>Master branch belum tersedia.</td></tr>}
