@@ -99,7 +99,7 @@ export default function App() {
     <div className={`app-shell theme-${theme}`}>
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Navigasi utama">
         <div className="brand">
-          <div className="brand-mark">K</div>
+          <div className="brand-mark"><img src="/sicepat-icon.svg" alt="SiCepat"/></div>
           {!collapsed && <div><strong>Control Tower</strong><span>Central Java - DIY</span></div>}
           <button className="mobile-close" onClick={() => setMobileOpen(false)}><X size={20}/></button>
         </div>
@@ -220,7 +220,7 @@ export default function App() {
                 {selectedBranch.kpiDetails?.length ? selectedBranch.kpiDetails.map(kpi=><tr key={kpi.key} className="clickable-row" onClick={()=>setSelectedKpiKey(kpi.key)}><td><strong>{kpi.label}</strong></td><td>{fmtPercent(kpi.actual)}</td><td>{kpi.targetLabel}</td><td><span className={`tier-badge tier-${kpi.tier.toLowerCase()}`}>{kpi.tier}</span></td><td>{kpi.weight}%</td><td><strong>{kpi.score.toFixed(1)}</strong></td><td><button className="detail-row-btn" onClick={(e)=>{e.stopPropagation();setSelectedKpiKey(kpi.key)}}>Detail →</button></td></tr>) : <tr><td colSpan={7}>Detail KPI belum tersedia untuk unit ini.</td></tr>}
               </tbody></table></div>
             </article>}
-            {selectedKpi && <article className="panel full kpi-detail-panel"><div className="panel-title"><div><span>KPI DETAIL</span><h3>{selectedKpi.label} — Daily Performance</h3></div><button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← KPI Summary</button></div>
+            {selectedKpi && <article className="panel full kpi-detail-panel"><div className="panel-title"><div><span>KPI DETAIL</span><h3>{selectedKpi.label} — Daily Performance</h3><small>Actual harian dibandingkan dengan target T1 pada periode aktif</small></div><div className="kpi-detail-actions"><span className="branch-function-chip">{selectedBranch?.function}</span><button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← KPI Summary</button></div>
               <div className="kpi-detail-chart" aria-label={`${selectedKpi.label} daily chart`}>
                 {selectedKpi.daily.map(day=><div className="kpi-detail-col" key={day.date} title={`${fmtDate(day.date)}: ${fmtPercent(day.actual)}`}><div className="kpi-detail-value">{day.actual==null?'—':day.actual.toFixed(1)}</div><div className="kpi-detail-track"><div className="kpi-target-line" style={{bottom:`${Math.min(100,(day.target/kpiTrendMax)*100)}%`}}/><div className="kpi-detail-bar" style={{height:day.actual==null?'0%':`${Math.max(2,(day.actual/kpiTrendMax)*100)}%`}}/></div><small>{new Date(`${day.date}T00:00:00`).getDate()}</small></div>)}
               </div>
