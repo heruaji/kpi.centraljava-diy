@@ -297,6 +297,12 @@ export async function buildRegionDashboard(env:EnvSource){
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
         sla:aggregate(slaItems).sla,kpiScore:score,penalty,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,
+        operations:{
+          volume:sum(slaItems,'VOLUME_SLA_ALL'),
+          backlog:sum(slaItems,'VOLUME_BACKLOG'),
+          failedDelivery:sum(slaItems,'VOLUME_FAILED_DELIVERY'),
+          codTransfer:sum(slaItems,'VOLUME_COD_TRANSFER'),
+        },
         kpiDetails:fn==='LM'?lmDetails(lmBranch):fn==='FM'?fmDetails(fmBranch):fn==='MM'?mmDetails(mmBranch):[],
         penaltyDetails:fn==='LM'?lmPenaltyDetails(lmBranch):fn==='FM'?fmPenaltyDetails(fmBranch):fn==='MM'?mmPenaltyDetails(mmBranch):[],
         kpiDailyDetails:fn==='LM'?lmDailyDetails(lmBranch):fn==='FM'?fmDailyDetails(fmBranch):fn==='MM'?mmDailyDetails(mmBranch):[],trend:branchTrend
