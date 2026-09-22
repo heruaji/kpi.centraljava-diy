@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import type { RegionDashboard } from './types/dashboard';
-import { getRegionDashboard, latestFreshness } from './services/dashboard';
+import { getRegionDashboard, latestFreshness, type DashboardPeriod } from './services/dashboard';
 import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, Gauge, Menu, Route, Target, TrendingUp, X } from 'lucide-react';
 
 const navigation = [
@@ -18,6 +18,7 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
+  const [periodPreset, setPeriodPreset] = useState<DashboardPeriod>('MTD');
   const [trendMetric, setTrendMetric] = useState<'sla'|'kpiLm'|'kpiFm'|'kpiMm'>('sla');
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
@@ -29,11 +30,13 @@ export default function App() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    getRegionDashboard()
+    setLoading(true);
+    setError(null);
+    getRegionDashboard(periodPreset)
       .then(setDashboard)
       .catch(err => setError(err instanceof Error ? err.message : 'Gagal memuat dashboard'))
       .finally(() => setLoading(false));
-  }, []);
+  }, [periodPreset]);
 
   const cards = dashboard?.metrics ?? [];
   const penalties = dashboard?.penalties;
@@ -106,10 +109,12 @@ export default function App() {
             {periodOpen && (
               <div className="period-popover">
                 <strong>Pilih Periode</strong>
-                {['Hari Ini','Kemarin','7 Hari Terakhir','30 Hari Terakhir','WTD','MTD','YTD','Custom Range'].map(x =>
-                  <button key={x} className={x === 'MTD' ? 'selected' : ''} onClick={() => setPeriodOpen(false)}>{x}</button>
+                {([
+                  ['TODAY','Hari Ini'],['YESTERDAY','Kemarin'],['LAST_7','7 Hari Terakhir'],['LAST_30','30 Hari Terakhir'],['WTD','WTD'],['MTD','MTD'],['YTD','YTD']
+                ] as [DashboardPeriod,string][]).map(([value,label]) =>
+                  <button key={value} className={value === periodPreset ? 'selected' : ''} onClick={() => {setPeriodPreset(value);setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>{label}</button>
                 )}
-                <small>Periode final akan mengikuti MAX_DATE sumber data.</small>
+                <small>Periode dihitung terhadap tanggal data terbaru, bukan tanggal perangkat.</small>
               </div>
             )}
           </div>
