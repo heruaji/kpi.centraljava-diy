@@ -403,3 +403,9 @@ body{background:#f4f6f9;color:#0f172a}
 .penalty-block-head{display:flex;align-items:center;justify-content:space-between;gap:10px}.penalty-block-head>span{font-size:8.5px!important;font-weight:700!important;letter-spacing:.06em!important;color:var(--ct-muted)!important}.penalty-block-head>small{font-size:8px!important;color:var(--ct-soft)!important}.performance-health-panel .penalty-grid{margin-top:8px!important}.performance-health-panel .penalty-grid>div{padding:9px 10px!important}
 .theme-dark .health-scope-chip{background:rgba(255,255,255,.04)!important}
 @media(max-width:760px){.performance-trend-panel.scope-wide{grid-column:auto!important}.penalty-block-head{align-items:flex-start;flex-direction:column;gap:2px}}
+
+
+/* Operational driver comparison rates */
+.driver-card .driver-rate{display:inline-flex!important;align-items:center!important;width:max-content!important;max-width:100%!important;margin-top:8px!important;padding:3px 7px!important;border:1px solid var(--ct-border)!important;border-radius:999px!important;background:var(--ct-card2)!important;color:var(--ct-muted)!important;font-size:8px!important;font-style:normal!important;font-weight:700!important;line-height:1.2!important;white-space:nowrap!important}
+.driver-card .driver-rate.neutral{font-weight:600!important;color:var(--ct-soft)!important}
+.theme-dark .driver-card .driver-rate{background:rgba(255,255,255,.04)!important;color:#cbd5e1!important}
