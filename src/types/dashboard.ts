@@ -4,8 +4,10 @@ export interface DateRange { start: string; end: string; label: string; preset: 
 export interface SourceFreshness { source: 'SLA'|'LM'|'FM'|'MM'; maxDate: string|null }
 export interface MetricSummary { key:string; label:string; value:number|null; unit:'percent'|'number'; target?:number|null; previous?:number|null }
 export interface KpiDetail { key:string; label:string; actual:number|null; target:number; targetLabel:string; tier:string; weight:number; score:number }
+export interface KpiDaily { date:string; numerator:number; denominator:number; actual:number|null; target:number; targetLabel:string; gap:number|null; tier:string }
+export interface KpiDetailDaily { key:string; label:string; targetLabel:string; daily:KpiDaily[] }
 export interface PenaltyDetail { key:string; label:string; actual:number|null; targetLabel:string; tier:string; maxPenalty:number; penalty:number }
-export interface BranchMaster { id:string; code:string; name:string; function:string; city:string; sla?:number|null; kpiScore?:number|null; penalty?:number|null; productivity?:number|null; trend?:TrendPoint[]; kpiDetails?:KpiDetail[]; penaltyDetails?:PenaltyDetail[] }
+export interface BranchMaster { id:string; code:string; name:string; function:string; city:string; sla?:number|null; kpiScore?:number|null; penalty?:number|null; productivity?:number|null; trend?:TrendPoint[]; kpiDetails?:KpiDetail[]; penaltyDetails?:PenaltyDetail[]; kpiDailyDetails?:KpiDetailDaily[] }
 export interface AreaPerformance { id:string; name:string; sla:number|null; kpiLm:number|null; kpiFm:number|null; kpiMm:number|null; productivity:number|null; status:string; trend?:TrendPoint[]; branches?:BranchMaster[] }
 export interface KpiPenalties { lm:number|null; fm:number|null; mm:number|null }
 export interface TrendPoint { date:string; sla:number|null; kpiLm:number|null; kpiFm:number|null; kpiMm:number|null }
