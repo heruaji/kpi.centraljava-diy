@@ -18,7 +18,7 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [periodOpen, setPeriodOpen] = useState(false);
-  const [periodPreset, setPeriodPreset] = useState<DashboardPeriod>('MTD');
+  const [periodPreset, setPeriodPreset] = useState<DashboardPeriod>(() => (localStorage.getItem('kpi-dashboard-period') as DashboardPeriod) || 'MTD');
   const [trendMetric, setTrendMetric] = useState<'sla'|'kpiLm'|'kpiFm'|'kpiMm'>('sla');
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
@@ -38,13 +38,17 @@ export default function App() {
       .finally(() => setLoading(false));
   }, [periodPreset]);
 
+  useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
+
   const cards = dashboard?.metrics ?? [];
   const penalties = dashboard?.penalties;
   const healthCounts = (dashboard?.areas ?? []).reduce<Record<string, number>>((acc, area) => { acc[area.status] = (acc[area.status] || 0) + 1; return acc; }, {});
   const freshDate = latestFreshness(dashboard);
   const activeRange = dashboard?.range ?? null;
   const selectedArea = dashboard?.areas.find(area => area.id === selectedAreaId) ?? null;
+  useEffect(() => { if(selectedAreaId && dashboard && !selectedArea) { setSelectedAreaId(null); setSelectedBranchId(null); setSelectedKpiKey(null); setSelectedDriver(null); } }, [dashboard, selectedAreaId, selectedArea]);
   const selectedBranch = selectedArea?.branches?.find(branch => branch.id === selectedBranchId) ?? null;
+  useEffect(() => { if(selectedBranchId && selectedArea && !selectedBranch) { setSelectedBranchId(null); setSelectedKpiKey(null); setSelectedDriver(null); } }, [selectedArea, selectedBranchId, selectedBranch]);
   const filteredBranches = selectedArea?.branches?.filter(branch => branchFunctionFilter === 'ALL' || branch.function === branchFunctionFilter) ?? [];
   const selectedKpi = selectedBranch?.kpiDailyDetails?.find(kpi => kpi.key === selectedKpiKey) ?? null;
   const trend = selectedBranch?.trend ?? selectedArea?.trend ?? dashboard?.trend ?? [];
