@@ -100,7 +100,7 @@ export default function App() {
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Navigasi utama">
         <div className="brand">
           <div className="brand-mark"><img src="/sicepat-icon.svg" alt="SiCepat"/></div>
-          <div className="brand-copy" aria-hidden={collapsed}><strong>Control Tower</strong><span>Central Java - DIY</span></div>}
+          <div className="brand-copy" aria-hidden={collapsed}><strong>Control Tower</strong><span>Central Java - DIY</span></div>
           <button className="mobile-close" onClick={() => setMobileOpen(false)}><X size={20}/></button>
         </div>
         <nav>
