@@ -169,3 +169,19 @@ body{background:#f4f6f9;color:#0f172a}
 .trend-bar{background:linear-gradient(180deg,#434851 0%,#343941 70%,#2f343b 100%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -5px 10px rgba(0,0,0,.06);border-radius:5px 5px 2px 2px!important}.trend-bar.trend-achieved{background:linear-gradient(180deg,#424952 0%,#343941 72%,#30353c 100%)!important}.trend-bar.trend-below{background:linear-gradient(180deg,#555b64 0%,#3e444d 72%,#353a42 100%)!important;opacity:.9}.trend-column:nth-child(3n) .trend-bar{filter:brightness(1.025)}.trend-column:nth-child(4n) .trend-bar{filter:brightness(.975)}
 .trend-legend{display:flex;justify-content:flex-end;align-items:center;gap:18px;padding:8px 5px 0;color:var(--ct-muted);font-size:9px}.trend-legend span{display:flex;align-items:center;gap:6px}.trend-legend i{display:inline-block}.legend-actual{width:9px;height:9px;border-radius:3px;background:#3a4048}.legend-target{width:18px;border-top:2px dashed #f59e0b}
 .theme-dark .trend-bar,.theme-dark .trend-bar.trend-achieved{background:linear-gradient(180deg,#21d49a 0%,#10b981 62%,#07966f 100%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 6px rgba(16,185,129,.08)}.theme-dark .trend-bar.trend-below{background:linear-gradient(180deg,#fbbf24 0%,#f59e0b 72%,#d97706 100%)!important}.theme-dark .legend-actual{background:#10b981}.theme-dark .trend-target-line span{color:#17202a}
+
+
+/* Trend chart v2 — proportional plot area */
+.trend-chart-shell{display:flex;flex-direction:column;min-height:0;padding-top:6px}
+.trend-plot{position:relative;height:292px;margin:8px 10px 0 38px;border-bottom:1px solid var(--ct-border)}
+.trend-bars{position:absolute;inset:0;display:flex;align-items:stretch;gap:6px;z-index:2}
+.trend-column{min-width:28px;flex:1;display:grid;grid-template-rows:20px 1fr 22px;gap:4px;text-align:center}
+.trend-track{height:100%;display:flex;align-items:flex-end;background:rgba(148,163,184,.10);border-radius:6px 6px 2px 2px;overflow:hidden}
+.trend-value{font-size:9px;color:var(--ct-soft);align-self:end}.trend-column small{font-size:9px;color:var(--ct-soft);padding-top:2px}
+.trend-grid-line{position:absolute;left:0;right:0;border-top:1px solid var(--ct-grid);z-index:0}.grid100{top:20px}.grid75{top:25%}.grid50{top:50%}.grid25{top:75%}.grid0{bottom:22px}
+.trend-y-label{position:absolute;right:calc(100% + 9px);transform:translateY(-50%);font-size:9px;color:var(--ct-muted);white-space:nowrap}.y100{top:20px}.y75{top:25%}.y50{top:50%}.y25{top:75%}.y0{bottom:16px}
+.trend-target-line{left:0!important;right:0!important;z-index:5!important;transform:translateY(11px);border-top:2px dashed #f59e0b!important}.trend-target-line span{right:0!important;top:-13px!important}
+.trend-legend{min-height:32px;justify-content:flex-end;padding:10px 12px 0 38px;margin-top:0;gap:20px}
+.panel.wide:has(.trend-chart-shell){min-height:405px}.panel.wide:has(.trend-chart-shell) .panel-title{margin-bottom:4px}
+.theme-dark .trend-grid-line{border-color:rgba(148,163,184,.14)}.theme-dark .trend-track{background:rgba(148,163,184,.08)}
+@media(max-width:900px){.trend-plot{height:245px;margin-left:34px}.trend-bars{overflow-x:auto}.trend-column{min-width:28px}.panel.wide:has(.trend-chart-shell){min-height:360px}}
