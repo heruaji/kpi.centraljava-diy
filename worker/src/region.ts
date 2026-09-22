@@ -289,10 +289,14 @@ export async function buildRegionDashboard(env:EnvSource){
       const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
       const score=fn==='LM'?lmScore(lmBranch):fn==='FM'?fmScore(fmBranch):fn==='MM'?mmScore(mmBranch):null;
       const penalty=fn==='LM'?lmPenalty(lmBranch):fn==='FM'?fmPenalty(fmBranch):fn==='MM'?mmPenalty(mmBranch):null;
-      const branchDayKeys=[...new Set(sourceItems.map(x=>x.__date as string))].sort();
+      const branchDayKeys=[...new Set([...sourceItems.map(x=>x.__date as string),...slaItems.map(x=>x.__date as string)].filter(Boolean))].sort();
       const branchTrend=branchDayKeys.map(date=>{
         const day=sourceItems.filter(x=>x.__date===date);
         return {date,sla:null,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
+      });
+      const operationalTrend=branchDayKeys.map(date=>{
+        const day=slaItems.filter(x=>x.__date===date);
+        return {date,volume:sum(day,'VOLUME_SLA_ALL'),backlog:sum(day,'VOLUME_BACKLOG'),failedDelivery:sum(day,'VOLUME_FAILED_DELIVERY'),codTransfer:sum(day,'VOLUME_COD_TRANSFER')};
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
@@ -305,7 +309,7 @@ export async function buildRegionDashboard(env:EnvSource){
         },
         kpiDetails:fn==='LM'?lmDetails(lmBranch):fn==='FM'?fmDetails(fmBranch):fn==='MM'?mmDetails(mmBranch):[],
         penaltyDetails:fn==='LM'?lmPenaltyDetails(lmBranch):fn==='FM'?fmPenaltyDetails(fmBranch):fn==='MM'?mmPenaltyDetails(mmBranch):[],
-        kpiDailyDetails:fn==='LM'?lmDailyDetails(lmBranch):fn==='FM'?fmDailyDetails(fmBranch):fn==='MM'?mmDailyDetails(mmBranch):[],trend:branchTrend
+        kpiDailyDetails:fn==='LM'?lmDailyDetails(lmBranch):fn==='FM'?fmDailyDetails(fmBranch):fn==='MM'?mmDailyDetails(mmBranch):[],operationalTrend,trend:branchTrend
       };
     });
     const areaDayKeys=[...new Set(items.map(r=>r.__date as string))].sort();
