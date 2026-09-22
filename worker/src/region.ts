@@ -296,7 +296,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       });
       const operationalTrend=branchDayKeys.map(date=>{
         const day=slaItems.filter(x=>x.__date===date);
-        return {date,volume:sum(day,'VOLUME_SLA_ALL'),backlog:sum(day,'VOLUME_BACKLOG'),failedDelivery:sum(day,'VOLUME_FD'),codTransfer:sum(day,'VOLUME_COD_TRANSFER')};
+        return {date,volume:sum(day,'VOLUME_SLA_ALL'),backlog:sum(day,'VOLUME_BACKLOG'),failedDelivery:sum(day,'VOLUME_FD'),codTransfer:sum(day,'VOLUME_COD_TF')};
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
@@ -305,7 +305,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
           backlog:sum(slaItems,'VOLUME_BACKLOG'),
           failedDelivery:sum(slaItems,'VOLUME_FD'),
-          codTransfer:sum(slaItems,'VOLUME_COD_TRANSFER'),
+          codTransfer:sum(slaItems,'VOLUME_COD_TF'),
         },
         kpiDetails:fn==='LM'?lmDetails(lmBranch):fn==='FM'?fmDetails(fmBranch):fn==='MM'?mmDetails(mmBranch):[],
         penaltyDetails:fn==='LM'?lmPenaltyDetails(lmBranch):fn==='FM'?fmPenaltyDetails(fmBranch):fn==='MM'?mmPenaltyDetails(mmBranch):[],
