@@ -1,5 +1,5 @@
 import { readSheet, type EnvSource, type Row } from './data-source';
-import { defaultPeriod } from './period';
+import { defaultPeriod, resolvePreset, type PeriodPreset } from './period';
 import { penaltyScore, positiveScore, tier, type TierRule } from './calculation';
 
 const n=(v:unknown)=>typeof v==='number'?v:Number(v)||0;
@@ -208,7 +208,7 @@ function lmScore(items:Row[]){
   },0);
 }
 
-export async function buildRegionDashboard(env:EnvSource){
+export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset){
   const [sla,sto,lm,fm,mm]=await Promise.all([
     readSheet(env,'SLA','A:AC'),
     readSheet(env,'STO','A:I'),
@@ -235,7 +235,7 @@ export async function buildRegionDashboard(env:EnvSource){
   const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
   const mmMaxDate=mmDated.map(r=>r.__date as string).sort().at(-1) || null;
   if(!maxDate) throw new Error('No valid SLA date');
-  const range=defaultPeriod(maxDate);
+  const range=preset?resolvePreset(preset,maxDate):defaultPeriod(maxDate);
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
