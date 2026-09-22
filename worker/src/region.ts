@@ -81,8 +81,21 @@ function lmDailyDetails(items:Row[]):KpiDetailDaily[]{
   return defs.map(([key,label,num,den,rule,targetLabel])=>({key,label,targetLabel,daily:dailyRatio(items,num,den,rule as TierRule,targetLabel)}));
 }
 function fmDailyDetails(items:Row[]):KpiDetailDaily[]{
-  const labels=['SDOB 10 PM','SDOB 00 AM','SDOB 02 AM','N0 Pickup Attempt','N0 Pickup Success','Lost Rate','FAS Retur','','HD Completion','TMT RTS'];
-  return FM_POSITIVE.flatMap((kpi,i)=>kpi.calc?[]:[{key:`fm-${i}`,label:labels[i],targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,daily:dailyRatio(items,kpi.num!,kpi.den!,kpi.rule,`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`)}]);
+  const labels=['SDOB 10 PM','SDOB 00 AM','SDOB 02 AM','N0 Pickup Attempt','N0 Pickup Success','Lost Rate','FAS Retur','Scanning Compliance','HD Completion','TMT RTS'];
+  return FM_POSITIVE.map((kpi,i)=>{
+    const targetLabel=`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`;
+    if(!kpi.calc) return {key:`fm-${i}`,label:labels[i],targetLabel,daily:dailyRatio(items,kpi.num!,kpi.den!,kpi.rule,targetLabel)};
+    const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
+    const daily=dates.map(date=>{
+      const day=items.filter(r=>r.__date===date);
+      const popNum=sum(day,'VOLUME_POP_BY_APPS'),popDen=sum(day,'VOLUME_PICK');
+      const outNum=sum(day,'VOLUME_OUTBRANCH_BY_APPS'),outDen=sum(day,'VOLUME_SCAN_FM');
+      const a=ratio(popNum,popDen),b=ratio(outNum,outDen);
+      const raw=a===null||b===null?null:(a+b)/2;
+      return {date,numerator:popNum+outNum,denominator:popDen+outDen,actual:pct(raw),target:pct(kpi.rule.tier1)!,targetLabel,gap:raw===null?null:pct(raw-kpi.rule.tier1),tier:tierLabel(tier(raw,kpi.rule))};
+    });
+    return {key:`fm-${i}`,label:labels[i],targetLabel,daily};
+  });
 }
 function mmDailyDetails(items:Row[]):KpiDetailDaily[]{
   const labels=['SDOB 04','SDOB 06','SDOB 10','Inbound Lead Time','Scanning Compliance','Lost Rate','CC Rate','HD Completion'];
