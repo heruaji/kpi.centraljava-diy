@@ -66,6 +66,10 @@ export default function App() {
   const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
   const trendValues=trend.map(p=>p[activeTrendMetric]).filter((v):v is number=>v!=null);
   const trendMax=Math.max(100,...trendValues);
+  const cardTargets: Record<string,{value:number;label:string;direction:'HIGHER'|'LOWER'}> = {
+    sla:{value:98,label:'98%',direction:'HIGHER'},lm:{value:95,label:'95%',direction:'HIGHER'},fm:{value:99,label:'99%',direction:'HIGHER'},mm:{value:96.5,label:'96.5%',direction:'HIGHER'},
+    kpi:{value:95,label:'95%',direction:'HIGHER'},productivity:{value:100,label:'100%',direction:'HIGHER'},penalty:{value:.5,label:'0.5%',direction:'LOWER'}
+  };
   const visibleCards = selectedBranch ? [
     {key:'sla',label:'SLA Performance',value:selectedBranch.sla ?? null,unit:'percent' as const},
     {key:'kpi',label:`KPI ${selectedBranch.function}`,value:selectedBranch.kpiScore ?? null,unit:'percent' as const},
@@ -147,10 +151,13 @@ export default function App() {
 
           {!selectedKpi && <div className="metric-grid">
             {visibleCards.length ? visibleCards.map(metric => (
-              <article className="metric-card" key={metric.key}>
-                <span>{metric.label}</span>
-                <strong>{fmtPercent(metric.value)}</strong>
-                <small>{metric.value == null ? 'Data belum terhubung' : (activeRange?.label ?? 'Periode aktif')}</small>
+              <article className={`metric-card ${metric.key === 'penalty' ? 'metric-card-penalty' : ''}`} key={metric.key}>
+                {(()=>{const target=cardTargets[metric.key];const achieved=metric.value!=null&&target?(target.direction==='HIGHER'?metric.value>=target.value:metric.value<=target.value):false;const progress=metric.value==null?0:target?(target.direction==='HIGHER'?Math.min(100,(metric.value/target.value)*100):Math.min(100,(target.value/Math.max(metric.value,.001))*100)):Math.min(100,metric.value);return <>
+                  <div className="metric-card-head"><span>{metric.label}</span>{target&&<span className={`metric-target ${metric.key==='penalty'?'warning':''}`}>Target: {target.label}</span>}</div>
+                  <strong>{fmtPercent(metric.value)}</strong>
+                  <div className={`metric-progress ${achieved?'achieved':'review'}`}><i style={{width:`${progress}%`}}/></div>
+                  <div className="metric-card-foot"><small>{activeRange ? `${activeRange.label} ${new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(activeRange.end+'T00:00:00'))}` : 'Periode aktif'}</small><span className={achieved?'status-achieved':'status-review'}>{metric.value==null?'—':achieved?'↗ Achieved':'↘ Needs Review'}</span></div>
+                </>})()}
               </article>
             )) : ['SLA Performance','KPI LM','KPI FM','KPI MM'].map(label => (
               <article className="metric-card" key={label}><span>{label}</span><strong>—</strong><small>{error || 'Memuat data...'}</small></article>
