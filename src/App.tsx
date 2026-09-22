@@ -89,8 +89,8 @@ export default function App() {
           <div className="title-row">
             <button className="mobile-menu" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
             <div>
-              <div className="breadcrumb">{selectedBranch ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch.name}` : selectedArea ? `Central Java - DIY / Region / ${selectedArea.name}` : 'Central Java - DIY / Region'}</div>
-              <h1>{selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1>
+              <div className="breadcrumb">{selectedKpi ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch?.name} / ${selectedKpi.label}` : selectedBranch ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch.name}` : selectedArea ? `Central Java - DIY / Region / ${selectedArea.name}` : 'Central Java - DIY / Region'}</div>
+              <h1>{selectedKpi ? 'KPI Detail' : selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1>
             </div>
           </div>
           <div className="period-wrap">
@@ -111,11 +111,11 @@ export default function App() {
 
         <section className="content">
           <div className="section-heading">
-            <div><p className="eyebrow">EXECUTIVE OVERVIEW</p><h2>{selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Performance Summary'}</h2>{selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
+            <div><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Performance Summary'}</h2>{selectedKpi ? <button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Branch</button> : selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
             <span className="freshness">{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data terakhir: ${fmtDate(freshDate)}`}</span>
           </div>
 
-          <div className="metric-grid">
+          {!selectedKpi && <div className="metric-grid">
             {visibleCards.length ? visibleCards.map(metric => (
               <article className="metric-card" key={metric.key}>
                 <span>{metric.label}</span>
@@ -125,15 +125,15 @@ export default function App() {
             )) : ['SLA Performance','KPI LM','KPI FM','KPI MM'].map(label => (
               <article className="metric-card" key={label}><span>{label}</span><strong>—</strong><small>{error || 'Memuat data...'}</small></article>
             ))}
-          </div>
+          </div>}
 
           <div className="dashboard-grid">
-            <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `${selectedBranch.name} Trend` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
+            {!selectedKpi && <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `${selectedBranch.name} Trend` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
               {trend.length ? <div className="trend-chart" aria-label={`${trendLabels[trendMetric]} daily trend`}>
                 {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}
               </div> : <div className="placeholder">Data trend belum tersedia</div>}
-            </article>
-            <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
+            </article>}
+            {!selectedKpi && <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
               <div className="health-list">
                 {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status => <div className="health-row" key={status}><span>{status}</span><strong>{healthCounts[status] || 0}</strong></div>)}
               </div>
@@ -142,7 +142,7 @@ export default function App() {
                 <div><small>FM</small><strong>{fmtPercent(penalties?.fm ?? null)}</strong></div>
                 <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
               </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
-            </article>
+            </article>}
             {!selectedArea && !selectedBranch && <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
               <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
                 <td><button className="area-link" onClick={()=>setSelectedAreaId(area.id)}>{area.name}</button></td><td>{fmtPercent(area.sla)}</td><td>{fmtPercent(area.kpiLm)}</td>
@@ -150,7 +150,7 @@ export default function App() {
                 <td>{fmtPercent(area.productivity)}</td><td>{area.status}</td>
               </tr>
             )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
-            {selectedBranch && <article className="panel full"><div className="panel-title"><div><span>KPI PERFORMANCE</span><h3>KPI ${selectedBranch.function} Breakdown</h3></div></div>
+            {selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>KPI PERFORMANCE</span><h3>KPI ${selectedBranch.function} Breakdown</h3></div></div>
               <div className="table-wrap"><table><thead><tr><th>KPI</th><th>Actual</th><th>Target T1</th><th>Tier</th><th>Weight</th><th>Score</th></tr></thead><tbody>
                 {selectedBranch.kpiDetails?.length ? selectedBranch.kpiDetails.map(kpi=><tr key={kpi.key} className="clickable-row" onClick={()=>setSelectedKpiKey(kpi.key)}><td><strong>{kpi.label}</strong></td><td>{fmtPercent(kpi.actual)}</td><td>{kpi.targetLabel}</td><td><span className={`tier-badge tier-${kpi.tier.toLowerCase()}`}>{kpi.tier}</span></td><td>{kpi.weight}%</td><td><strong>{kpi.score.toFixed(1)}</strong></td></tr>) : <tr><td colSpan={6}>Detail KPI belum tersedia untuk unit ini.</td></tr>}
               </tbody></table></div>
@@ -164,7 +164,7 @@ export default function App() {
                 {selectedKpi.daily.map(day=><tr key={day.date}><td>{fmtDate(day.date)}</td><td>{day.numerator.toLocaleString('id-ID')}</td><td>{day.denominator.toLocaleString('id-ID')}</td><td><strong>{fmtPercent(day.actual)}</strong></td><td>{day.targetLabel}</td><td>{day.gap==null?'—':`${day.gap>=0?'+':''}${day.gap.toFixed(2)} pp`}</td><td><span className={`tier-badge tier-${day.tier.toLowerCase()}`}>{day.tier}</span></td></tr>)}
               </tbody></table></div>
             </article>}
-            {selectedBranch && <article className="panel full"><div className="panel-title"><div><span>PENGURANG KPI</span><h3>Penalty Breakdown</h3></div><strong className="penalty-total">Total {fmtPercent(selectedBranch.penalty ?? null)}</strong></div>
+            {selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>PENGURANG KPI</span><h3>Penalty Breakdown</h3></div><strong className="penalty-total">Total {fmtPercent(selectedBranch.penalty ?? null)}</strong></div>
               <div className="table-wrap"><table><thead><tr><th>Indicator</th><th>Actual</th><th>Target T1</th><th>Tier</th><th>Max Penalty</th><th>Penalty</th></tr></thead><tbody>
                 {selectedBranch.penaltyDetails?.length ? selectedBranch.penaltyDetails.map(item=><tr key={item.key}><td><strong>{item.label}</strong></td><td>{fmtPercent(item.actual)}</td><td>{item.targetLabel}</td><td><span className={`tier-badge tier-${item.tier.toLowerCase()}`}>{item.tier}</span></td><td>{item.maxPenalty}%</td><td><strong>{item.penalty.toFixed(1)}</strong></td></tr>) : <tr><td colSpan={6}>Penalty detail belum tersedia untuk unit ini.</td></tr>}
               </tbody></table></div>
