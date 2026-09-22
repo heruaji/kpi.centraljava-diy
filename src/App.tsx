@@ -152,6 +152,14 @@ export default function App() {
                 <td>{fmtPercent(area.productivity)}</td><td>{area.status}</td>
               </tr>
             )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
+            {selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>OPERATIONAL DRIVERS</span><h3>Branch Operations</h3></div></div>
+              <div className="driver-grid">
+                <div className="driver-card"><span>Volume</span><strong>{selectedBranch.operations?.volume?.toLocaleString('id-ID') ?? '—'}</strong><small>Paket periode aktif</small></div>
+                <div className="driver-card"><span>Backlog</span><strong>{selectedBranch.operations?.backlog?.toLocaleString('id-ID') ?? '—'}</strong><small>Outstanding package</small></div>
+                <div className="driver-card"><span>Failed Delivery</span><strong>{selectedBranch.operations?.failedDelivery?.toLocaleString('id-ID') ?? '—'}</strong><small>Gagal delivery</small></div>
+                <div className="driver-card"><span>COD Transfer</span><strong>{selectedBranch.operations?.codTransfer?.toLocaleString('id-ID') ?? '—'}</strong><small>Transfer COD</small></div>
+              </div>
+            </article>}
             {selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>KPI PERFORMANCE</span><h3>KPI ${selectedBranch.function} Breakdown</h3></div></div>
               <div className="table-wrap"><table><thead><tr><th>KPI</th><th>Actual</th><th>Target T1</th><th>Tier</th><th>Weight</th><th>Score</th></tr></thead><tbody>
                 {selectedBranch.kpiDetails?.length ? selectedBranch.kpiDetails.map(kpi=><tr key={kpi.key} className="clickable-row" onClick={()=>setSelectedKpiKey(kpi.key)}><td><strong>{kpi.label}</strong></td><td>{fmtPercent(kpi.actual)}</td><td>{kpi.targetLabel}</td><td><span className={`tier-badge tier-${kpi.tier.toLowerCase()}`}>{kpi.tier}</span></td><td>{kpi.weight}%</td><td><strong>{kpi.score.toFixed(1)}</strong></td></tr>) : <tr><td colSpan={6}>Detail KPI belum tersedia untuk unit ini.</td></tr>}
