@@ -162,3 +162,10 @@ body{background:#f4f6f9;color:#0f172a}
 .theme-dark .kpi-detail-chart{border-color:var(--ct-border)!important}
 .theme-dark .kpi-target-line{border-color:#f59e0b!important}
 .theme-dark th{color:#a9bdd0!important}
+
+
+/* Performance trend — target guide + subtle bar variation */
+.trend-chart-shell{position:relative}.trend-chart{position:relative}.trend-target-line{position:absolute;left:0;right:0;z-index:4;border-top:2px dashed #f59e0b;pointer-events:none}.trend-target-line span{position:absolute;right:4px;top:-12px;padding:3px 7px;border-radius:5px;background:#f59e0b;color:#111827;font-size:9px;font-weight:700;box-shadow:0 2px 5px rgba(245,158,11,.22)}
+.trend-bar{background:linear-gradient(180deg,#434851 0%,#343941 70%,#2f343b 100%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.16),inset 0 -5px 10px rgba(0,0,0,.06);border-radius:5px 5px 2px 2px!important}.trend-bar.trend-achieved{background:linear-gradient(180deg,#424952 0%,#343941 72%,#30353c 100%)!important}.trend-bar.trend-below{background:linear-gradient(180deg,#555b64 0%,#3e444d 72%,#353a42 100%)!important;opacity:.9}.trend-column:nth-child(3n) .trend-bar{filter:brightness(1.025)}.trend-column:nth-child(4n) .trend-bar{filter:brightness(.975)}
+.trend-legend{display:flex;justify-content:flex-end;align-items:center;gap:18px;padding:8px 5px 0;color:var(--ct-muted);font-size:9px}.trend-legend span{display:flex;align-items:center;gap:6px}.trend-legend i{display:inline-block}.legend-actual{width:9px;height:9px;border-radius:3px;background:#3a4048}.legend-target{width:18px;border-top:2px dashed #f59e0b}
+.theme-dark .trend-bar,.theme-dark .trend-bar.trend-achieved{background:linear-gradient(180deg,#21d49a 0%,#10b981 62%,#07966f 100%)!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.18),0 2px 6px rgba(16,185,129,.08)}.theme-dark .trend-bar.trend-below{background:linear-gradient(180deg,#fbbf24 0%,#f59e0b 72%,#d97706 100%)!important}.theme-dark .legend-actual{background:#10b981}.theme-dark .trend-target-line span{color:#17202a}
