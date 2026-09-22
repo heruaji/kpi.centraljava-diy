@@ -136,7 +136,7 @@ export default function App() {
           <div className="dashboard-grid">
             {!selectedKpi && <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `${selectedBranch.name} Trend` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
               {trend.length ? <div className="trend-chart" aria-label={`${trendLabels[trendMetric]} daily trend`}>
-                {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></button>})}
+                {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}
               </div> : <div className="placeholder">Data trend belum tersedia</div>}
             </article>}
             {!selectedKpi && <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
@@ -147,7 +147,7 @@ export default function App() {
                 <div><small>LM</small><strong>{fmtPercent(penalties?.lm ?? null)}</strong></div>
                 <div><small>FM</small><strong>{fmtPercent(penalties?.fm ?? null)}</strong></div>
                 <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
-              </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></button>
+              </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
             </article>}
             {!selectedArea && !selectedBranch && <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
               <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
