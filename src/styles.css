@@ -406,6 +406,8 @@ body{background:#f4f6f9;color:#0f172a}
 
 
 /* Operational driver comparison rates */
-.driver-card .driver-rate{display:inline-flex!important;align-items:center!important;width:max-content!important;max-width:100%!important;margin-top:8px!important;padding:3px 7px!important;border:1px solid var(--ct-border)!important;border-radius:999px!important;background:var(--ct-card2)!important;color:var(--ct-muted)!important;font-size:8px!important;font-style:normal!important;font-weight:700!important;line-height:1.2!important;white-space:nowrap!important}
+.driver-card .driver-rate{position:absolute!important;left:auto!important;right:15px!important;bottom:13px!important;display:inline-flex!important;align-items:center!important;justify-content:center!important;width:auto!important;max-width:58%!important;margin:0!important;padding:4px 7px!important;border:1px solid var(--ct-border)!important;border-radius:6px!important;background:var(--ct-card2)!important;color:var(--ct-muted)!important;font-size:8px!important;font-style:normal!important;font-weight:700!important;line-height:1!important;white-space:nowrap!important}
+.driver-card>small{padding-bottom:26px!important}
 .driver-card .driver-rate.neutral{font-weight:600!important;color:var(--ct-soft)!important}
 .theme-dark .driver-card .driver-rate{background:rgba(255,255,255,.04)!important;color:#cbd5e1!important}
+@media(max-width:560px){.driver-card .driver-rate{position:absolute!important;right:12px!important;bottom:12px!important;margin:0!important}.driver-card>small{padding-bottom:24px!important}}
