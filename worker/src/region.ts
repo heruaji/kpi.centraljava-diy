@@ -237,6 +237,9 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   if(!maxDate) throw new Error('No valid SLA date');
   const range=customRange?{start:customRange.start,end:customRange.end,label:'Custom',preset:'CUSTOM' as const}:preset?resolvePreset(preset,maxDate):defaultPeriod(maxDate);
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const shiftMonth=(isoDate:string,months:number)=>{const d=new Date(isoDate+'T00:00:00Z');d.setUTCMonth(d.getUTCMonth()+months);return d.toISOString().slice(0,10)};
+  const previousRange={start:shiftMonth(range.start,-1),end:shiftMonth(range.end,-1)};
+  const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const mmSelected=mmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
@@ -283,6 +286,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'—');
       const fn=String(r.Fungsi||'—').toUpperCase();
       const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
+      const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
       const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
       const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
       const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
@@ -309,6 +313,13 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
           failedDeliveryRate:pct(ratio(sum(slaItems,'VOLUME_FD'),sum(slaItems,'VOLUME_FD_ALL'))),
           codTransfer:sum(slaItems,'VOLUME_COD_TF'),
           codTransferRate:pct(ratio(sum(slaItems,'VOLUME_COD_TF'),sum(slaItems,'VOLUME_COD_ALL'))),
+          comparison:{
+            label:previousRange.start.slice(0,7),
+            volume:sum(previousSlaItems,'VOLUME_SLA_ALL'),
+            backlogRate:pct(ratio(sum(previousSlaItems,'VOLUME_BACKLOG'),sum(previousSlaItems,'VOLUME_BACKLOG_ALL'))),
+            failedDeliveryRate:pct(ratio(sum(previousSlaItems,'VOLUME_FD'),sum(previousSlaItems,'VOLUME_FD_ALL'))),
+            codTransferRate:pct(ratio(sum(previousSlaItems,'VOLUME_COD_TF'),sum(previousSlaItems,'VOLUME_COD_ALL'))),
+          },
         },
         kpiDetails:fn==='LM'?lmDetails(lmBranch):fn==='FM'?fmDetails(fmBranch):fn==='MM'?mmDetails(mmBranch):[],
         penaltyDetails:fn==='LM'?lmPenaltyDetails(lmBranch):fn==='FM'?fmPenaltyDetails(fmBranch):fn==='MM'?mmPenaltyDetails(mmBranch):[],
