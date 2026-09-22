@@ -179,7 +179,7 @@ export default function App() {
             </article>}
             {!selectedKpi && <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
               <div className="health-list">
-                {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status => <div className="health-row" key={status}><span>{status}</span><strong>{healthCounts[status] || 0}</strong></div>)}
+                {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status=>{const count=healthCounts[status]||0;const meta=healthMeta[status];return <div className={`health-row health-${meta.tone}`} key={status}><span className="health-name"><i/>{meta.label} <small>({status})</small></span><span className="health-stat"><strong>{count}</strong><small>area</small><b>{((count/healthTotal)*100).toFixed(1)}%</b><em>›</em></span></div>})}
               </div>
               <div className="penalty-block"><span>PENGURANG KPI</span><div className="penalty-grid">
                 <div><small>LM</small><strong>{fmtPercent(penalties?.lm ?? null)}</strong></div>
