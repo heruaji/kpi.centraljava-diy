@@ -23,6 +23,7 @@ export default function App() {
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [selectedKpiKey, setSelectedKpiKey] = useState<string | null>(null);
   const [branchFunctionFilter, setBranchFunctionFilter] = useState<'ALL'|'LM'|'FM'|'MM'>('ALL');
+  const [selectedDriver, setSelectedDriver] = useState<'volume'|'backlog'|'failedDelivery'|'codTransfer'|null>(null);
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -44,6 +45,9 @@ export default function App() {
   const filteredBranches = selectedArea?.branches?.filter(branch => branchFunctionFilter === 'ALL' || branch.function === branchFunctionFilter) ?? [];
   const selectedKpi = selectedBranch?.kpiDailyDetails?.find(kpi => kpi.key === selectedKpiKey) ?? null;
   const trend = selectedBranch?.trend ?? selectedArea?.trend ?? dashboard?.trend ?? [];
+  const driverLabels={volume:'Volume',backlog:'Backlog',failedDelivery:'Failed Delivery',codTransfer:'COD Transfer'} as const;
+  const driverDaily=selectedBranch?.operationalTrend ?? [];
+  const driverMax=selectedDriver?Math.max(1,...driverDaily.map(d=>d[selectedDriver])):1;
   const kpiTrendMax = selectedKpi ? Math.max(100,...selectedKpi.daily.map(d=>d.actual ?? 0),selectedKpi.daily[0]?.target ?? 0) : 100;
   const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
   const trendValues=trend.map(p=>p[trendMetric]).filter((v):v is number=>v!=null);
@@ -132,7 +136,7 @@ export default function App() {
           <div className="dashboard-grid">
             {!selectedKpi && <article className="panel wide"><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `${selectedBranch.name} Trend` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3></div><select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA</option><option value="kpiLm">KPI LM</option><option value="kpiFm">KPI FM</option><option value="kpiMm">KPI MM</option></select></div>
               {trend.length ? <div className="trend-chart" aria-label={`${trendLabels[trendMetric]} daily trend`}>
-                {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}
+                {trend.map(point=>{const value=point[trendMetric]; return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${fmtPercent(value)}`}><div className="trend-value">{value==null?'':value.toFixed(0)}</div><div className="trend-track"><div className="trend-bar" style={{height:value==null?'0%':`${Math.max(2,(value/trendMax)*100)}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></button>})}
               </div> : <div className="placeholder">Data trend belum tersedia</div>}
             </article>}
             {!selectedKpi && <article className="panel"><div className="panel-title"><div><span>HEALTH</span><h3>Performance Health</h3></div></div>
@@ -143,7 +147,7 @@ export default function App() {
                 <div><small>LM</small><strong>{fmtPercent(penalties?.lm ?? null)}</strong></div>
                 <div><small>FM</small><strong>{fmtPercent(penalties?.fm ?? null)}</strong></div>
                 <div><small>MM</small><strong>{fmtPercent(penalties?.mm ?? null)}</strong></div>
-              </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></div>
+              </div><small className="penalty-note">Ditampilkan terpisah dari KPI Score sesuai baseline.</small></button>
             </article>}
             {!selectedArea && !selectedBranch && <article className="panel full"><div className="panel-title"><div><span>AREA PERFORMANCE</span><h3>Area Comparison</h3></div></div><div className="table-wrap"><table><thead><tr><th>Area</th><th>SLA</th><th>KPI LM</th><th>KPI FM</th><th>KPI MM</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{dashboard?.areas?.length ? dashboard.areas.map(area => (
               <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
@@ -154,11 +158,15 @@ export default function App() {
             )) : <tr><td colSpan={7}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
             {selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>OPERATIONAL DRIVERS</span><h3>Branch Operations</h3></div></div>
               <div className="driver-grid">
-                <div className="driver-card"><span>Volume</span><strong>{selectedBranch.operations?.volume?.toLocaleString('id-ID') ?? '—'}</strong><small>Paket periode aktif</small></div>
-                <div className="driver-card"><span>Backlog</span><strong>{selectedBranch.operations?.backlog?.toLocaleString('id-ID') ?? '—'}</strong><small>Outstanding package</small></div>
-                <div className="driver-card"><span>Failed Delivery</span><strong>{selectedBranch.operations?.failedDelivery?.toLocaleString('id-ID') ?? '—'}</strong><small>Gagal delivery</small></div>
-                <div className="driver-card"><span>COD Transfer</span><strong>{selectedBranch.operations?.codTransfer?.toLocaleString('id-ID') ?? '—'}</strong><small>Transfer COD</small></div>
+                <button className="driver-card" onClick={()=>setSelectedDriver('volume')}><span>Volume</span><strong>{selectedBranch.operations?.volume?.toLocaleString('id-ID') ?? '—'}</strong><small>Paket periode aktif</small></button>
+                <button className="driver-card" onClick={()=>setSelectedDriver('backlog')}><span>Backlog</span><strong>{selectedBranch.operations?.backlog?.toLocaleString('id-ID') ?? '—'}</strong><small>Outstanding package</small></button>
+                <button className="driver-card" onClick={()=>setSelectedDriver('failedDelivery')}><span>Failed Delivery</span><strong>{selectedBranch.operations?.failedDelivery?.toLocaleString('id-ID') ?? '—'}</strong><small>Gagal delivery</small></button>
+                <button className="driver-card" onClick={()=>setSelectedDriver('codTransfer')}><span>COD Transfer</span><strong>{selectedBranch.operations?.codTransfer?.toLocaleString('id-ID') ?? '—'}</strong><small>Transfer COD</small></button>
               </div>
+            </article>}
+            {selectedDriver && selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>OPERATIONAL DETAIL</span><h3>{driverLabels[selectedDriver]} — Daily Trend</h3></div><button className="back-scope" onClick={()=>setSelectedDriver(null)}>Tutup Detail</button></div>
+              <div className="driver-trend">{driverDaily.map(day=><div className="driver-trend-col" key={day.date} title={`${fmtDate(day.date)}: ${day[selectedDriver].toLocaleString('id-ID')}`}><strong>{day[selectedDriver].toLocaleString('id-ID')}</strong><div className="driver-trend-track"><div className="driver-trend-bar" style={{height:`${Math.max(2,(day[selectedDriver]/driverMax)*100)}%`}}/></div><small>{new Date(`${day.date}T00:00:00`).getDate()}</small></div>)}</div>
+              <div className="table-wrap"><table><thead><tr><th>Tanggal</th><th>{driverLabels[selectedDriver]}</th></tr></thead><tbody>{driverDaily.map(day=><tr key={day.date}><td>{fmtDate(day.date)}</td><td><strong>{day[selectedDriver].toLocaleString('id-ID')}</strong></td></tr>)}</tbody></table></div>
             </article>}
             {selectedBranch && !selectedKpi && <article className="panel full"><div className="panel-title"><div><span>KPI PERFORMANCE</span><h3>KPI ${selectedBranch.function} Breakdown</h3></div></div>
               <div className="table-wrap"><table><thead><tr><th>KPI</th><th>Actual</th><th>Target T1</th><th>Tier</th><th>Weight</th><th>Score</th></tr></thead><tbody>
