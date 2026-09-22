@@ -59,7 +59,7 @@ const matchesBranch=(r:Row,name:string,code:string)=>{
   return candidates.some(v=>v===target||v.includes(target)||target.includes(v)||(codeKey&&String(r['Hub Name']||r['Nama Hub']||r['Sortation Name']||'').toLowerCase().includes(codeKey)));
 };
 type KpiDetail={key:string;label:string;actual:number|null;target:number;targetLabel:string;tier:string;weight:number;score:number};
-const tierLabel=(v:ReturnType<typeof tier>)=>v===1?'T1':v===2?'T2':v===3?'T3':'—';
+const tierLabel=(v:ReturnType<typeof tier>)=>v??'—';
 type KpiDaily={date:string;numerator:number;denominator:number;actual:number|null;target:number;targetLabel:string;gap:number|null;tier:string};
 type KpiDetailDaily={key:string;label:string;targetLabel:string;daily:KpiDaily[]};
 const dailyRatio=(items:Row[],num:string,den:string,rule:TierRule,targetLabel:string):KpiDaily[]=>{
