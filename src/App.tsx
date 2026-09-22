@@ -127,7 +127,7 @@ export default function App() {
           <div className="title-row">
             <button className="mobile-menu" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
             <div>
-              <div className="breadcrumb">{selectedKpi ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch?.name} / ${selectedKpi.label}` : selectedBranch ? `Central Java - DIY / Region / ${selectedArea?.name} / ${selectedBranch.name}` : selectedArea ? `Central Java - DIY / Region / ${selectedArea.name}` : 'Central Java - DIY / Region'}</div>
+              <div className="breadcrumb"><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null)}}>Central Java - DIY</button><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null)}}>Region</button>{selectedArea&&<><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null)}}>{selectedArea.name}</button></>}{selectedBranch&&<><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null)}}>{selectedBranch.name}</button></>}{selectedKpi&&<><span>/</span><strong>{selectedKpi.label}</strong></>}</div>
               <h1>{selectedKpi ? 'KPI Detail' : selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1><p className="page-subtitle">{selectedKpi ? 'Detail performa KPI berdasarkan periode aktif' : selectedBranch ? 'Pantau performa operasional dan KPI unit terpilih' : selectedArea ? 'Pantau performa seluruh branch dalam area' : 'Pantau kinerja seluruh wilayah dalam satu tampilan'}</p>
             </div>
           </div>
