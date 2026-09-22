@@ -2,8 +2,10 @@ import type { RegionDashboard } from '../types/dashboard';
 
 const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
 
-export async function getRegionDashboard(): Promise<RegionDashboard> {
-  const response = await fetch(`${API_BASE}/api/dashboard/region`);
+export type DashboardPeriod = 'TODAY'|'YESTERDAY'|'LAST_7'|'LAST_30'|'WTD'|'MTD'|'YTD';
+
+export async function getRegionDashboard(period: DashboardPeriod = 'MTD'): Promise<RegionDashboard> {
+  const response = await fetch(`${API_BASE}/api/dashboard/region?period=${period}`);
   const body = await response.json();
   if (!response.ok) {
     const message = body && typeof body === 'object' && 'error' in body ? String(body.error) : `API ${response.status}`;
