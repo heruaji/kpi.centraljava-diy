@@ -133,3 +133,32 @@ body{background:#f4f6f9;color:#0f172a}
 .metric-card>strong{margin:13px 0 12px!important;font-size:26px!important;line-height:1!important}.metric-progress{height:4px!important;margin:0 0 10px!important;background:#e2e8f0!important}.metric-progress i{height:100%;display:block;border-radius:999px}.metric-progress.achieved i{background:linear-gradient(90deg,#6366f1,#10b981)!important}.metric-progress.review i{background:linear-gradient(90deg,#f59e0b,#ef4444)!important}.metric-card-foot{margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:8px}.metric-card-foot small{font-size:9px!important;color:var(--ct-soft)!important}.metric-card-foot>span{font-size:9px;font-weight:600;white-space:nowrap}.status-achieved{color:#10b981}.status-review{color:#f59e0b}.metric-card-penalty .metric-progress{background:#e2e8f0!important}
 .theme-dark .metric-target{border-color:rgba(16,185,129,.7);background:rgba(16,185,129,.09);color:#34d399!important}.theme-dark .metric-target.warning{border-color:rgba(245,158,11,.7);background:rgba(245,158,11,.08);color:#fbbf24!important}.theme-dark .metric-progress{background:#425466!important}.theme-dark .metric-card-foot small{color:#9fb0c2!important}
 @media(max-width:760px){.metric-card{min-height:120px!important}.metric-card>strong{font-size:23px!important}.metric-card-foot{align-items:flex-end}}
+
+
+/* ===== DARK MODE CONTRAST AUDIT =====
+   Override legacy light-theme text declarations across every dashboard section. */
+.theme-dark{color-scheme:dark}
+.theme-dark .breadcrumb,.theme-dark .freshness,.theme-dark .placeholder,.theme-dark .trend-value,.theme-dark .trend-column small,
+.theme-dark .kpi-detail-value,.theme-dark .kpi-detail-col small,.theme-dark .kpi-chart-legend,
+.theme-dark .driver-trend-col>strong,.theme-dark .driver-trend-col small,.theme-dark .branch-count,
+.theme-dark .back-scope,.theme-dark .penalty-grid small,.theme-dark .penalty-note,
+.theme-dark .custom-range-title small,.theme-dark .custom-date-fields label>span,.theme-dark .custom-date-fields b,
+.theme-dark .period-popover-head small,.theme-dark .period-presets>button>small,.theme-dark .period-note{
+  color:var(--ct-muted)!important
+}
+.theme-dark .area-link,.theme-dark .driver-card strong,.theme-dark .health-row strong,
+.theme-dark .health-row span,.theme-dark .penalty-grid>div,.theme-dark .panel-title h3,
+.theme-dark .branch-directory-title h3,.theme-dark td,.theme-dark tbody strong{
+  color:var(--ct-text)!important
+}
+.theme-dark .area-link{color:#818cf8!important}.theme-dark .area-link:hover,.theme-dark .back-scope:hover{color:#a5b4fc!important}
+.theme-dark .branch-function-filter button{color:#8ea4ba!important}.theme-dark .branch-function-filter button.active{background:#f5f3ff!important;color:#5b5ff5!important}
+.theme-dark .driver-card span,.theme-dark .driver-card small{color:var(--ct-muted)!important}
+.theme-dark .tier-badge{color:#cbd5e1!important}.theme-dark .tier-t1{color:#34d399!important}.theme-dark .tier-t2{color:#fbbf24!important}.theme-dark .tier-t3{color:#fb7185!important}
+.theme-dark .custom-range-title>svg{color:var(--ct-muted)!important}.theme-dark .custom-date-fields label>span{color:#9fb0c2!important}
+.theme-dark .period-popover strong,.theme-dark .custom-range-title strong{color:var(--ct-text)!important}
+.theme-dark .clickable-row:hover td{background:#182a3a!important}
+.theme-dark .driver-card:hover{background:#182a3a!important;border-color:#385066!important}
+.theme-dark .kpi-detail-chart{border-color:var(--ct-border)!important}
+.theme-dark .kpi-target-line{border-color:#f59e0b!important}
+.theme-dark th{color:#a9bdd0!important}
