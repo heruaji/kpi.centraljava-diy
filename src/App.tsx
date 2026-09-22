@@ -111,9 +111,9 @@ export default function App() {
             </button>
           ))}
           {!collapsed && <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>}
-          <button className={!selectedArea ? 'nav-item active' : 'nav-item'}><BarChart3 size={18}/>{!collapsed && <span>Region Overview</span>}</button>
-          <button className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'}><Target size={18}/>{!collapsed && <span>Area Control Tower</span>}</button>
-          <button className={selectedBranch ? 'nav-item active' : 'nav-item'}><Route size={18}/>{!collapsed && <span>Branch Command</span>}</button>
+          <button title={collapsed?'Region Overview':undefined} className={!selectedArea ? 'nav-item active' : 'nav-item'} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setMobileOpen(false)}}><BarChart3 size={18}/>{!collapsed && <span>Region Overview</span>}</button>
+          <button title={collapsed?'Area Control Tower':undefined} className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedArea} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setMobileOpen(false)}}><Target size={18}/>{!collapsed && <span>Area Control Tower</span>}</button>
+          <button title={collapsed?'Branch Command':undefined} className={selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedBranch} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setMobileOpen(false)}}><Route size={18}/>{!collapsed && <span>Branch Command</span>}</button>
         </nav>
         <button className="collapse-btn" aria-label={collapsed?'Buka menu':'Tutup menu'} title={collapsed?'Buka menu':'Tutup menu'} onClick={() => setCollapsed(v => !v)}>
           {collapsed ? <ChevronRight size={17}/> : <><ChevronLeft size={17}/><span>Collapse Menu</span></>}
