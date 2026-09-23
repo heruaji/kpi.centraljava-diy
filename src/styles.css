@@ -601,13 +601,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 
 /* ===== SLA LM DETAIL: STICKY HEADER + INTERNAL DATA SCROLL ===== */
-.sla-branch-table{max-height:590px!important;overflow:auto!important;position:relative!important;border:1px solid var(--ct-border)!important;border-radius:8px!important}
+.sla-branch-table{height:clamp(360px,58vh,590px)!important;max-height:none!important;overflow:auto!important;position:relative!important;border:1px solid var(--ct-border)!important;border-radius:8px!important;overscroll-behavior:contain!important}
 .sla-branch-table table{border-radius:0!important}
 .sla-branch-table thead{position:sticky!important;top:0!important;z-index:8!important}
 .sla-branch-table thead th{position:sticky!important;top:0!important;z-index:9!important;background:var(--ct-card2)!important;box-shadow:0 1px 0 var(--ct-border)!important}
 .theme-light .sla-branch-table thead th{background:#f8fafc!important}
 .theme-dark .sla-branch-table thead th{background:var(--ct-card2)!important}
-@media(max-width:760px){.sla-branch-table{max-height:520px!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}.sla-branch-table thead th{top:0!important}}
+@media(max-width:760px){.sla-branch-table{height:clamp(320px,56vh,520px)!important;max-height:none!important;overflow:auto!important;-webkit-overflow-scrolling:touch!important}.sla-branch-table thead th{top:0!important}}
 
 
 /* ===== SLA LM DETAIL STICKY HEADER — FIX TABLE PAINTING ===== */
