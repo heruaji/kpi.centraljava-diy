@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import type { RegionDashboard } from './types/dashboard';
 import { getRegionDashboard, latestFreshness, type DashboardPeriod } from './services/dashboard';
-import { BarChart3, CalendarDays, ChevronLeft, ChevronRight, Gauge, Menu, Moon, Route, Sun, Target, TrendingUp, X } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Gauge, Menu, Moon, Route, Sun, Target, TrendingUp, X } from 'lucide-react';
 
 const navigation = [
   { label: 'Control Tower', icon: Gauge, active: true },
