@@ -764,3 +764,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .sla-branch-detail-page .sla-daily-table .sla-status{min-height:20px!important;padding:3px 8px!important;font-size:7px!important}
 @media(max-width:1050px){.sla-branch-detail-page .sla-daily-table{height:auto!important;max-height:none!important;overflow-y:visible!important}}
 @media(max-width:760px){.sla-branch-detail-page .sla-daily-table{height:auto!important;max-height:none!important;overflow-y:visible!important}}
+
+
+/* ===== SLA PERFORMANCE: daily table scroll correction ===== */
+.sla-branch-detail-page .sla-daily-table{width:100%!important;height:clamp(260px,42vh,430px)!important;max-height:430px!important;overflow-x:hidden!important;overflow-y:auto!important}
+.sla-branch-detail-page .sla-daily-table table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+.sla-branch-detail-page .sla-daily-table thead th{position:sticky!important;top:0!important;z-index:5!important}
+.sla-branch-detail-page .sla-daily-table th,.sla-branch-detail-page .sla-daily-table td{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(1),.sla-branch-detail-page .sla-daily-table td:nth-child(1){width:9%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(2),.sla-branch-detail-page .sla-daily-table td:nth-child(2){width:24%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(3),.sla-branch-detail-page .sla-daily-table td:nth-child(3){width:16%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(4),.sla-branch-detail-page .sla-daily-table td:nth-child(4){width:16%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(5),.sla-branch-detail-page .sla-daily-table td:nth-child(5){width:17%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(6),.sla-branch-detail-page .sla-daily-table td:nth-child(6){width:18%!important}
+@media(max-width:1050px){.sla-branch-detail-page .sla-daily-table{height:330px!important;max-height:330px!important;overflow-x:hidden!important;overflow-y:auto!important}}
+@media(max-width:760px){.sla-branch-detail-page .sla-daily-table{height:310px!important;max-height:310px!important;overflow-x:hidden!important;overflow-y:auto!important}.sla-branch-detail-page .sla-daily-table th,.sla-branch-detail-page .sla-daily-table td{padding-left:5px!important;padding-right:5px!important;font-size:7.5px!important}}
