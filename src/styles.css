@@ -489,3 +489,34 @@ body{background:#f4f6f9;color:#0f172a}
 .theme-light .dashboard-grid>.panel>.panel-title{border-color:#e5eaf0!important}.theme-dark .dashboard-grid>.panel>.panel-title{border-color:var(--ct-border)!important}.theme-dark .branch-function-chip{background:rgba(255,255,255,.045)!important;color:#cbd5e1!important}.theme-dark .area-performance-table tbody td,.theme-dark .branch-directory-table tbody td,.theme-dark .kpi-breakdown-table tbody td,.theme-dark .penalty-detail-table tbody td,.theme-dark .kpi-daily-table tbody td,.theme-dark .operational-daily-table tbody td{border-bottom-color:rgba(148,163,184,.11)!important}
 
 @media(max-width:760px){.dashboard-grid>.panel{padding:14px!important}.dashboard-grid>.panel>.panel-title{min-height:0!important;gap:8px!important;flex-wrap:wrap!important}.section-heading{gap:9px!important;flex-wrap:wrap!important}.freshness{order:2!important}.metric-grid{margin-bottom:10px!important}}
+
+
+/* ===== BATCH 15: RESPONSIVE + INTERACTION FINALIZATION ===== */
+html,body,#root,.app-shell{min-height:100%!important}.app-shell{min-height:100vh!important}.main{min-width:0!important}.content{width:100%!important;box-sizing:border-box!important}.dashboard-grid,.metric-grid,.panel,.table-wrap{min-width:0!important}
+
+/* Tablet: preserve content flow; no viewport-height content containers */
+@media(max-width:1180px) and (min-width:761px){.content{padding:18px!important}.topbar{padding-left:20px!important;padding-right:20px!important}.metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}.dashboard-grid{grid-template-columns:1fr!important}.dashboard-grid>.panel{grid-column:1!important}.trend-chart-shell,.kpi-detail-chart-wrap,.driver-trend{max-width:100%!important}}
+
+/* Mobile: one natural vertical page scroll */
+@media(max-width:760px){
+  .app-shell,.main,.content{height:auto!important;min-height:100vh!important;overflow:visible!important}
+  .main{margin-left:0!important;width:100%!important}
+  .content{padding:14px 12px 30px!important}
+  .dashboard-grid{display:grid!important;grid-template-columns:minmax(0,1fr)!important;gap:10px!important;margin-top:10px!important}
+  .dashboard-grid>.panel,.panel.full,.panel.wide,.performance-trend-panel.scope-wide{grid-column:1!important;width:100%!important;min-width:0!important;max-width:100%!important;box-sizing:border-box!important}
+  .metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:9px!important}
+  .table-wrap,.area-performance-table,.branch-directory-table,.kpi-breakdown-table,.penalty-detail-table,.kpi-daily-table,.operational-daily-table{width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch}
+  .kpi-daily-table,.operational-daily-table{max-height:none!important}
+  .trend-chart-shell,.kpi-detail-chart-wrap,.driver-trend{width:100%!important;max-width:100%!important;overflow-x:auto!important;overflow-y:visible!important;-webkit-overflow-scrolling:touch}
+  .trend-plot{min-width:620px!important;height:230px!important;margin-left:38px!important;margin-right:8px!important}
+  .kpi-detail-chart{min-width:max(620px,100%)!important;height:215px!important}
+  .driver-trend{min-height:200px!important;height:auto!important}
+  .sidebar.mobile-open{width:min(286px,86vw)!important;max-width:86vw!important;overflow-y:auto!important}
+  .scrim{backdrop-filter:blur(1.5px)}
+  .topbar{position:sticky!important;top:0!important;z-index:20!important;width:100%!important;box-sizing:border-box!important}
+  .title-row{min-width:0!important;flex:1!important}.title-row>div{min-width:0!important}.topbar-actions{flex:0 0 auto!important}
+  .breadcrumb{white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+  .period-popover{z-index:70!important}
+}
+@media(max-width:520px){.metric-grid{grid-template-columns:1fr!important}.metric-card{width:100%!important}.topbar{gap:8px!important}.period-button{min-width:128px!important}.period-button>span strong{max-width:80px!important}.trend-plot{min-width:600px!important}}
+@media(max-width:380px){.period-button{min-width:112px!important;padding-left:8px!important;padding-right:8px!important}.period-button>span small{display:none!important}.period-button>span strong{max-width:70px!important}.content{padding-left:10px!important;padding-right:10px!important}}
