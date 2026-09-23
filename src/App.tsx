@@ -29,6 +29,7 @@ export default function App() {
   const [selectedKpiKey, setSelectedKpiKey] = useState<string | null>(null);
   const [branchFunctionFilter, setBranchFunctionFilter] = useState<'ALL'|'LM'|'FM'|'MM'>('ALL');
   const [selectedDriver, setSelectedDriver] = useState<'volume'|'backlog'|'failedDelivery'|'codTransfer'|null>(null);
+  const [activeModule, setActiveModule] = useState<'control'|'sla'>('control');
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -113,11 +114,11 @@ export default function App() {
         </div>
         <nav>
           <span className="nav-section-label">CORE MODULES</span>
-          {navigation.map(({ label, icon: Icon, active }) => (
-            <button key={label} className={active ? 'nav-item active' : 'nav-item'} title={collapsed ? label : undefined}>
+          {navigation.map(({ label, icon: Icon }) => { const key=label==='SLA Performance'?'sla':'control'; const enabled=label==='Control Tower'||label==='SLA Performance'; return (
+            <button key={label} disabled={!enabled} className={enabled && activeModule===key ? 'nav-item active' : 'nav-item'} title={collapsed ? label : undefined} onClick={()=>{if(!enabled)return;setActiveModule(key);setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setMobileOpen(false)}}>
               <Icon size={18}/><span className="nav-label">{label}</span>
             </button>
-          ))}
+          )})}
           <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>
           <button title={collapsed?'Region Overview':undefined} className={!selectedArea ? 'nav-item active' : 'nav-item'} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setMobileOpen(false)}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
           <button title={collapsed?'Area Control Tower':undefined} className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedArea} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setMobileOpen(false)}}><Target size={18}/><span className="nav-label">Area Control Tower</span></button>
@@ -161,6 +162,9 @@ export default function App() {
         </header>
 
         <section className="content">
+          {activeModule==='sla' && <div className="module-intro"><div><p className="eyebrow">SLA PERFORMANCE</p><h2>Service Level Performance</h2><small>Monitoring pencapaian SLA dari region hingga area dan branch pada periode aktif.</small></div><span className="module-target">Target ≥ 98%</span></div>}
+          {activeModule==='sla' && <div className="sla-overview-grid"><article className="metric-card"><div className="metric-card-head"><span>SLA Performance</span><span className="metric-target">Target: 98%</span></div><strong>{fmtPercent(dashboard?.metrics?.find(m=>m.key==='sla')?.value ?? null)}</strong><small>{activeRange?.label ?? 'Periode aktif'} • Region Central Java - DIY</small></article><article className="panel sla-module-placeholder"><div className="panel-title"><div><span>NEXT DETAIL</span><h3>SLA Analysis Workspace</h3><small>Trend, perbandingan area, dan drill-down branch akan dibangun pada tahap berikutnya.</small></div></div></article></div>}
+          <div className={activeModule==='control'?'':'module-hidden'}>
           <div className="section-heading">
             <div className="scope-heading"><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : selectedBranch ? 'BRANCH PERFORMANCE' : selectedArea ? 'AREA PERFORMANCE' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Control Tower Performance Summary'}</h2>{selectedKpi ? <button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Branch</button> : selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
             <span className="freshness" title="Tanggal data terbaru yang tersedia"><i></i>{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data Freshness: ${fmtDate(freshDate)}`}{!error&&!loading&&<b>Live</b>}</span>
@@ -254,6 +258,7 @@ export default function App() {
                 {filteredBranches.length ? filteredBranches.map(branch=><tr key={branch.id} className="clickable-row" onClick={()=>setSelectedBranchId(branch.id)}><td>{branch.code}</td><td><strong>{branch.name}</strong></td><td><span className="branch-function-chip">{branch.function}</span></td><td>{branch.city}</td><td><button className="detail-row-btn" onClick={(e)=>{e.stopPropagation();setSelectedBranchId(branch.id)}}>Detail →</button></td></tr>) : <tr><td colSpan={5}>Tidak ada unit {branchFunctionFilter==='ALL'?'':branchFunctionFilter} di area ini.</td></tr>}
               </tbody></table></div>
             </article>}
+          </div>
           </div>
         </section>
       </main>
