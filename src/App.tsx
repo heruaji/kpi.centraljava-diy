@@ -32,6 +32,8 @@ export default function App() {
   const [selectedDriver, setSelectedDriver] = useState<'volume'|'backlog'|'failedDelivery'|'codTransfer'|null>(null);
   const [activeModule, setActiveModule] = useState<'control'|'sla'|'kpi'>(() => (localStorage.getItem('kpi-dashboard-module') as 'control'|'sla'|'kpi') || 'control');
   const [kpiFunction, setKpiFunction] = useState<'LM'|'FM'|'MM'>('LM');
+  const [kpiAreaQuery, setKpiAreaQuery] = useState('');
+  const [kpiAreaSort, setKpiAreaSort] = useState<'score-desc'|'score-asc'|'name'>('score-desc');
   const [slaAreaId, setSlaAreaId] = useState<string | null>(null);
   const [slaAreaQuery, setSlaAreaQuery] = useState('');
   const [slaStatusFilter, setSlaStatusFilter] = useState<'ALL'|'ACHIEVED'|'REVIEW'>('ALL');
@@ -128,6 +130,14 @@ export default function App() {
   useEffect(()=>{if(slaAreaId&&dashboard&&!slaSelectedArea){setSlaAreaId(null);setSlaBranchDetailId(null)}},[dashboard,slaAreaId,slaSelectedArea]);
   useEffect(()=>{if(slaBranchDetailId&&slaSelectedArea&&!slaSelectedBranch)setSlaBranchDetailId(null)},[slaSelectedArea,slaBranchDetailId,slaSelectedBranch]);
   const slaFilteredAreas = [...(dashboard?.areas ?? [])].filter(area => (!slaAreaQuery.trim() || area.name.toLowerCase().includes(slaAreaQuery.trim().toLowerCase())) && (slaStatusFilter==='ALL' || (slaStatusFilter==='ACHIEVED' ? area.sla!=null&&area.sla>=98 : area.sla!=null&&area.sla<98))).sort((a,b)=>slaAreaSort==='sla-asc'?(a.sla??999)-(b.sla??999):slaAreaSort==='decline'?((a.sla??0)-(a.slaPrevious??a.sla??0))-((b.sla??0)-(b.slaPrevious??b.sla??0)):(b.sla??-1)-(a.sla??-1));
+  const kpiMetricKey = kpiFunction==='LM'?'kpiLm':kpiFunction==='FM'?'kpiFm':'kpiMm';
+  const kpiRegionValue = dashboard?.metrics?.find(m=>m.key===kpiMetricKey)?.value ?? null;
+  const kpiAreaValues = (dashboard?.areas??[]).map(a=>({area:a,value:a[kpiMetricKey]}));
+  const kpiAreaWithData = kpiAreaValues.filter(x=>x.value!=null);
+  const kpiAreaExcellent = kpiAreaWithData.filter(x=>(x.value??0)>=95).length;
+  const kpiAreaGood = kpiAreaWithData.filter(x=>(x.value??0)>=85&&(x.value??0)<95).length;
+  const kpiAreaReview = kpiAreaWithData.filter(x=>(x.value??0)<85).length;
+  const kpiFilteredAreas = kpiAreaValues.filter(x=>!kpiAreaQuery.trim()||x.area.name.toLowerCase().includes(kpiAreaQuery.trim().toLowerCase())).sort((a,b)=>kpiAreaSort==='name'?a.area.name.localeCompare(b.area.name,'id'):kpiAreaSort==='score-asc'?(a.value??999)-(b.value??999):(b.value??-1)-(a.value??-1));
   const periodLabel = activeRange
     ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
     : 'MTD • Memuat...';
@@ -192,10 +202,16 @@ export default function App() {
           {activeModule==='kpi' && <div className="module-intro"><div><p className="eyebrow">KPI PERFORMANCE</p><h2>Key Performance Indicator</h2><small>Monitoring performa KPI LM, FM, dan MM pada periode aktif.</small></div><span className="module-target">Function: {kpiFunction}</span></div>}
           {activeModule==='kpi' && <div className="kpi-module">
             <div className="kpi-function-tabs">{(['LM','FM','MM'] as const).map(fn=><button key={fn} className={kpiFunction===fn?'active':''} onClick={()=>setKpiFunction(fn)}>KPI {fn}</button>)}</div>
-            <div className="kpi-overview-grid">
-              <article className="metric-card"><div className="metric-card-head"><span>KPI {kpiFunction} Region</span><span className="metric-target">Periode aktif</span></div><strong>{fmtPercent(dashboard?.metrics?.find(m=>m.key===`kpi${kpiFunction[0]}${kpiFunction.slice(1).toLowerCase()}`)?.value??null)}</strong><small>Central Java - DIY • {activeRange?.label??'Periode aktif'}</small></article>
-              <article className="panel kpi-stage-panel"><div className="panel-title"><div><span>MODULE BASELINE</span><h3>KPI {kpiFunction} Performance</h3><small>Struktur awal modul KPI. Detail target, score, area, branch, dan daily drill-down akan menggunakan data KPI yang sudah tersedia.</small></div></div><div className="kpi-stage-note">Tahap berikutnya: Region summary → Area comparison → Branch KPI → KPI detail per tanggal.</div></article>
+            <div className="kpi-summary-grid">
+              <article className="metric-card"><div className="metric-card-head"><span>KPI {kpiFunction} Region</span><span className="metric-target">Periode aktif</span></div><strong>{fmtPercent(kpiRegionValue)}</strong><small>Central Java - DIY • {activeRange?.label??'Periode aktif'}</small></article>
+              <article className="metric-card"><div className="metric-card-head"><span>Excellent Area</span><span className="metric-target">≥ 95%</span></div><strong>{kpiAreaExcellent}<em> / {kpiAreaWithData.length}</em></strong><small>Area dengan KPI {kpiFunction} ≥ 95%</small></article>
+              <article className="metric-card"><div className="metric-card-head"><span>Need Attention</span><span className="metric-target warning">&lt; 85%</span></div><strong>{kpiAreaReview}<em> / {kpiAreaWithData.length}</em></strong><small>Area dengan KPI {kpiFunction} di bawah 85%</small></article>
             </div>
+            <div className="kpi-analysis-grid">
+              <article className="panel"><div className="panel-title"><div><span>KPI HEALTH</span><h3>Area Performance Distribution</h3><small>Distribusi KPI {kpiFunction} berdasarkan score area</small></div><span className="area-count">{kpiAreaWithData.length} area</span></div><div className="kpi-health-list"><div><span><i className="excellent"/>Excellent ≥95%</span><strong>{kpiAreaExcellent}</strong></div><div><span><i className="good"/>Good 85–&lt;95%</span><strong>{kpiAreaGood}</strong></div><div><span><i className="review"/>Need Attention &lt;85%</span><strong>{kpiAreaReview}</strong></div></div></article>
+              <article className="panel"><div className="panel-title"><div><span>REGION TREND</span><h3>KPI {kpiFunction} Daily</h3><small>Pergerakan KPI region pada periode aktif</small></div></div><div className="kpi-region-trend">{(dashboard?.trend??[]).map(p=>{const value=p[kpiMetricKey];return <div key={p.date} title={`${fmtDate(p.date)} • ${fmtPercent(value)}`}><strong>{value==null?'—':value.toFixed(1)}</strong><span><i style={{height:value==null?'0%':`${Math.max(2,Math.min(100,value))}%`}}/></span><small>{new Date(`${p.date}T00:00:00`).getDate()}</small></div>})}</div></article>
+            </div>
+            <article className="panel kpi-area-panel"><div className="panel-title kpi-area-title"><div><span>AREA COMPARISON</span><h3>KPI {kpiFunction} Performance by Area</h3><small>Perbandingan score KPI seluruh area pada periode aktif</small></div><div className="kpi-area-tools"><input className="table-search" type="search" placeholder="Cari area..." value={kpiAreaQuery} onChange={e=>setKpiAreaQuery(e.target.value)}/><select className="table-sort" value={kpiAreaSort} onChange={e=>setKpiAreaSort(e.target.value as typeof kpiAreaSort)}><option value="score-desc">Score tertinggi</option><option value="score-asc">Score terendah</option><option value="name">Nama area</option></select><span className="area-count">{kpiFilteredAreas.length} area</span></div></div><div className="table-wrap kpi-area-table"><table><thead><tr><th>No</th><th>Area</th><th>KPI {kpiFunction}</th><th>Status</th></tr></thead><tbody>{kpiFilteredAreas.length?kpiFilteredAreas.map((x,index)=><tr key={x.area.id}><td>{index+1}</td><td><strong>{x.area.name}</strong></td><td><strong>{fmtPercent(x.value)}</strong></td><td><span className={`kpi-health-chip ${x.value==null?'nodata':x.value>=95?'excellent':x.value>=85?'good':'review'}`}>{x.value==null?'No Data':x.value>=95?'Excellent':x.value>=85?'Good':'Need Attention'}</span></td></tr>):<tr><td colSpan={4}>Tidak ada area sesuai pencarian.</td></tr>}</tbody></table></div></article>
           </div>}
           {activeModule==='sla' && <div className="module-intro"><div><p className="eyebrow">SLA PERFORMANCE</p><h2>{slaBranchDetailId?'Detail Gerai':slaAreaId?'Area SLA Performance':'Service Level Performance'}</h2><small>{slaBranchDetailId?'Detail SLA harian gerai sesuai periode aktif.':slaAreaId?'Daftar gerai LM dan pencapaian SLA pada area terpilih.':'Monitoring pencapaian SLA dari region hingga area dan branch pada periode aktif.'}</small></div><span className="module-target">Target ≥ 98%</span></div>}
           {activeModule==='sla' && <div className="sla-module">
