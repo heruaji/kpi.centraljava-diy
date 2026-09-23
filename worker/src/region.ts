@@ -241,8 +241,11 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   const previousRange={start:shiftMonth(range.start,-1),end:shiftMonth(range.end,-1)};
   const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const lmPreviousSelected=lmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const fmPreviousSelected=fmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const mmSelected=mmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const mmPreviousSelected=mmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
 
   const aggregate=(items:Row[])=>{
     const s=(key:string)=>sum(items,key);
@@ -278,6 +281,8 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     const previousItems=previousSelected.filter(r=>String(r.District||'')===name);
     const lmItems=lmSelected.filter(r=>String(r['District Area']||'')===name);
     const fmItems=fmSelected.filter(r=>String(r.__area||'')===name);
+    const lmPreviousItems=lmPreviousSelected.filter(r=>String(r['District Area']||'')===name);
+    const fmPreviousItems=fmPreviousSelected.filter(r=>String(r.__area||'')===name);
     const a=aggregate(items);
     const kpiLm=lmScore(lmItems);
     const kpiFm=fmScore(fmItems);
@@ -291,9 +296,15 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
       const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
       const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
+      const lmPreviousBranch=lmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const fmPreviousBranch=fmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const mmPreviousBranch=mmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
+      const previousSourceItems=fn==='LM'?lmPreviousBranch:fn==='FM'?fmPreviousBranch:mmPreviousBranch;
       const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
       const score=fn==='LM'?lmScore(lmBranch):fn==='FM'?fmScore(fmBranch):fn==='MM'?mmScore(mmBranch):null;
       const penalty=fn==='LM'?lmPenalty(lmBranch):fn==='FM'?fmPenalty(fmBranch):fn==='MM'?mmPenalty(mmBranch):null;
+      const kpiScorePrevious=fn==='LM'?lmScore(lmPreviousBranch):fn==='FM'?fmScore(fmPreviousBranch):fn==='MM'?mmScore(mmPreviousBranch):null;
+      const penaltyPrevious=fn==='LM'?lmPenalty(lmPreviousBranch):fn==='FM'?fmPenalty(fmPreviousBranch):fn==='MM'?mmPenalty(mmPreviousBranch):null;
       const branchDayKeys=[...new Set([...sourceItems.map(x=>x.__date as string),...slaItems.map(x=>x.__date as string)].filter(Boolean))].sort();
       const branchTrend=branchDayKeys.map(date=>{
         const day=sourceItems.filter(x=>x.__date===date);
@@ -306,7 +317,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
-        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,penalty,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,
+        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
           backlog:sum(slaItems,'VOLUME_BACKLOG'),
