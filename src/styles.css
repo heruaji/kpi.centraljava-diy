@@ -584,3 +584,17 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 /* ===== SLA MONTH-OVER-MONTH COMPARISON ===== */
 .sla-area-table table{min-width:1080px!important}.sla-branch-table table{min-width:1120px!important}.sla-area-table td:nth-child(4),.sla-branch-table td:nth-child(5){color:var(--ct-muted)!important}.sla-area-table td:nth-child(5),.sla-branch-table td:nth-child(6){font-weight:750!important;white-space:nowrap!important}.sla-area-table th:nth-child(n+3),.sla-area-table td:nth-child(n+3),.sla-branch-table th:nth-child(n+4),.sla-branch-table td:nth-child(n+4){font-variant-numeric:tabular-nums!important}
 @media(max-width:760px){.sla-area-table,.sla-branch-table{overscroll-behavior-x:contain!important}}
+
+
+/* ===== SLA TABLE ALIGNMENT + CELL SEPARATORS ===== */
+/* Center every SLA table column except the descriptive name column. */
+.sla-area-table th,.sla-area-table td,.sla-branch-table th,.sla-branch-table td{text-align:center!important;vertical-align:middle!important}
+.sla-area-table th:nth-child(2),.sla-area-table td:nth-child(2),.sla-branch-table th:nth-child(2),.sla-branch-table td:nth-child(2){text-align:left!important}
+
+/* Subtle grid separators improve scanability without making the table heavy. */
+.sla-area-table th,.sla-area-table td,.sla-branch-table th,.sla-branch-table td{border-right:1px solid var(--ct-border)!important}
+.sla-area-table th:first-child,.sla-area-table td:first-child,.sla-branch-table th:first-child,.sla-branch-table td:first-child{border-left:1px solid var(--ct-border)!important}
+.sla-area-table thead th,.sla-branch-table thead th{border-top:1px solid var(--ct-border)!important}
+.sla-area-table tbody tr:last-child td,.sla-branch-table tbody tr:last-child td{border-bottom:1px solid var(--ct-border)!important}
+.sla-area-table table,.sla-branch-table table{border-radius:8px!important;overflow:hidden!important}
+.theme-dark .sla-area-table th,.theme-dark .sla-area-table td,.theme-dark .sla-branch-table th,.theme-dark .sla-branch-table td{border-color:rgba(148,163,184,.14)!important}
