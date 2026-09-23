@@ -30,7 +30,7 @@ export default function App() {
   const [selectedKpiKey, setSelectedKpiKey] = useState<string | null>(null);
   const [branchFunctionFilter, setBranchFunctionFilter] = useState<'ALL'|'LM'|'FM'|'MM'>('ALL');
   const [selectedDriver, setSelectedDriver] = useState<'volume'|'backlog'|'failedDelivery'|'codTransfer'|null>(null);
-  const [activeModule, setActiveModule] = useState<'control'|'sla'>('control');
+  const [activeModule, setActiveModule] = useState<'control'|'sla'>(() => (localStorage.getItem('kpi-dashboard-module') as 'control'|'sla') || 'control');
   const [slaAreaId, setSlaAreaId] = useState<string | null>(null);
   const [slaAreaQuery, setSlaAreaQuery] = useState('');
   const [slaStatusFilter, setSlaStatusFilter] = useState<'ALL'|'ACHIEVED'|'REVIEW'>('ALL');
@@ -56,6 +56,7 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
   useEffect(() => { localStorage.setItem('kpi-dashboard-theme', theme); }, [theme]);
+  useEffect(() => { localStorage.setItem('kpi-dashboard-module', activeModule); }, [activeModule]);
   useEffect(() => {
     if (!mobileOpen && !periodOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
