@@ -237,7 +237,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   if(!maxDate) throw new Error('No valid SLA date');
   const range=customRange?{start:customRange.start,end:customRange.end,label:'Custom',preset:'CUSTOM' as const}:preset?resolvePreset(preset,maxDate):defaultPeriod(maxDate);
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
-  const shiftMonth=(isoDate:string,months:number)=>{const d=new Date(isoDate+'T00:00:00Z');d.setUTCMonth(d.getUTCMonth()+months);return d.toISOString().slice(0,10)};
+  const shiftMonth=(isoDate:string,months:number)=>{const [year,month,day]=isoDate.split('-').map(Number);const target=new Date(Date.UTC(year,month-1+months,1));const lastDay=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();return `${target.getUTCFullYear()}-${String(target.getUTCMonth()+1).padStart(2,'0')}-${String(Math.min(day,lastDay)).padStart(2,'0')}`};
   const previousRange={start:shiftMonth(range.start,-1),end:shiftMonth(range.end,-1)};
   const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
