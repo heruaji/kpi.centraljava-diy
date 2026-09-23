@@ -753,3 +753,14 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 /* ===== SLA PERFORMANCE: page-style gerai drill-down ===== */
 .sla-branch-detail-page{min-height:420px!important}.sla-branch-detail-page .sla-daily-head{margin-bottom:14px!important;padding-bottom:12px!important;border-bottom:1px solid var(--ct-border)!important}.sla-branch-detail-page .sla-daily-head h3{margin:0!important;font-size:14px!important;color:var(--ct-text)!important}.sla-branch-detail-page .sla-daily-summary{margin-bottom:12px!important}.sla-branch-detail-page .sla-daily-layout{margin-top:0!important}.sla-branch-detail-page .sla-daily-chart,.sla-branch-detail-page .sla-daily-table{min-height:300px!important}
 @media(max-width:760px){.sla-branch-detail-page{min-height:0!important}.sla-branch-detail-page .sla-daily-head .back-scope{align-self:flex-start!important}}
+
+
+/* ===== SLA PERFORMANCE: compact daily table without inner scroll ===== */
+.sla-branch-detail-page .sla-daily-layout{align-items:start!important}
+.sla-branch-detail-page .sla-daily-table{height:auto!important;min-height:0!important;max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
+.sla-branch-detail-page .sla-daily-table thead th{position:static!important}
+.sla-branch-detail-page .sla-daily-table th{padding:7px 8px!important;height:30px!important;font-size:7.5px!important}
+.sla-branch-detail-page .sla-daily-table td{padding:6px 8px!important;height:30px!important;font-size:8.5px!important}
+.sla-branch-detail-page .sla-daily-table .sla-status{min-height:20px!important;padding:3px 8px!important;font-size:7px!important}
+@media(max-width:1050px){.sla-branch-detail-page .sla-daily-table{height:auto!important;max-height:none!important;overflow-y:visible!important}}
+@media(max-width:760px){.sla-branch-detail-page .sla-daily-table{height:auto!important;max-height:none!important;overflow-y:visible!important}}
