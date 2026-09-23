@@ -221,7 +221,7 @@ export default function App() {
             </article>}
             {!selectedArea && !selectedBranch && !selectedKpi && <article className="panel performance-health-panel"><div className="panel-title"><div><span>REGION HEALTH</span><h3>Performance Health</h3><small>Distribusi status seluruh area pada periode aktif</small></div><span className="health-scope-chip">{dashboard?.areas?.length ?? 0} area</span></div>
               <div className="health-list">
-                {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status=>{const count=healthCounts[status]||0;const meta=healthMeta[status];return <div className={`health-row health-${meta.tone}`} key={status}><span className="health-name"><i/>{meta.label} <small>({status})</small></span><span className="health-stat"><strong>{count}</strong><small>area</small><b>{((count/healthTotal)*100).toFixed(1)}%</b><em>›</em></span></div>})}
+                {['Excellent','Good','Fair','Bad','Unsatisfactory'].map(status=>{const count=healthCounts[status]||0;const meta=healthMeta[status];const share=(count/healthTotal)*100;return <div className={`health-row health-${meta.tone}`} key={status}><span className="health-name"><i/>{meta.label} <small>({status})</small></span><span className="health-share"><i style={{width:`${share}%`}}/></span><span className="health-stat"><strong>{count}</strong><small>area</small><b>{share.toFixed(1)}%</b></span></div>})}
               </div>
               <div className="penalty-block"><div className="penalty-block-head"><span>PENGURANG KPI REGION</span><small>Terpisah dari KPI Score</small></div><div className="penalty-grid">
                 <div><small>LM</small><strong>{fmtPercent(penalties?.lm ?? null)}</strong></div>
