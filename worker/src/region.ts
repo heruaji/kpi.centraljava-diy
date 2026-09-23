@@ -275,6 +275,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   const districts=[...new Set(sto.map(r=>String(r.District||'')).filter(Boolean))].sort();
   const areas=districts.map((name,index)=>{
     const items=selected.filter(r=>String(r.District||'')===name);
+    const previousItems=previousSelected.filter(r=>String(r.District||'')===name);
     const lmItems=lmSelected.filter(r=>String(r['District Area']||'')===name);
     const fmItems=fmSelected.filter(r=>String(r.__area||'')===name);
     const a=aggregate(items);
@@ -304,7 +305,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
-        sla:aggregate(slaItems).sla,kpiScore:score,penalty,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,
+        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,penalty,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
           backlog:sum(slaItems,'VOLUME_BACKLOG'),
@@ -334,7 +335,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const mmDay=mmSelected.filter(r=>r.__date===date);
       return {date,sla:aggregate(slaDay).sla,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
-    return {id:`area-${index+1}`,name,sla:a.sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
+    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
   });
 
   return {
