@@ -44,6 +44,14 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
   useEffect(() => { localStorage.setItem('kpi-dashboard-theme', theme); }, [theme]);
+  useEffect(() => {
+    if (!mobileOpen && !periodOpen) return;
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { setMobileOpen(false); setPeriodOpen(false); }
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, [mobileOpen, periodOpen]);
 
   const cards = dashboard?.metrics ?? [];
   const penalties = dashboard?.penalties;
@@ -122,7 +130,7 @@ export default function App() {
 
       {mobileOpen && <button className="scrim" aria-label="Tutup menu" onClick={() => setMobileOpen(false)}/>}
 
-      <main className="main">
+      <main className="main" onClick={()=>{if(periodOpen)setPeriodOpen(false)}}>
         <header className="topbar">
           <div className="title-row">
             <button className="mobile-menu" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
@@ -131,7 +139,7 @@ export default function App() {
               <h1>{selectedKpi ? 'KPI Detail' : selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1><p className="page-subtitle">{selectedKpi ? 'Detail performa KPI berdasarkan periode aktif' : selectedBranch ? 'Pantau performa operasional dan KPI unit terpilih' : selectedArea ? 'Pantau performa seluruh branch dalam area' : 'Pantau kinerja seluruh wilayah dalam satu tampilan'}</p>
             </div>
           </div>
-          <div className="topbar-actions"><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><div className="period-wrap">
+          <div className="topbar-actions" onClick={e=>e.stopPropagation()}><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><div className="period-wrap">
             <button className={`period-button ${periodOpen?'open':''}`} aria-expanded={periodOpen} aria-haspopup="dialog" onClick={() => setPeriodOpen(v => !v)}>
               <CalendarDays size={17}/><span><small>Periode Aktif</small><strong>{periodLabel}</strong></span><ChevronDown size={14} className="period-chevron"/>
             </button>
