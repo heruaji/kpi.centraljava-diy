@@ -634,3 +634,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .branch-directory-table tbody td:first-child{font-variant-numeric:tabular-nums!important;color:var(--ct-muted)!important}.branch-directory-table tbody tr:hover td{background:var(--ct-card2)!important}.branch-directory-table .branch-function-chip{min-width:34px!important;justify-content:center!important}.branch-directory-table th:last-child,.branch-directory-table td:last-child{text-align:right!important}
 .theme-dark .health-share,.theme-dark .area-count{background:rgba(255,255,255,.045)!important}
 @media(max-width:760px){.health-row{grid-template-columns:minmax(130px,1fr) auto!important;gap:8px!important}.health-share{grid-column:1/-1!important;grid-row:2!important}.health-stat{min-width:92px!important}.area-table-tools{width:100%!important;justify-content:space-between!important}.branch-directory-title{align-items:flex-start!important;gap:10px!important}.branch-directory-tools{width:100%!important;justify-content:space-between!important}}
+
+
+/* ===== BATCH 11: Prior-month comparison clarity ===== */
+.driver-compare.neutral{color:var(--ct-muted)!important}.driver-compare.good,.driver-compare.review,.driver-compare.neutral{font-variant-numeric:tabular-nums!important}.theme-dark .driver-compare.neutral{color:#94a3b8!important}.theme-light .driver-compare.neutral{color:#64748b!important}
