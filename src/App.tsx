@@ -185,7 +185,7 @@ export default function App() {
         </header>
 
         <section className="content">
-          {activeModule==='sla' && <div className="module-intro"><div><p className="eyebrow">SLA PERFORMANCE</p><h2>Service Level Performance</h2><small>Monitoring pencapaian SLA dari region hingga area dan branch pada periode aktif.</small></div><span className="module-target">Target ≥ 98%</span></div>}
+          {activeModule==='sla' && <div className="module-intro"><div><p className="eyebrow">SLA PERFORMANCE</p><h2>{slaBranchDetailId?'Detail Gerai':slaAreaId?'Area SLA Performance':'Service Level Performance'}</h2><small>{slaBranchDetailId?'Detail SLA harian gerai sesuai periode aktif.':slaAreaId?'Daftar gerai LM dan pencapaian SLA pada area terpilih.':'Monitoring pencapaian SLA dari region hingga area dan branch pada periode aktif.'}</small></div><span className="module-target">Target ≥ 98%</span></div>}
           {activeModule==='sla' && <div className="sla-module">
             {!slaAreaId && <>
             <div className="sla-summary-grid">
