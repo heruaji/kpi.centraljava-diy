@@ -689,3 +689,51 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* ===== SLA PERFORMANCE: compact clickable area table ===== */
 .sla-area-table th:last-child,.sla-area-table td:last-child{text-align:center!important}.sla-area-table .clickable-row{cursor:pointer!important}.sla-area-table .clickable-row:hover td{background:var(--ct-card2)!important}.sla-area-table .clickable-row:active td{background:var(--ct-border)!important}
+
+
+/* ===== DESKTOP SIDEBAR: viewport-fit responsive density ===== */
+@media(min-width:901px){
+  .sidebar,.sidebar.collapsed{
+    height:100dvh!important;
+    min-height:0!important;
+    box-sizing:border-box!important;
+    overflow:hidden!important;
+  }
+  .sidebar .brand,.sidebar.collapsed .brand{
+    flex:0 0 clamp(68px,11vh,96px)!important;
+    height:clamp(68px,11vh,96px)!important;
+    min-height:68px!important;
+  }
+  .sidebar nav{
+    flex:1 1 auto!important;
+    min-height:0!important;
+    padding:clamp(8px,2vh,28px) 24px clamp(6px,1.4vh,16px)!important;
+    gap:clamp(2px,.55vh,5px)!important;
+  }
+  .sidebar .nav-section-label{
+    height:clamp(24px,3.7vh,31px)!important;
+    min-height:24px!important;
+    padding-top:clamp(3px,.8vh,7px)!important;
+    padding-bottom:clamp(3px,.7vh,6px)!important;
+  }
+  .sidebar .nav-region-label{margin-top:clamp(4px,1.5vh,12px)!important}
+  .sidebar .nav-item{
+    height:clamp(36px,5.4vh,44px)!important;
+    min-height:36px!important;
+  }
+  .sidebar .collapse-btn{
+    flex:0 0 clamp(38px,5.8vh,48px)!important;
+    height:clamp(38px,5.8vh,48px)!important;
+    min-height:38px!important;
+    margin-top:clamp(4px,1vh,10px)!important;
+    margin-bottom:clamp(8px,2vh,18px)!important;
+  }
+}
+@media(min-width:901px) and (max-height:700px){
+  .sidebar .brand,.sidebar.collapsed .brand{flex-basis:64px!important;height:64px!important;min-height:64px!important}
+  .sidebar nav{padding-top:6px!important;padding-bottom:4px!important;gap:1px!important}
+  .sidebar .nav-section-label{height:22px!important;min-height:22px!important;padding:3px 12px!important}
+  .sidebar .nav-region-label{margin-top:2px!important}
+  .sidebar .nav-item{height:34px!important;min-height:34px!important}
+  .sidebar .collapse-btn{height:36px!important;min-height:36px!important;margin-top:3px!important;margin-bottom:7px!important}
+}
