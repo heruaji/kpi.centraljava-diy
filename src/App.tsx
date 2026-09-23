@@ -132,8 +132,8 @@ export default function App() {
             </div>
           </div>
           <div className="topbar-actions"><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><div className="period-wrap">
-            <button className="period-button" onClick={() => setPeriodOpen(v => !v)}>
-              <CalendarDays size={18}/><span>{periodLabel}</span>
+            <button className={`period-button ${periodOpen?'open':''}`} aria-expanded={periodOpen} aria-haspopup="dialog" onClick={() => setPeriodOpen(v => !v)}>
+              <CalendarDays size={17}/><span><small>Periode Aktif</small><strong>{periodLabel}</strong></span><ChevronDown size={14} className="period-chevron"/>
             </button>
             {periodOpen && (
               <div className="period-popover">
@@ -146,7 +146,7 @@ export default function App() {
                 )}
                 </div>
                 <div className="custom-range"><div className="custom-range-title"><CalendarDays size={17}/><div><strong>Custom Range</strong><small>Pilih tanggal awal dan akhir secara manual</small></div></div><div className="custom-date-fields"><label><span>Tanggal Awal</span><input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)}/></label><b>—</b><label><span>Tanggal Akhir</span><input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)}/></label></div><button disabled={!customStart||!customEnd||customStart>customEnd} onClick={()=>{setCustomRange({start:customStart,end:customEnd});setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null)}}>Terapkan</button></div>
-                <div className="period-note">Preset dihitung terhadap tanggal data terbaru. Custom Range memakai tanggal yang dipilih.</div>
+                <div className="period-note"><span>Preset mengikuti tanggal data terbaru.</span><span>Custom Range memakai tanggal pilihan.</span></div>
               </div>
             )}
           </div></div>
