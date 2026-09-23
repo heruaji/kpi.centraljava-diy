@@ -647,7 +647,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 
 /* ===== SLA PERFORMANCE: area comparison discovery ===== */
-.sla-area-title{align-items:flex-start!important;gap:14px!important}.sla-area-tools{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;flex-wrap:wrap!important}.sla-status-filter{display:flex!important;align-items:center!important;padding:2px!important;border:1px solid var(--ct-border)!important;border-radius:7px!important;background:var(--ct-card2)!important}.sla-status-filter button{height:23px!important;padding:0 8px!important;border:0!important;border-radius:5px!important;background:transparent!important;color:var(--ct-muted)!important;font:inherit!important;font-size:8.5px!important;font-weight:650!important;cursor:pointer!important}.sla-status-filter button.active{background:var(--ct-card)!important;color:var(--ct-text)!important;box-shadow:0 1px 3px rgba(15,23,42,.08)!important}.sla-area-table tbody tr:hover td{background:var(--ct-card2)!important}.sla-area-table th:nth-child(n+3):nth-child(-n+7),.sla-area-table td:nth-child(n+3):nth-child(-n+7){font-variant-numeric:tabular-nums!important}.sla-area-table th:last-child,.sla-area-table td:last-child{text-align:right!important}
+.sla-area-title{align-items:flex-start!important;gap:14px!important}.sla-area-tools{display:flex!important;align-items:center!important;justify-content:flex-end!important;gap:7px!important;flex-wrap:wrap!important}.sla-status-filter{display:flex!important;align-items:center!important;padding:2px!important;border:1px solid var(--ct-border)!important;border-radius:7px!important;background:var(--ct-card2)!important}.sla-status-filter button{height:23px!important;padding:0 8px!important;border:0!important;border-radius:5px!important;background:transparent!important;color:var(--ct-muted)!important;font:inherit!important;font-size:8.5px!important;font-weight:650!important;cursor:pointer!important}.sla-status-filter button.active{background:var(--ct-card)!important;color:var(--ct-text)!important;box-shadow:0 1px 3px rgba(15,23,42,.08)!important}.sla-area-table tbody tr:hover td{background:var(--ct-card2)!important}.sla-area-table th:nth-child(n+3):nth-child(-n+7),.sla-area-table td:nth-child(n+3):nth-child(-n+7){font-variant-numeric:tabular-nums!important}.sla-area-table th:last-child,.sla-area-table td:last-child{text-align:center!important}
 .theme-dark .sla-status-filter{background:rgba(255,255,255,.035)!important}.theme-dark .sla-status-filter button.active{background:#1b3041!important;box-shadow:none!important}
 @media(max-width:760px){.sla-area-title{flex-direction:column!important}.sla-area-tools{width:100%!important;display:grid!important;grid-template-columns:1fr auto!important}.sla-area-tools .table-search{grid-column:1!important;width:100%!important}.sla-area-tools .area-count{grid-column:2!important;grid-row:1!important}.sla-status-filter{grid-column:1/-1!important;justify-content:stretch!important}.sla-status-filter button{flex:1!important}}
 
@@ -757,13 +757,9 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* ===== SLA PERFORMANCE: compact daily table without inner scroll ===== */
 .sla-branch-detail-page .sla-daily-layout{align-items:start!important}
-.sla-branch-detail-page .sla-daily-table{height:auto!important;min-height:0!important;max-height:none!important;overflow-x:auto!important;overflow-y:visible!important}
-.sla-branch-detail-page .sla-daily-table thead th{position:static!important}
 .sla-branch-detail-page .sla-daily-table th{padding:7px 8px!important;height:30px!important;font-size:7.5px!important}
 .sla-branch-detail-page .sla-daily-table td{padding:6px 8px!important;height:30px!important;font-size:8.5px!important}
 .sla-branch-detail-page .sla-daily-table .sla-status{min-height:20px!important;padding:3px 8px!important;font-size:7px!important}
-@media(max-width:1050px){.sla-branch-detail-page .sla-daily-table{height:auto!important;max-height:none!important;overflow-y:visible!important}}
-@media(max-width:760px){.sla-branch-detail-page .sla-daily-table{height:auto!important;max-height:none!important;overflow-y:visible!important}}
 
 
 /* ===== SLA PERFORMANCE: daily table scroll correction ===== */
