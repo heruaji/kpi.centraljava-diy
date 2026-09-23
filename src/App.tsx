@@ -131,7 +131,8 @@ export default function App() {
   useEffect(()=>{if(slaBranchDetailId&&slaSelectedArea&&!slaSelectedBranch)setSlaBranchDetailId(null)},[slaSelectedArea,slaBranchDetailId,slaSelectedBranch]);
   const slaFilteredAreas = [...(dashboard?.areas ?? [])].filter(area => (!slaAreaQuery.trim() || area.name.toLowerCase().includes(slaAreaQuery.trim().toLowerCase())) && (slaStatusFilter==='ALL' || (slaStatusFilter==='ACHIEVED' ? area.sla!=null&&area.sla>=98 : area.sla!=null&&area.sla<98))).sort((a,b)=>slaAreaSort==='sla-asc'?(a.sla??999)-(b.sla??999):slaAreaSort==='decline'?((a.sla??0)-(a.slaPrevious??a.sla??0))-((b.sla??0)-(b.slaPrevious??b.sla??0)):(b.sla??-1)-(a.sla??-1));
   const kpiMetricKey = kpiFunction==='LM'?'kpiLm':kpiFunction==='FM'?'kpiFm':'kpiMm';
-  const kpiRegionValue = dashboard?.metrics?.find(m=>m.key===kpiMetricKey)?.value ?? null;
+  const kpiSummaryKey = kpiFunction.toLowerCase();
+  const kpiRegionValue = dashboard?.metrics?.find(m=>m.key===kpiSummaryKey)?.value ?? null;
   const kpiAreaValues = (dashboard?.areas??[]).map(a=>({area:a,value:a[kpiMetricKey]}));
   const kpiAreaWithData = kpiAreaValues.filter(x=>x.value!=null);
   const kpiAreaExcellent = kpiAreaWithData.filter(x=>(x.value??0)>=95).length;
