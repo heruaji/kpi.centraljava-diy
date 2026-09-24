@@ -12,5 +12,5 @@ export interface BranchOperations { volume:number; backlog:number; backlogRate:n
 export interface BranchMaster { id:string; code:string; name:string; function:string; city:string; sla?:number|null; slaPrevious?:number|null; kpiScore?:number|null; kpiScorePrevious?:number|null; penalty?:number|null; penaltyPrevious?:number|null; productivity?:number|null; productivityPrevious?:number|null; trend?:TrendPoint[]; kpiDetails?:KpiDetail[]; penaltyDetails?:PenaltyDetail[]; kpiDailyDetails?:KpiDetailDaily[]; operations?:BranchOperations; operationalTrend?:OperationalTrendPoint[] }
 export interface AreaPerformance { id:string; name:string; sla:number|null; slaPrevious?:number|null; kpiLm:number|null; kpiFm:number|null; kpiMm:number|null; productivity:number|null; status:string; trend?:TrendPoint[]; branches?:BranchMaster[] }
 export interface KpiPenalties { lm:number|null; fm:number|null; mm:number|null }
-export interface TrendPoint { date:string; sla:number|null; kpiLm:number|null; kpiFm:number|null; kpiMm:number|null }
+export interface TrendPoint { date:string; sla:number|null; productivity?:number|null; kpiLm:number|null; kpiFm:number|null; kpiMm:number|null }
 export interface RegionDashboard { range:DateRange|null; freshness:SourceFreshness[]; metrics:MetricSummary[]; penalties?:KpiPenalties; trend?:TrendPoint[]; areas:AreaPerformance[] }
