@@ -1069,3 +1069,6 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-legend{width:8px!important;height:8px!important;border:0!important;border-radius:2px!important}.kpi-legend.excellent{background:#22c55e!important}.kpi-legend.good{background:#84cc16!important}.kpi-legend.fair{background:#f59e0b!important}.kpi-legend.bad{background:#f97316!important}.kpi-legend.unsatisfactory{background:#ef4444!important}
 [data-theme="dark"] .kpi-category-line span,.dark .kpi-category-line span{background:var(--ui-card,#1c2232)}
 [data-theme="light"] .kpi-category-line span,.light .kpi-category-line span{background:#fff}
+
+/* Keep the 95% Excellent threshold visually below the 100% chart ceiling. */
+.kpi-category-line.kpi-category-excellent span{top:3px}
