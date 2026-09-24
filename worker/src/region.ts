@@ -347,7 +347,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const mmDay=mmSelected.filter(r=>r.__date===date);
       return {date,sla:aggregate(slaDay).sla,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
-    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm??a.productivityFm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
+    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
   });
 
   return {
