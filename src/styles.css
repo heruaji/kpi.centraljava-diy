@@ -940,3 +940,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .drivers-area-table td:nth-child(2) strong{display:block}
 .drivers-area-table td:nth-child(2) small{display:block;margin-top:3px;color:var(--ct-muted);font-size:8px}
 @media(max-width:720px){.drivers-area-table{min-width:700px}}
+
+
+/* Performance Drivers drill-down */
+.drivers-tools{display:flex;justify-content:flex-end;align-items:center;gap:10px;margin:10px 0}
+.drivers-tools .table-search{min-width:230px}
+.drivers-metric-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:12px 0 18px}
+.drivers-daily-title{margin-top:8px}
+.drivers-daily-table td:nth-child(n+2),.drivers-daily-table th:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
+@media(max-width:900px){.drivers-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:600px){.drivers-tools{align-items:stretch;flex-direction:column}.drivers-tools .table-search{min-width:0;width:100%}.drivers-metric-grid{grid-template-columns:1fr 1fr}.drivers-daily-table{min-width:650px}}
