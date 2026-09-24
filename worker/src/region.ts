@@ -78,13 +78,23 @@ function lmDailyDetails(items:Row[]):KpiDetailDaily[]{
     ['fraud','Fraud COD','LAST_MILE_QUALITY_VOLUME_COD_FRAUD','LAST_MILE_QUALITY_VOLUME_COD_DLV_FRAUD',{direction:'LOWER',tier1:0,tier2:.0005},'0%'],
     ['remittance','COD Remittance','LAST_MILE_QUALITY_VOLUME_COD_TERIMA_ADMIN_H0','LAST_MILE_QUALITY_VOLUME_COD_DLV',{direction:'HIGHER',tier1:.98,tier2:.95},'≥98%'],
   ] as const;
-  return defs.map(([key,label,num,den,rule,targetLabel])=>({key,label,targetLabel,daily:dailyRatio(items,num,den,rule as TierRule,targetLabel)}));
+  return defs.map(([key,label,num,den,rule,targetLabel])=>{
+    if(key!=='hd') return {key,label,targetLabel,daily:dailyRatio(items,num,den,rule as TierRule,targetLabel)};
+    const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
+    const daily=dates.map(date=>{const day=items.filter(r=>r.__date===date);const numerator=sum(day,num);const denominator=sum(day,den);const raw=denominator===0?1:ratio(numerator,denominator);return {date,numerator,denominator,actual:pct(raw),target:pct((rule as TierRule).tier1)!,targetLabel,gap:raw===null?null:pct(raw-(rule as TierRule).tier1),tier:tierLabel(tier(raw,rule as TierRule))}});
+    return {key,label,targetLabel,daily};
+  });
 }
 function fmDailyDetails(items:Row[]):KpiDetailDaily[]{
   const labels=['SDOB 10 PM','SDOB 00 AM','SDOB 02 AM','N0 Pickup Attempt','N0 Pickup Success','Lost Rate','FAS Retur','Scanning Compliance','HD Completion','TMT RTS'];
   return FM_POSITIVE.map((kpi,i)=>{
     const targetLabel=`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`;
-    if(!kpi.calc) return {key:`fm-${i}`,label:labels[i],targetLabel,daily:dailyRatio(items,kpi.num!,kpi.den!,kpi.rule,targetLabel)};
+    if(!kpi.calc){
+      if(i!==8) return {key:`fm-${i}`,label:labels[i],targetLabel,daily:dailyRatio(items,kpi.num!,kpi.den!,kpi.rule,targetLabel)};
+      const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
+      const daily=dates.map(date=>{const day=items.filter(r=>r.__date===date);const numerator=sum(day,kpi.num!);const denominator=sum(day,kpi.den!);const raw=denominator===0?1:ratio(numerator,denominator);return {date,numerator,denominator,actual:pct(raw),target:pct(kpi.rule.tier1)!,targetLabel,gap:raw===null?null:pct(raw-kpi.rule.tier1),tier:tierLabel(tier(raw,kpi.rule))}});
+      return {key:`fm-${i}`,label:labels[i],targetLabel,daily};
+    }
     const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
     const daily=dates.map(date=>{
       const day=items.filter(r=>r.__date===date);
@@ -127,10 +137,10 @@ function lmDetails(items:Row[]):KpiDetail[]{
     ['fraud','Fraud COD','LAST_MILE_QUALITY_VOLUME_COD_FRAUD','LAST_MILE_QUALITY_VOLUME_COD_DLV_FRAUD',{direction:'LOWER',tier1:0,tier2:.0005},5,'0%'],
     ['remittance','COD Remittance','LAST_MILE_QUALITY_VOLUME_COD_TERIMA_ADMIN_H0','LAST_MILE_QUALITY_VOLUME_COD_DLV',{direction:'HIGHER',tier1:.98,tier2:.95},5,'≥98%'],
   ] as const;
-  return defs.map(([key,label,num,den,rule,weight,targetLabel])=>{const actual=ratio(sum(items,num),sum(items,den));const tr=tier(actual,rule as TierRule);return {key,label,actual:pct(actual),target:pct(rule.tier1)!,targetLabel,tier:tierLabel(tr),weight,score:positiveScore(tr,weight)}});
+  return defs.map(([key,label,num,den,rule,weight,targetLabel])=>{const denominator=sum(items,den);const actual=key==='hd'&&denominator===0?1:ratio(sum(items,num),denominator);const tr=tier(actual,rule as TierRule);return {key,label,actual:pct(actual),target:pct(rule.tier1)!,targetLabel,tier:tierLabel(tr),weight,score:positiveScore(tr,weight)}});
 }
 function fmDetails(items:Row[]):KpiDetail[]{
-  return FM_POSITIVE.map((kpi,i)=>{const labels=['SDOB 10 PM','SDOB 00 AM','SDOB 02 AM','N0 Pickup Attempt','N0 Pickup Success','Lost Rate','FAS Retur','Scanning Compliance','HD Completion','TMT RTS'];const actual=kpi.calc?kpi.calc(items):ratio(sum(items,kpi.num!),sum(items,kpi.den!));const tr=tier(actual,kpi.rule);return {key:`fm-${i}`,label:labels[i],actual:pct(actual),target:pct(kpi.rule.tier1)!,targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,tier:tierLabel(tr),weight:kpi.weight,score:positiveScore(tr,kpi.weight)}});
+  return FM_POSITIVE.map((kpi,i)=>{const labels=['SDOB 10 PM','SDOB 00 AM','SDOB 02 AM','N0 Pickup Attempt','N0 Pickup Success','Lost Rate','FAS Retur','Scanning Compliance','HD Completion','TMT RTS'];const denominator=kpi.calc?0:sum(items,kpi.den!);const actual=kpi.calc?kpi.calc(items):i===8&&denominator===0?1:ratio(sum(items,kpi.num!),denominator);const tr=tier(actual,kpi.rule);return {key:`fm-${i}`,label:labels[i],actual:pct(actual),target:pct(kpi.rule.tier1)!,targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,tier:tierLabel(tr),weight:kpi.weight,score:positiveScore(tr,kpi.weight)}});
 }
 function mmDetails(items:Row[]):KpiDetail[]{
   const labels=['SDOB 04','SDOB 06','SDOB 10','Inbound Lead Time','Scanning Compliance','Lost Rate','CC Rate','HD Completion'];
@@ -207,16 +217,18 @@ function mmScore(items:Row[]){
 
 function fmScore(items:Row[]){
   if(!items.length) return null;
-  return FM_POSITIVE.reduce((total,kpi)=>{
-    const actual=kpi.calc?kpi.calc(items):ratio(sum(items,kpi.num!),sum(items,kpi.den!));
+  return FM_POSITIVE.reduce((total,kpi,index)=>{
+    const denominator=kpi.calc?0:sum(items,kpi.den!);
+    const actual=kpi.calc?kpi.calc(items):index===8&&denominator===0?1:ratio(sum(items,kpi.num!),denominator);
     return total+positiveScore(tier(actual,kpi.rule),kpi.weight);
   },0);
 }
 
 function lmScore(items:Row[]){
   if(!items.length) return null;
-  return LM_POSITIVE.reduce((total,kpi)=>{
-    const actual=ratio(sum(items,kpi.num),sum(items,kpi.den));
+  return LM_POSITIVE.reduce((total,kpi,index)=>{
+    const denominator=sum(items,kpi.den);
+    const actual=index===4&&denominator===0?1:ratio(sum(items,kpi.num),denominator);
     return total+positiveScore(tier(actual,kpi.rule),kpi.weight);
   },0);
 }
