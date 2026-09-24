@@ -15,6 +15,13 @@
       "id": "1e2c1951865949b1b4d507ad019397a3"
     }
   ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "kpi-centraljava-diy-db",
+      "database_id": "fac094e0-e57f-421a-bb43-489db283e32e"
+    }
+  ],
   "vars": {
     "SHEET_ID": "1knhNraKDgmu7JfiPDZIjEU1sstiQNY0i9mYABaY-oJQ"
   }
