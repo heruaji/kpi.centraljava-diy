@@ -908,3 +908,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .combo-legend span{color:#94a3b8}
 .theme-dark .combo-legend i.actual{background:#e2e8f0}
 .theme-dark .combo-legend i.actual:after{background:#e2e8f0}
+
+
+/* Productivity chart hover summary */
+.combo-day,.combo-hover-zone{cursor:crosshair}
+.combo-tooltip-fo{opacity:0;pointer-events:none;transition:opacity .12s ease}
+.combo-tooltip{box-sizing:border-box;width:180px;padding:9px 10px;border-radius:8px;background:rgba(15,23,42,.96);border:1px solid rgba(148,163,184,.24);box-shadow:0 10px 28px rgba(0,0,0,.28);color:#e2e8f0;font:500 9px/1.35 'Plus Jakarta Sans',Inter,sans-serif}
+.combo-tooltip strong{display:block;margin-bottom:6px;color:#fff;font-size:10px}
+.combo-tooltip span{display:grid;grid-template-columns:8px 1fr auto;align-items:center;gap:5px;margin-top:3px;color:#94a3b8}
+.combo-tooltip b{color:#f8fafc;font-weight:700}
+.combo-tooltip i{width:6px;height:6px;border-radius:50%}
+.combo-tooltip i.volume{background:#4f9f63}.combo-tooltip i.manpower{background:#ff8a34}.combo-tooltip i.productivity{background:#e2e8f0}.combo-tooltip i.target{background:#ff4d5a}
+.combo-hover-zone:hover~.combo-tooltip-fo,.combo-hover-zone:focus~.combo-tooltip-fo{opacity:1}
+.combo-tooltip-fo:has(+ .combo-hover-zone:hover),.combo-tooltip-fo:has(+ .combo-hover-zone:focus){opacity:1}
+.theme-light .combo-tooltip{background:rgba(255,255,255,.98);border-color:#dfe3e8;color:#111827;box-shadow:0 10px 28px rgba(15,23,42,.14)}
+.theme-light .combo-tooltip strong,.theme-light .combo-tooltip b{color:#111827}.theme-light .combo-tooltip span{color:#64748b}
