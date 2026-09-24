@@ -851,3 +851,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* ===== PRODUCTIVITY: movement filters ===== */
 .productivity-movement-filter{max-width:138px}.productivity-branch-tools .productivity-movement-filter{margin-left:auto}.productivity-branch-tools .productivity-movement-filter+.productivity-sort{margin-left:0}@media(max-width:720px){.productivity-movement-filter{max-width:132px}.productivity-panel-tools{flex-wrap:wrap}.productivity-branch-tools .productivity-movement-filter{margin-left:0}}
+
+
+/* ===== PRODUCTIVITY: primary detail cards ===== */
+.productivity-gerai-detail>.productivity-detail-cards .metric-card{min-height:122px!important;padding:16px!important}.productivity-gerai-detail>.productivity-detail-cards .metric-card>span{font-size:9px!important}.productivity-gerai-detail>.productivity-detail-cards .metric-card>strong{font-size:26px!important;line-height:1.05!important;margin-top:12px!important}.productivity-gerai-detail>.productivity-detail-cards .productivity-card-context{margin-top:auto!important;padding-top:14px!important}
