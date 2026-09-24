@@ -18,27 +18,13 @@ const FRESH_MS=5*60*1000;
 
 async function ensureDb(env:Env){
   if(!env.DB) return;
-  await env.DB.exec(`CREATE TABLE IF NOT EXISTS dashboard_snapshots (
-    cache_key TEXT PRIMARY KEY,
-    period TEXT NOT NULL,
-    range_start TEXT,
-    range_end TEXT,
-    updated_at TEXT NOT NULL,
-    payload TEXT NOT NULL
-  );
-  CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at);
-  CREATE TABLE IF NOT EXISTS dashboard_sync_runs (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    cache_key TEXT NOT NULL,
-    period TEXT NOT NULL,
-    range_start TEXT,
-    range_end TEXT,
-    status TEXT NOT NULL,
-    started_at TEXT NOT NULL,
-    finished_at TEXT,
-    error TEXT
-  );
-  CREATE INDEX IF NOT EXISTS idx_dashboard_sync_runs_key ON dashboard_sync_runs(cache_key, started_at);`);
+  const statements=[
+    `CREATE TABLE IF NOT EXISTS dashboard_snapshots (cache_key TEXT PRIMARY KEY,period TEXT NOT NULL,range_start TEXT,range_end TEXT,updated_at TEXT NOT NULL,payload TEXT NOT NULL)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at)`,
+    `CREATE TABLE IF NOT EXISTS dashboard_sync_runs (id INTEGER PRIMARY KEY AUTOINCREMENT,cache_key TEXT NOT NULL,period TEXT NOT NULL,range_start TEXT,range_end TEXT,status TEXT NOT NULL,started_at TEXT NOT NULL,finished_at TEXT,error TEXT)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_sync_runs_key ON dashboard_sync_runs(cache_key, started_at)`
+  ];
+  await env.DB.batch(statements.map(sql=>env.DB!.prepare(sql)));
 }
 async function readDbSnapshot(env:Env,key:string):Promise<Snapshot|null>{
   if(!env.DB) return null;
@@ -114,8 +100,10 @@ export default {
       if((start||end)&&(!validDate(start)||!validDate(end)||start!>end!)) return json({ok:false,error:'Custom range tidak valid'},400,origin);
       const key=cacheKey(preset||undefined,start,end);
       const force=url.searchParams.get('refresh')==='1';
-      const kvSnapshot=await readSnapshot(env,key);
-      const dbSnapshot=kvSnapshot?null:await readDbSnapshot(env,key);
+      let kvSnapshot:Snapshot|null=null;
+      let dbSnapshot:Snapshot|null=null;
+      try{kvSnapshot=await readSnapshot(env,key)}catch{}
+      if(!kvSnapshot){try{dbSnapshot=await readDbSnapshot(env,key)}catch{}}
       const snapshot=kvSnapshot??dbSnapshot;
       if(dbSnapshot && env.DASHBOARD_CACHE) ctx.waitUntil(saveSnapshot(env,key,dbSnapshot.data));
       const fresh=snapshot && Date.now()-Date.parse(snapshot.updatedAt)<FRESH_MS;
