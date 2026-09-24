@@ -1009,3 +1009,20 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   .productivity-combo-scroll,.table-wrap{overscroll-behavior-inline:contain}
   .drivers-daily-table{max-height:420px;overflow:auto}
 }
+
+
+/* Final audit: unified scroll-table behavior */
+.productivity-daily-table,.sla-daily-table,.kpi-matrix-wrap,.drivers-daily-table{position:relative}
+.productivity-daily-table thead th,.sla-daily-table thead th,.kpi-matrix-wrap thead th,.drivers-daily-table thead th{
+  position:sticky!important;top:0!important;z-index:6!important;
+  background:var(--ct-card2)!important;box-shadow:0 1px 0 var(--ct-border)
+}
+.theme-light .productivity-daily-table thead th,.theme-light .sla-daily-table thead th,.theme-light .kpi-matrix-wrap thead th,.theme-light .drivers-daily-table thead th{background:#f8fafc!important}
+.theme-dark .productivity-daily-table thead th,.theme-dark .sla-daily-table thead th,.theme-dark .kpi-matrix-wrap thead th,.theme-dark .drivers-daily-table thead th{background:#172231!important}
+
+/* Final audit: preserve one page scroll on mobile; only intentional data tables scroll internally */
+@media(max-width:760px){
+  .productivity-daily-table,.sla-daily-table,.kpi-matrix-wrap{height:auto!important;max-height:none!important;overflow-y:visible!important}
+  .drivers-daily-table{height:auto!important;max-height:420px!important;overflow-y:auto!important}
+  .productivity-daily-table,.sla-daily-table,.kpi-matrix-wrap,.drivers-daily-table{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
+}
