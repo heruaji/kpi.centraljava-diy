@@ -11,7 +11,8 @@ export interface Env {
 }
 const json=(body:unknown,status=200,origin='*',extra:Record<string,string>={})=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':origin,...extra}});
 const CACHE_VERSION='v3-native-sheet-lookup';
-const cacheKey=(preset?:string,start?:string|null,end?:string|null)=>`${CACHE_VERSION}:region:${preset||'MTD'}:${start||''}:${end||''}`;
+const LEGACY_CACHE_VERSION='v2-native-area';
+const cacheKey=(preset?:string,start?:string|null,end?:string|null,version=CACHE_VERSION)=>`${version}:region:${preset||'MTD'}:${start||''}:${end||''}`;
 const SNAPSHOT_TTL=60*60*24*7;
 const FRESH_MS=5*60*1000;
 
@@ -120,7 +121,15 @@ export default {
       let dbSnapshot:Snapshot|null=null;
       try{kvSnapshot=await readSnapshot(env,key)}catch{}
       if(!kvSnapshot){try{dbSnapshot=await readDbSnapshot(env,key)}catch{}}
-      const snapshot=kvSnapshot??dbSnapshot;
+      let snapshot=kvSnapshot??dbSnapshot;
+      // A cache-version bump must not force the browser to wait for a heavy
+      // Google Sheets rebuild. Reuse the previous last-good snapshot while v3
+      // is rebuilt in the background.
+      if(!snapshot && !force){
+        const legacyKey=cacheKey(preset||undefined,start,end,LEGACY_CACHE_VERSION);
+        try{snapshot=await readSnapshot(env,legacyKey)}catch{}
+        if(!snapshot){try{snapshot=await readDbSnapshot(env,legacyKey)}catch{}}
+      }
       if(dbSnapshot && env.DASHBOARD_CACHE) ctx.waitUntil(saveSnapshot(env,key,dbSnapshot.data));
       const fresh=snapshot && Date.now()-Date.parse(snapshot.updatedAt)<FRESH_MS;
       if(snapshot && fresh && !force) return json(snapshot.data,200,origin,{'x-dashboard-cache':'HIT','x-dashboard-updated-at':snapshot.updatedAt});
