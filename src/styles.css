@@ -1141,3 +1141,8 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .control-module-links small{display:block;margin-top:4px;font-size:9px;color:var(--ct-muted)}
 @media(max-width:900px){.control-module-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.control-module-links{grid-template-columns:1fr}}
+
+/* Control Tower detail polish */
+[data-theme="dark"] .branch-count{color:var(--ct-text)!important;background:var(--ct-card2)!important;border:1px solid var(--ct-border)!important}
+.control-detail-table.kpi-points-matrix th:nth-child(2){background:var(--ct-card2)!important;text-align:center!important}
+.control-detail-table.kpi-points-matrix td:nth-child(2){background:var(--ct-card)!important;text-align:left!important}
