@@ -988,3 +988,11 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-light .driver-mini-trend{background:#fff}
 .theme-dark .driver-mini-trend{background:#111b29}
 @media(max-width:720px){.driver-mini-trends{grid-template-columns:1fr}}
+
+
+/* Performance Drivers daily bar values */
+.driver-mini-col{overflow:visible}
+.driver-mini-bar-wrap{position:relative;display:flex;align-items:center;justify-content:flex-end;flex-direction:column;width:100%;height:calc(100% - 12px)}
+.driver-mini-bar-wrap i{display:block;width:70%;min-height:3px;border-radius:3px 3px 1px 1px;background:#4f9f63;opacity:.9}
+.driver-mini-bar-wrap b{position:absolute;bottom:calc(var(--bar-height,0%) + 2px);left:50%;transform:translateX(-50%);font-size:6.5px;line-height:1;color:var(--ui-muted);font-weight:700;white-space:nowrap;pointer-events:none}
+.driver-mini-col:hover .driver-mini-bar-wrap b{color:var(--ui-text)}
