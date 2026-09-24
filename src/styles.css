@@ -1072,3 +1072,8 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* Keep the 95% Excellent threshold visually below the 100% chart ceiling. */
 .kpi-category-line.kpi-category-excellent span{top:3px}
+
+/* KPI thresholds must use the same drawable plot bounds as the bars (not the full chart box). */
+.kpi-category-plot>.kpi-category-scale{position:absolute!important;left:0!important;right:0!important;top:24px!important;bottom:26px!important;z-index:5!important;pointer-events:none!important}
+.kpi-category-scale>.kpi-category-line{position:absolute!important;left:0!important;right:0!important;height:0!important}
+.kpi-category-scale>.kpi-category-excellent span{top:3px!important}
