@@ -316,13 +316,18 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     };
   });
   const penalties={lm:lmPenalty(lmSelected),fm:fmPenalty(fmSelected),mm:mmPenalty(mmSelected)};
-  const districts=[...new Set(sto.map(r=>String(r.District||'')).filter(Boolean))].sort();
+  const districts=[...new Set([
+    ...dated.map(r=>String(r.District||'').trim()),
+    ...lmDated.map(r=>String(r.__area||'').trim()),
+    ...fmDated.map(r=>String(r.__area||'').trim()),
+    ...mmDated.map(r=>String(r.__area||'').trim())
+  ].filter(Boolean))].sort();
   const areas=districts.map((name,index)=>{
     const items=selected.filter(r=>String(r.District||'')===name);
     const previousItems=previousSelected.filter(r=>String(r.District||'')===name);
-    const lmItems=lmSelected.filter(r=>String(r['District Area']||'')===name);
+    const lmItems=lmSelected.filter(r=>String(r.__area||'')===name);
     const fmItems=fmSelected.filter(r=>String(r.__area||'')===name);
-    const lmPreviousItems=lmPreviousSelected.filter(r=>String(r['District Area']||'')===name);
+    const lmPreviousItems=lmPreviousSelected.filter(r=>String(r.__area||'')===name);
     const fmPreviousItems=fmPreviousSelected.filter(r=>String(r.__area||'')===name);
     const mmItems=mmSelected.filter(r=>String(r.__area||'')===name);
     const mmPreviousItems=mmPreviousSelected.filter(r=>String(r.__area||'')===name);
