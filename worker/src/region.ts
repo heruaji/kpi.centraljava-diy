@@ -242,12 +242,6 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   const fm=await readSheet(env,'KPI FM','A:AO');
   const mm=await readSheet(env,'KPI MM','A:AJ');
   const dated=sla.map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
-  const stoAreaByHub=new Map<string,string>();
-  for(const r of sto){
-    const area=String(r.District||'').trim();
-    const names=[r['Nama Cabang/Gerai'],r.Nama].map(v=>String(v||'').trim()).filter(Boolean);
-    for(const name of names){stoAreaByHub.set(name,area);stoAreaByHub.set(name.replace(/^\d+\s*-\s*/,''),area)}
-  }
   const lmDated=lm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
   const fmDated=fm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
   // KPI MM does not carry the same area key as SLA. Resolve its hub/sortation
@@ -342,7 +336,9 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const key=`${fn}|${normHub(clean)}`;
       if(!nativeBranches.has(key)) nativeBranches.set(key,{name:clean,function:fn,code:'',city:'—'});
     };
-    // LM/FM branch membership comes only from the corresponding KPI source.
+    // SLA / KPI LM / KPI FM resolve Area and Gerai from their own native columns.
+    // STO must not determine membership for these three sources.
+    items.forEach(r=>addNative(String(r.Nama_Hub||'').trim(),String(r.Mile||'').trim().toUpperCase()||'LM'));
     lmItems.forEach(r=>addNative(String(r.__branch||''),'LM'));
     fmItems.forEach(r=>addNative(String(r.__branch||''),'FM'));
     // MM has no native Area column, so only MM keeps STO as its area/branch master.
