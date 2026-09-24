@@ -1,4 +1,5 @@
-import { buildRegionDashboard } from './region';
+import { buildRegionDashboard, buildRegionDashboardFromSources } from './region';
+import type { Row } from './data-source';
 import { readSheet } from './data-source';
 import type { PeriodPreset } from './period';
 
@@ -19,6 +20,7 @@ const FRESH_MS=5*60*1000;
 
 const SOURCE_SEGMENTS={
   SLA:{sheet:'SLA',range:'A:AC'},
+  STO:{sheet:'STO',range:'A:I'},
   LM:{sheet:'KPI LM',range:'A:AQ'},
   FM:{sheet:'KPI FM',range:'A:AO'},
   MM:{sheet:'KPI MM',range:'A:AJ'},
@@ -106,6 +108,20 @@ async function saveSnapshot(env:Env,key:string,data:unknown){
   await env.DASHBOARD_CACHE.put(key,JSON.stringify({updatedAt:new Date().toISOString(),data}),{expirationTtl:SNAPSHOT_TTL});
 }
 
+async function readD1Source(env:Env,source:SourceSegment):Promise<Row[]>{
+  if(!env.DB) return [];
+  await ensureSourceDb(env);
+  const result=await env.DB.prepare('SELECT row_json FROM source_rows WHERE source=? ORDER BY row_no').bind(source).all<{row_json:string}>();
+  return (result.results||[]).map(r=>{try{return JSON.parse(r.row_json) as Row}catch{return {}}}).filter(r=>Object.keys(r).length);
+}
+async function d1SourcesReady(env:Env){
+  if(!env.DB) return false;
+  await ensureSourceDb(env);
+  const result=await env.DB.prepare("SELECT source,status FROM source_sync_state WHERE source IN ('SLA','STO','LM','FM','MM')").all<{source:string;status:string}>();
+  const ready=new Set((result.results||[]).filter(r=>r.status==='READY').map(r=>r.source));
+  return ['SLA','STO','LM','FM','MM'].every(x=>ready.has(x));
+}
+
 async function rebuildAndPersist(env:Env,key:string,period:string,start:string|null,end:string|null){
   await ensureDb(env);
   let runId:number|undefined;
@@ -115,7 +131,15 @@ async function rebuildAndPersist(env:Env,key:string,period:string,start:string|n
     runId=Number(run.meta.last_row_id);
   }
   try{
-    const data=await buildRegionDashboard(env,period as PeriodPreset,start&&end?{start,end}:undefined);
+    let data:unknown;
+    if(await d1SourcesReady(env)){
+      const [sla,sto,lm,fm,mm]=await Promise.all([
+        readD1Source(env,'SLA'),readD1Source(env,'STO'),readD1Source(env,'LM'),readD1Source(env,'FM'),readD1Source(env,'MM')
+      ]);
+      data=await buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},period as PeriodPreset,start&&end?{start,end}:undefined);
+    }else{
+      data=await buildRegionDashboard(env,period as PeriodPreset,start&&end?{start,end}:undefined);
+    }
     await saveDbSnapshot(env,key,period,start,end,data);
     await saveSnapshot(env,key,data);
     if(env.DB&&runId) await env.DB.prepare('UPDATE dashboard_sync_runs SET status=?, finished_at=? WHERE id=?').bind('READY',new Date().toISOString(),runId).run();
@@ -140,7 +164,7 @@ export default {
       if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
       if(env.SYNC_TOKEN && request.headers.get('authorization')!==`Bearer ${env.SYNC_TOKEN}`) return json({ok:false,error:'Unauthorized'},401,origin);
       const source=String(url.searchParams.get('source')||'').toUpperCase() as SourceSegment;
-      if(!(source in SOURCE_SEGMENTS)) return json({ok:false,error:'source harus SLA, LM, FM, atau MM'},400,origin);
+      if(!(source in SOURCE_SEGMENTS)) return json({ok:false,error:'source harus SLA, STO, LM, FM, atau MM'},400,origin);
       ctx.waitUntil(syncSourceSegment(env,source).catch(()=>undefined));
       return json({ok:true,status:'SYNC_STARTED',source},202,origin);
     }
