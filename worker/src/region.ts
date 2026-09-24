@@ -51,11 +51,24 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 ];
 
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
-const normHub=(v:unknown)=>String(v||'').trim().toLowerCase().replace(/^t?\d+\s*-\s*/,'');
-const matchesBranch=(r:Row,name:string,_code:string)=>{
-  const granular=normHub(r.GRANULAR_AREA);
+const normHub=(v:unknown)=>String(v||'')
+  .trim().toLowerCase()
+  .replace(/^t?\d+\s*-\s*/,'')
+  .replace(/\b(branch|cabang|gerai|hub|lm|fm|mm)\b/g,' ')
+  .replace(/[^a-z0-9]+/g,' ')
+  .trim();
+const matchesBranch=(r:Row,name:string,code:string)=>{
+  const granular=normHub(r.GRANULAR_AREA ?? r['Hub Name'] ?? r['Nama Hub']);
   const target=normHub(name);
-  return Boolean(granular&&target&&granular===target);
+  const sourceCode=String(r['Kode Analytic'] ?? r['Analytic Code'] ?? r.CODE ?? '').trim().toLowerCase();
+  const targetCode=String(code||'').trim().toLowerCase();
+  if(sourceCode&&targetCode&&sourceCode===targetCode) return true;
+  if(!granular||!target) return false;
+  if(granular===target) return true;
+  // Sheet KPI and STO frequently differ only by operational prefixes/suffixes.
+  // Accept the same normalized hub name without weakening short-name matching.
+  return Math.min(granular.length,target.length)>=5 &&
+    (granular.startsWith(target+' ')||target.startsWith(granular+' '));
 };
 type KpiDetail={key:string;label:string;actual:number|null;target:number;targetLabel:string;tier:string;weight:number;score:number};
 const tierLabel=(v:ReturnType<typeof tier>)=>v??'—';
