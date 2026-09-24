@@ -820,3 +820,14 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 
 .productivity-delta{display:inline-flex;align-items:center;font-size:8px;font-weight:750;font-variant-numeric:tabular-nums}.productivity-delta.good{color:#10b981}.productivity-delta.review{color:#ef4444}.productivity-delta.neutral{color:var(--ct-muted)}.productivity-previous{display:block;margin-top:3px;font-size:7px;color:var(--ct-muted)}
+
+
+/* ===== DARK MODE: global text contrast audit ===== */
+.theme-dark .content,.theme-dark .panel,.theme-dark .module-intro,.theme-dark table,.theme-dark tbody td{color:var(--ct-text)!important}
+.theme-dark .page-subtitle,.theme-dark .panel-title small,.theme-dark .module-intro small,.theme-dark .productivity-detail-head small,.theme-dark .metric-card small{color:#b7c5d3!important}
+.theme-dark .productivity-detail-head>div>span,.theme-dark .productivity-area-panel .panel-title>div>span,.theme-dark .productivity-branch-panel .panel-title>div>span{color:#cbd5e1!important}
+.theme-dark .back-scope{background:#172839!important;border-color:#3a5165!important;color:#e5edf5!important}
+.theme-dark .back-scope:hover{background:#203548!important;border-color:#60778b!important;color:#fff!important}
+.theme-dark .productivity-area-table tbody td,.theme-dark .productivity-branch-table tbody td,.theme-dark .productivity-daily-table tbody td{color:#edf3f8!important}
+.theme-dark .productivity-area-table tbody strong,.theme-dark .productivity-branch-table tbody strong,.theme-dark .productivity-daily-table tbody strong{color:#fff!important}
+.theme-dark .productivity-delta.neutral{color:#aebdcb!important}
