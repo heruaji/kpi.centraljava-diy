@@ -950,3 +950,9 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .drivers-daily-table td:nth-child(n+2),.drivers-daily-table th:nth-child(n+2){text-align:right;font-variant-numeric:tabular-nums}
 @media(max-width:900px){.drivers-metric-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:600px){.drivers-tools{align-items:stretch;flex-direction:column}.drivers-tools .table-search{min-width:0;width:100%}.drivers-metric-grid{grid-template-columns:1fr 1fr}.drivers-daily-table{min-width:650px}}
+
+
+/* Performance Drivers table alignment */
+.drivers-area-table th,.drivers-area-table td,
+.drivers-daily-table th,.drivers-daily-table td{text-align:center!important}
+.drivers-area-table th:nth-child(2),.drivers-area-table td:nth-child(2){text-align:left!important}
