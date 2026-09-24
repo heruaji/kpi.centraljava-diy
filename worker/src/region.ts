@@ -53,7 +53,7 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
 const normHub=(v:unknown)=>String(v||'').trim().toLowerCase().replace(/^t?\d+\s*-\s*/,'');
 const matchesBranch=(r:Row,name:string,code:string)=>{
-  const candidates=[r['Hub Name'],r['Nama Hub'],r.GRANULAR_AREA,r['Sortation Name']].map(normHub).filter(Boolean);
+  const candidates=[r.Nama_Hub,r['Hub Name'],r['Nama Hub'],r['Sortation Name']].map(normHub).filter(Boolean);
   const target=normHub(name);
   const codeKey=String(code||'').toLowerCase();
   return candidates.some(v=>v===target||v.includes(target)||target.includes(v)||(codeKey&&String(r['Hub Name']||r['Nama Hub']||r['Sortation Name']||'').toLowerCase().includes(codeKey)));
@@ -248,12 +248,8 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     const names=[r['Nama Cabang/Gerai'],r.Nama].map(v=>String(v||'').trim()).filter(Boolean);
     for(const name of names){stoAreaByHub.set(name,area);stoAreaByHub.set(name.replace(/^\d+\s*-\s*/,''),area)}
   }
-  const lmDated=lm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE)})).filter(r=>r.__date);
-  const fmDated=fm.map(r=>{
-    const hub=String(r['Hub Name']||r['Nama Hub']||'').trim();
-    const area=String(r['District Area']||'').trim()||stoAreaByHub.get(hub)||stoAreaByHub.get(hub.replace(/^\d+\s*-\s*/,''))||'';
-    return {...r,__date:excelDate(r.GRANULAR_DATE),__area:area};
-  }).filter(r=>r.__date);
+  const lmDated=lm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
+  const fmDated=fm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
   // KPI MM does not carry the same area key as SLA. Resolve its hub/sortation
   // against STO, then use the STO District as the dashboard area.
   const resolveStoArea=(row:Row)=>{
