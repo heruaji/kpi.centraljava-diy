@@ -97,9 +97,22 @@ function fmDailyDetails(items:Row[]):KpiDetailDaily[]{
     return {key:`fm-${i}`,label:labels[i],targetLabel,daily};
   });
 }
+function mmActual(items:Row[],kpi:(typeof MM_POSITIVE)[number],index:number){
+  const denominator=sum(items,kpi.den);
+  // MM HD Completion: no complaint/ticket means there is nothing outstanding,
+  // therefore performance is treated as fully compliant (100%).
+  if(index===7 && denominator===0) return 1;
+  return ratio(sum(items,kpi.num),denominator);
+}
 function mmDailyDetails(items:Row[]):KpiDetailDaily[]{
   const labels=['SDOB 04','SDOB 06','SDOB 10','Inbound Lead Time','Scanning Compliance','Lost Rate','CC Rate','HD Completion'];
-  return MM_POSITIVE.map((kpi,i)=>({key:`mm-${i}`,label:labels[i],targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,daily:dailyRatio(items,kpi.num,kpi.den,kpi.rule,`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`)}));
+  return MM_POSITIVE.map((kpi,i)=>{
+    const targetLabel=`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`;
+    if(i!==7) return {key:`mm-${i}`,label:labels[i],targetLabel,daily:dailyRatio(items,kpi.num,kpi.den,kpi.rule,targetLabel)};
+    const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
+    const daily=dates.map(date=>{const day=items.filter(r=>r.__date===date);const numerator=sum(day,kpi.num);const denominator=sum(day,kpi.den);const raw=mmActual(day,kpi,i);return {date,numerator,denominator,actual:pct(raw),target:pct(kpi.rule.tier1)!,targetLabel,gap:raw===null?null:pct(raw-kpi.rule.tier1),tier:tierLabel(tier(raw,kpi.rule))}});
+    return {key:`mm-${i}`,label:labels[i],targetLabel,daily};
+  });
 }
 
 function lmDetails(items:Row[]):KpiDetail[]{
@@ -121,7 +134,7 @@ function fmDetails(items:Row[]):KpiDetail[]{
 }
 function mmDetails(items:Row[]):KpiDetail[]{
   const labels=['SDOB 04','SDOB 06','SDOB 10','Inbound Lead Time','Scanning Compliance','Lost Rate','CC Rate','HD Completion'];
-  return MM_POSITIVE.map((kpi,i)=>{const actual=ratio(sum(items,kpi.num),sum(items,kpi.den));const tr=tier(actual,kpi.rule);return {key:`mm-${i}`,label:labels[i],actual:pct(actual),target:pct(kpi.rule.tier1)!,targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,tier:tierLabel(tr),weight:kpi.weight,score:positiveScore(tr,kpi.weight)}});
+  return MM_POSITIVE.map((kpi,i)=>{const actual=mmActual(items,kpi,i);const tr=tier(actual,kpi.rule);return {key:`mm-${i}`,label:labels[i],actual:pct(actual),target:pct(kpi.rule.tier1)!,targetLabel:`${kpi.rule.direction==='HIGHER'?'≥':'≤'}${pct(kpi.rule.tier1)}%`,tier:tierLabel(tr),weight:kpi.weight,score:positiveScore(tr,kpi.weight)}});
 }
 
 type PenaltyDetail={key:string;label:string;actual:number|null;targetLabel:string;tier:string;maxPenalty:number;penalty:number};
@@ -186,8 +199,8 @@ function mmPenalty(items:Row[]){
 
 function mmScore(items:Row[]){
   if(!items.length) return null;
-  return MM_POSITIVE.reduce((total,kpi)=>{
-    const actual=ratio(sum(items,kpi.num),sum(items,kpi.den));
+  return MM_POSITIVE.reduce((total,kpi,index)=>{
+    const actual=mmActual(items,kpi,index);
     return total+positiveScore(tier(actual,kpi.rule),kpi.weight);
   },0);
 }
