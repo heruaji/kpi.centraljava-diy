@@ -325,6 +325,18 @@ export default function App() {
       area: () => { setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); }
     };
   })();
+  const openControlTowerModule = (kind:'SLA'|'LM'|'FM'|'MM',areaId:string,branchId?:string|null) => {
+    // Control Tower is only the entry point. Reuse the dedicated module/drilldown.
+    setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); setSelectedAreaId(null);
+    if(kind==='SLA'){
+      setActiveModule('sla'); setSlaAreaId(areaId); setSlaBranchDetailId(branchId??null);
+      setKpiAreaId(null); setKpiBranchDetailId(null); setKpiDailyDate(null);
+    }else{
+      setActiveModule('kpi'); setKpiFunction(kind); setKpiAreaId(areaId); setKpiBranchDetailId(branchId??null); setKpiDailyDate(null);
+      setSlaAreaId(null); setSlaBranchDetailId(null);
+    }
+    setMobileOpen(false);
+  };
   const territoryClose = () => setMobileOpen(false);
 
   return (
@@ -478,8 +490,8 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
             </article>}
             {!selectedArea && !selectedBranch && <article className="panel full area-comparison"><div className="panel-title"><div><span>PERBANDINGAN KINERJA AREA</span><h3>Area Performance Comparison</h3><small>Daftar kinerja area di wilayah Central Java – DIY</small></div><div className="area-table-tools"><input className="table-search" type="search" placeholder="Cari area..." value={areaQuery} onChange={e=>setAreaQuery(e.target.value)}/><select className="table-sort" value={areaSort} onChange={e=>setAreaSort(e.target.value as typeof areaSort)}><option value="name">Nama Area</option><option value="sla">SLA tertinggi</option><option value="lm">KPI LM tertinggi</option><option value="fm">KPI FM tertinggi</option><option value="mm">KPI MM tertinggi</option></select><span className="area-count">{filteredAreas.length} area</span></div></div><div className="table-wrap area-performance-table"><table><thead><tr><th>No</th><th>Nama Area</th><th>SLA (≥ 98%)</th><th>KPI Last Mile</th><th>KPI First Mile</th><th>KPI Middle Mile</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{filteredAreas.length ? filteredAreas.map((area,index) => (
                <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
-                 <td>{index+1}</td><td><strong>{area.name}</strong></td><td className={area.sla!=null&&area.sla>=98?'metric-good':''}>{fmtPercent(area.sla)}</td><td>{fmtPercent(area.kpiLm)}</td>
-                 <td>{fmtPercent(area.kpiFm)}</td><td>{fmtPercent(area.kpiMm)}</td>
+                 <td>{index+1}</td><td><strong>{area.name}</strong></td><td className={area.sla!=null&&area.sla>=98?'metric-good':''}><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('SLA',area.id)}}>{fmtPercent(area.sla)}</button></td><td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('LM',area.id)}}>{fmtPercent(area.kpiLm)}</button></td>
+                 <td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('FM',area.id)}}>{fmtPercent(area.kpiFm)}</button></td><td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('MM',area.id)}}>{fmtPercent(area.kpiMm)}</button></td>
                  <td>{fmtPercent(area.productivity)}</td><td><span className={`status-pill status-${area.status.toLowerCase()}`}>{area.status}</span></td>
                </tr>
              )) : <tr><td colSpan={8}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
@@ -521,10 +533,13 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
                 {selectedBranch.penaltyDetails?.length ? selectedBranch.penaltyDetails.map(item=><tr key={item.key}><td><strong>{item.label}</strong></td><td>{fmtPercent(item.actual)}</td><td>{item.targetLabel}</td><td><span className={`tier-badge tier-${item.tier.toLowerCase()}`}>{item.tier}</span></td><td>{item.maxPenalty}%</td><td><strong>{item.penalty.toFixed(1)}</strong></td></tr>) : <tr><td colSpan={6}>Penalty detail belum tersedia untuk unit ini.</td></tr>}
               </tbody></table></div>
             </article>}
-            {selectedArea && !selectedBranch && <article className="panel full branch-directory-panel"><div className="panel-title branch-directory-title"><div><span>BRANCH / GERAI</span><h3>Branch Directory</h3><small>Pilih unit untuk membuka Branch Command Center</small></div><div className="branch-directory-tools"><input className="table-search branch-search" type="search" placeholder="Cari branch / kode..." value={branchQuery} onChange={e=>setBranchQuery(e.target.value)}/><span className="branch-filter-label">Filter Fungsi</span><div className="branch-function-filter">{(['ALL','LM','FM','MM'] as const).map(fn=><button key={fn} className={branchFunctionFilter===fn?'active':''} onClick={()=>setBranchFunctionFilter(fn)}>{fn==='ALL'?'Semua':fn}</button>)}</div><span className="branch-count">{filteredBranches.length} unit</span></div></div>
-              <div className="table-wrap branch-directory-table"><table><thead><tr><th>Branch / Gerai</th><th>Fungsi</th><th>Aksi</th></tr></thead><tbody>
-                {filteredBranches.length ? filteredBranches.map(branch=><tr key={branch.id} className="clickable-row" onClick={()=>setSelectedBranchId(branch.id)}><td><strong>{branch.name}</strong></td><td><span className="branch-function-chip">{branch.function}</span></td><td><button className="detail-row-btn" onClick={(e)=>{e.stopPropagation();setSelectedBranchId(branch.id)}}>Detail →</button></td></tr>) : <tr><td colSpan={5}>Tidak ada unit {branchFunctionFilter==='ALL'?'':branchFunctionFilter} di area ini.</td></tr>}
-              </tbody></table></div>
+            {selectedArea && !selectedBranch && <article className="panel full branch-directory-panel"><div className="panel-title branch-directory-title"><div><span>DETAIL PERFORMANCE</span><h3>Buka Menu Performance</h3><small>Gunakan menu yang sudah tersedia agar detail SLA dan KPI tetap konsisten.</small></div></div>
+              <div className="control-module-links">
+                <button onClick={()=>openControlTowerModule('SLA',selectedArea.id)}><span>SLA</span><strong>SLA Performance</strong><small>Lihat SLA seluruh gerai di ${selectedArea.name}</small></button>
+                <button onClick={()=>openControlTowerModule('LM',selectedArea.id)}><span>LM</span><strong>KPI Last Mile</strong><small>Lihat KPI LM seluruh gerai di ${selectedArea.name}</small></button>
+                <button onClick={()=>openControlTowerModule('FM',selectedArea.id)}><span>FM</span><strong>KPI First Mile</strong><small>Lihat KPI FM seluruh gerai di ${selectedArea.name}</small></button>
+                <button onClick={()=>openControlTowerModule('MM',selectedArea.id)}><span>MM</span><strong>KPI Middle Mile</strong><small>Lihat KPI MM seluruh gerai di ${selectedArea.name}</small></button>
+              </div>
             </article>}
           </div>
           </div>
