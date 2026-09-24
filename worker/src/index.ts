@@ -7,11 +7,41 @@ export interface Env {
   GOOGLE_SERVICE_ACCOUNT_EMAIL?: string;
   GOOGLE_PRIVATE_KEY?: string;
   DASHBOARD_CACHE?: KVNamespace;
+  DB?: D1Database;
 }
 const json=(body:unknown,status=200,origin='*',extra:Record<string,string>={})=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':origin,...extra}});
 const cacheKey=(preset?:string,start?:string|null,end?:string|null)=>`region:${preset||'MTD'}:${start||''}:${end||''}`;
 const SNAPSHOT_TTL=60*60*24*7;
 const FRESH_MS=5*60*1000;
+
+async function ensureDb(env:Env){
+  if(!env.DB) return;
+  await env.DB.exec(`CREATE TABLE IF NOT EXISTS dashboard_snapshots (
+    cache_key TEXT PRIMARY KEY,
+    period TEXT NOT NULL,
+    range_start TEXT,
+    range_end TEXT,
+    updated_at TEXT NOT NULL,
+    payload TEXT NOT NULL
+  );
+  CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at);`);
+}
+async function readDbSnapshot(env:Env,key:string):Promise<Snapshot|null>{
+  if(!env.DB) return null;
+  await ensureDb(env);
+  const row=await env.DB.prepare('SELECT updated_at, payload FROM dashboard_snapshots WHERE cache_key = ?').bind(key).first<{updated_at:string;payload:string}>();
+  if(!row) return null;
+  try{return {updatedAt:row.updated_at,data:JSON.parse(row.payload)}}catch{return null}
+}
+async function saveDbSnapshot(env:Env,key:string,period:string,start:string|null,end:string|null,data:unknown){
+  if(!env.DB) return;
+  await ensureDb(env);
+  const updatedAt=new Date().toISOString();
+  await env.DB.prepare(`INSERT INTO dashboard_snapshots(cache_key,period,range_start,range_end,updated_at,payload)
+    VALUES(?,?,?,?,?,?)
+    ON CONFLICT(cache_key) DO UPDATE SET period=excluded.period,range_start=excluded.range_start,range_end=excluded.range_end,updated_at=excluded.updated_at,payload=excluded.payload`)
+    .bind(key,period,start,end,updatedAt,JSON.stringify(data)).run();
+}
 
 type Snapshot={updatedAt:string;data:unknown};
 
@@ -28,7 +58,7 @@ export default {
   async fetch(request:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
     const url=new URL(request.url); const origin=env.ALLOWED_ORIGIN||'*';
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
-    if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE},200,origin);
+    if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE,d1:!!env.DB},200,origin);
     if(url.pathname==='/api/dashboard/region'){
       const preset=url.searchParams.get('period') as PeriodPreset|null;
       const start=url.searchParams.get('start'); const end=url.searchParams.get('end');
@@ -36,12 +66,16 @@ export default {
       if((start||end)&&(!validDate(start)||!validDate(end)||start!>end!)) return json({ok:false,error:'Custom range tidak valid'},400,origin);
       const key=cacheKey(preset||undefined,start,end);
       const force=url.searchParams.get('refresh')==='1';
-      const snapshot=await readSnapshot(env,key);
+      const kvSnapshot=await readSnapshot(env,key);
+      const dbSnapshot=kvSnapshot?null:await readDbSnapshot(env,key);
+      const snapshot=kvSnapshot??dbSnapshot;
+      if(dbSnapshot && env.DASHBOARD_CACHE) ctx.waitUntil(saveSnapshot(env,key,dbSnapshot.data));
       const fresh=snapshot && Date.now()-Date.parse(snapshot.updatedAt)<FRESH_MS;
       if(snapshot && fresh && !force) return json(snapshot.data,200,origin,{'x-dashboard-cache':'HIT','x-dashboard-updated-at':snapshot.updatedAt});
 
       const rebuild=async()=>{
         const data=await buildRegionDashboard(env,preset||undefined,start&&end?{start,end}:undefined);
+        await saveDbSnapshot(env,key,preset||'MTD',start,end,data);
         await saveSnapshot(env,key,data);
         return data;
       };
