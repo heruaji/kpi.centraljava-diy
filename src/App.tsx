@@ -63,20 +63,26 @@ export default function App() {
   const [branchQuery, setBranchQuery] = useState('');
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const refreshSeq = useRef(0);
-  const refreshDashboard = async (showLoading = false) => {
+  const refreshDashboard = async (showLoading = false, manual = false) => {
     const seq = ++refreshSeq.current;
     if (showLoading) setLoading(true);
-    setError(null);
+    if (manual) setRefreshing(true);
     try {
       const next = await getRegionDashboard(periodPreset, customRange ?? undefined);
-      if (seq === refreshSeq.current) setDashboard(next);
+      if (seq === refreshSeq.current) {
+        setDashboard(next);
+        setError(null);
+      }
     } catch (err) {
-      if (seq === refreshSeq.current) setError(err instanceof Error ? err.message : 'Gagal memuat dashboard');
+      // Keep the last successful dashboard visible when a background/manual refresh fails.
+      if (seq === refreshSeq.current && !dashboard) setError(err instanceof Error ? err.message : 'Gagal memuat dashboard');
     } finally {
       if (showLoading && seq === refreshSeq.current) setLoading(false);
+      if (manual) window.setTimeout(() => setRefreshing(false), 450);
     }
   };
 
@@ -277,7 +283,7 @@ export default function App() {
               {activeModule==='productivity'?<><div className="breadcrumb"><button>Productivity</button><span>/</span><strong>Region</strong></div><h1>Productivity</h1><p className="page-subtitle">Monitoring produktivitas Last Mile (LM) pada periode aktif</p></>:activeModule==='drivers'?<><div className="breadcrumb"><button>Performance Drivers</button><span>/</span><strong>Region</strong></div><h1>Performance Drivers</h1><p className="page-subtitle">Monitoring faktor operasional Last Mile pada periode aktif</p></>:activeModule==='kpi'?<><div className="breadcrumb"><button onClick={()=>{setKpiAreaId(null);setKpiBranchDetailId(null);setKpiDailyDate(null)}}>KPI Performance</button><span>/</span><button onClick={()=>{setKpiAreaId(null);setKpiBranchDetailId(null);setKpiDailyDate(null)}}>{kpiFunction}</button>{kpiSelectedArea&&<><span>/</span><button onClick={()=>{setKpiBranchDetailId(null);setKpiDailyDate(null)}}>{kpiSelectedArea.name}</button></>}{kpiSelectedBranch&&<><span>/</span><strong>{kpiSelectedBranch.name}</strong></>}</div><h1>{kpiSelectedBranch?'Detail KPI Gerai':kpiSelectedArea?'Area KPI Performance':'KPI Performance'}</h1><p className="page-subtitle">{kpiSelectedBranch?`Detail KPI ${kpiFunction} gerai pada periode aktif`:kpiSelectedArea?`Daftar gerai ${kpiFunction} dan performa KPI area terpilih`:`Monitoring KPI ${kpiFunction} dari region hingga area dan branch pada periode aktif`}</p></>:activeModule==='sla'?<><div className="breadcrumb"><button onClick={()=>{setSlaAreaId(null);setSlaBranchDetailId(null)}}>SLA Performance</button>{slaSelectedArea&&<><span>/</span><button onClick={()=>setSlaBranchDetailId(null)}>{slaSelectedArea.name}</button></>}{slaSelectedBranch&&<><span>/</span><strong>{slaSelectedBranch.name}</strong></>}</div><h1>{slaSelectedBranch?'Detail Gerai':slaSelectedArea?'Area SLA Performance':'SLA Performance'}</h1><p className="page-subtitle">{slaSelectedBranch?'Detail SLA harian gerai sesuai periode aktif':slaSelectedArea?'Pantau SLA seluruh gerai LM dalam area terpilih':'Pantau pencapaian SLA region, area, dan gerai'}</p></>:<><div className="breadcrumb"><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null)}}>Central Java - DIY</button><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null)}}>Region</button>{selectedArea&&<><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null)}}>{selectedArea.name}</button></>}{selectedBranch&&<><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null)}}>{selectedBranch.name}</button></>}{selectedKpi&&<><span>/</span><strong>{selectedKpi.label}</strong></>}</div><h1>{selectedKpi ? 'KPI Detail' : selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1><p className="page-subtitle">{selectedKpi ? 'Detail performa KPI berdasarkan periode aktif' : selectedBranch ? 'Pantau performa operasional dan KPI unit terpilih' : selectedArea ? 'Pantau performa seluruh branch dalam area' : 'Pantau kinerja seluruh wilayah dalam satu tampilan'}</p></>}
             </div>
           </div>
-          <div className="topbar-actions" onClick={e=>e.stopPropagation()}><button className="theme-toggle refresh-button" onClick={()=>void refreshDashboard(false)} disabled={loading} title="Refresh data sekarang"><RefreshCw size={15} className={loading?'spin':''}/><span>Refresh Data</span></button><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><div className="period-wrap">
+          <div className="topbar-actions" onClick={e=>e.stopPropagation()}><button className="theme-toggle refresh-button" onClick={()=>void refreshDashboard(false,true)} disabled={loading||refreshing} title="Refresh data sekarang"><RefreshCw size={15} className={refreshing?'refresh-spin':''}/><span>{refreshing?'Memperbarui...':'Refresh Data'}</span></button><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><div className="period-wrap">
             <button className={`period-button ${periodOpen?'open':''}`} aria-expanded={periodOpen} aria-haspopup="dialog" onClick={() => setPeriodOpen(v => !v)}>
               <CalendarDays size={17}/><span><small>Periode Aktif</small><strong>{periodLabel}</strong></span><ChevronDown size={14} className="period-chevron"/>
             </button>
