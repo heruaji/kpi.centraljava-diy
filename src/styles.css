@@ -1101,3 +1101,8 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-area-category-summary>.metric-card:first-child small{color:var(--ct-muted)!important}
 @media(max-width:1200px) and (min-width:761px){.kpi-area-category-summary{grid-template-columns:repeat(3,minmax(0,1fr))!important}}
 @media(max-width:760px){.kpi-area-category-summary{grid-template-columns:1fr!important}}
+
+/* Area KPI table: one gerai per row, all KPI functions as columns */
+.kpi-area-all-table table{min-width:760px!important}
+.kpi-area-all-table th:nth-child(n+3),.kpi-area-all-table td:nth-child(n+3){text-align:center!important}
+.kpi-area-all-table td:nth-child(n+3) .kpi-health-chip{display:inline-flex!important;margin-left:8px!important;vertical-align:middle!important}
