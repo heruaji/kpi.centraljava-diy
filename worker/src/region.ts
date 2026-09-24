@@ -52,11 +52,10 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
 const normHub=(v:unknown)=>String(v||'').trim().toLowerCase().replace(/^t?\d+\s*-\s*/,'');
-const matchesBranch=(r:Row,name:string,code:string)=>{
-  const candidates=[r['Hub Name'],r['Nama Hub'],r.GRANULAR_AREA,r['Sortation Name']].map(normHub).filter(Boolean);
+const matchesBranch=(r:Row,name:string,_code:string)=>{
+  const granular=normHub(r.GRANULAR_AREA);
   const target=normHub(name);
-  const codeKey=String(code||'').toLowerCase();
-  return candidates.some(v=>v===target||v.includes(target)||target.includes(v)||(codeKey&&String(r['Hub Name']||r['Nama Hub']||r['Sortation Name']||'').toLowerCase().includes(codeKey)));
+  return Boolean(granular&&target&&granular===target);
 };
 type KpiDetail={key:string;label:string;actual:number|null;target:number;targetLabel:string;tier:string;weight:number;score:number};
 const tierLabel=(v:ReturnType<typeof tier>)=>v??'—';
