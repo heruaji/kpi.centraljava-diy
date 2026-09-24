@@ -122,6 +122,22 @@ async function d1SourcesReady(env:Env){
   return ['SLA','STO','LM','FM','MM'].every(x=>ready.has(x));
 }
 
+const SYNC_ORDER:SourceSegment[]=['SLA','LM','FM','MM','STO'];
+async function syncAllSourcesSequentially(env:Env){
+  const results:{source:SourceSegment;status:string;rowCount?:number;error?:string}[]=[];
+  for(const source of SYNC_ORDER){
+    try{
+      const result=await syncSourceSegment(env,source);
+      results.push(result);
+    }catch(error){
+      results.push({source,status:'FAILED',error:error instanceof Error?error.message:'Unknown error'});
+      // Do not aggregate a mixed-generation dataset.
+      return {ok:false,results};
+    }
+  }
+  return {ok:true,results};
+}
+
 async function rebuildAndPersist(env:Env,key:string,period:string,start:string|null,end:string|null){
   await ensureDb(env);
   let runId:number|undefined;
@@ -138,7 +154,7 @@ async function rebuildAndPersist(env:Env,key:string,period:string,start:string|n
       ]);
       data=await buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},period as PeriodPreset,start&&end?{start,end}:undefined);
     }else{
-      data=await buildRegionDashboard(env,period as PeriodPreset,start&&end?{start,end}:undefined);
+      throw new Error('D1 source data belum READY. Jalankan backend source sync terlebih dahulu.');
     }
     await saveDbSnapshot(env,key,period,start,end,data);
     await saveSnapshot(env,key,data);
@@ -154,12 +170,25 @@ async function rebuildAndPersist(env:Env,key:string,period:string,start:string|n
 export default {
   async scheduled(_event:ScheduledEvent,env:Env,ctx:ExecutionContext){
     const period='MTD';
-    ctx.waitUntil(rebuildAndPersist(env,cacheKey(period,null,null),period,null,null).catch(()=>undefined));
+    ctx.waitUntil((async()=>{
+      const sync=await syncAllSourcesSequentially(env);
+      if(!sync.ok) return;
+      await rebuildAndPersist(env,cacheKey(period,null,null),period,null,null);
+    })().catch(()=>undefined));
   },
   async fetch(request:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
     const url=new URL(request.url); const origin=env.ALLOWED_ORIGIN||'*';
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
     if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE,d1:!!env.DB,cacheVersion:CACHE_VERSION},200,origin);
+    if(url.pathname==='/api/sync/all'){
+      if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
+      if(env.SYNC_TOKEN && request.headers.get('authorization')!==`Bearer ${env.SYNC_TOKEN}`) return json({ok:false,error:'Unauthorized'},401,origin);
+      ctx.waitUntil((async()=>{
+        const sync=await syncAllSourcesSequentially(env);
+        if(sync.ok) await rebuildAndPersist(env,cacheKey('MTD',null,null),'MTD',null,null);
+      })().catch(()=>undefined));
+      return json({ok:true,status:'FULL_SYNC_STARTED',order:SYNC_ORDER},202,origin);
+    }
     if(url.pathname==='/api/sync/source'){
       if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
       if(env.SYNC_TOKEN && request.headers.get('authorization')!==`Bearer ${env.SYNC_TOKEN}`) return json({ok:false,error:'Unauthorized'},401,origin);
