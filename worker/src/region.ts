@@ -229,7 +229,12 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     const area=String(r['District Area']||'').trim()||stoAreaByHub.get(hub)||stoAreaByHub.get(hub.replace(/^\d+\s*-\s*/,''))||'';
     return {...r,__date:excelDate(r.GRANULAR_DATE),__area:area};
   }).filter(r=>r.__date);
-  const mmDated=mm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE)})).filter(r=>r.__date);
+  const mmDated=mm.map(r=>{
+    const hub=String(r['Hub Name']||r['Nama Hub']||r.HUB_NAME||r.HUB||'').trim();
+    const explicitArea=String(r['District Area']||r.District||r.AREA||r['Area Name']||'').trim();
+    const area=explicitArea||stoAreaByHub.get(hub)||stoAreaByHub.get(hub.replace(/^\d+\s*-\s*/,''))||'';
+    return {...r,__date:excelDate(r.GRANULAR_DATE),__area:area};
+  }).filter(r=>r.__date);
   const maxDate=dated.map(r=>r.__date as string).sort().at(-1) || null;
   const lmMaxDate=lmDated.map(r=>r.__date as string).sort().at(-1) || null;
   const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
@@ -258,7 +263,6 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   const overall=aggregate(selected);
   const overallLm=lmScore(lmSelected);
   const overallFm=fmScore(fmSelected);
-  // Baseline v1 intentionally follows current Result MM behavior: positive MM score is regional/global.
   const overallMm=mmScore(mmSelected);
   const dayKeys=[...new Set(selected.map(r=>r.__date as string))].sort();
   const trend=dayKeys.map(date=>{
@@ -283,10 +287,13 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     const fmItems=fmSelected.filter(r=>String(r.__area||'')===name);
     const lmPreviousItems=lmPreviousSelected.filter(r=>String(r['District Area']||'')===name);
     const fmPreviousItems=fmPreviousSelected.filter(r=>String(r.__area||'')===name);
+    const mmItems=mmSelected.filter(r=>String(r.__area||'')===name);
+    const mmPreviousItems=mmPreviousSelected.filter(r=>String(r.__area||'')===name);
     const a=aggregate(items);
     const kpiLm=lmScore(lmItems);
     const kpiFm=fmScore(fmItems);
-    const health=kpiLm??kpiFm;
+    const kpiMm=mmScore(mmItems);
+    const health=kpiLm??kpiFm??kpiMm;
     const branches=sto.filter(r=>String(r.District||'')===name).map((r,branchIndex)=>{
       const code=String(r['Kode Analytic']||'');
       const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'—');
@@ -295,10 +302,10 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
       const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
       const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
-      const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
+      const mmBranch=mmItems.filter(x=>matchesBranch(x,branchName,code));
       const lmPreviousBranch=lmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
       const fmPreviousBranch=fmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
-      const mmPreviousBranch=mmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
+      const mmPreviousBranch=mmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
       const previousSourceItems=fn==='LM'?lmPreviousBranch:fn==='FM'?fmPreviousBranch:mmPreviousBranch;
       const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
       const score=fn==='LM'?lmScore(lmBranch):fn==='FM'?fmScore(fmBranch):fn==='MM'?mmScore(mmBranch):null;
@@ -345,10 +352,10 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const slaDay=items.filter(r=>r.__date===date);
       const lmDay=lmItems.filter(r=>r.__date===date);
       const fmDay=fmItems.filter(r=>r.__date===date);
-      const mmDay=mmSelected.filter(r=>r.__date===date);
+      const mmDay=mmItems.filter(r=>r.__date===date);
       return {date,sla:aggregate(slaDay).sla,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
-    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm:overallMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
+    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
   });
 
   return {
