@@ -1123,3 +1123,9 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-penalty-section-head h4{margin:3px 0 2px!important;font-size:14px!important}
 .kpi-penalty-section-head small{color:var(--ct-muted)!important}
 .kpi-penalty-matrix td:last-child,.kpi-penalty-matrix th:last-child{font-weight:700!important}
+
+/* Control Tower area table — align with SLA table typography/alignment */
+.area-performance-table th,.area-performance-table td{text-align:center!important}
+.area-performance-table th:nth-child(2),.area-performance-table td:nth-child(2){text-align:left!important}
+.area-performance-table th{font-size:9px!important}
+.area-performance-table td{font-size:10px!important}
