@@ -64,9 +64,17 @@ export default function App() {
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [refreshNotice, setRefreshNotice] = useState<{kind:'updated'|'latest';text:string}|null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refreshSeq = useRef(0);
+  const noticeTimer = useRef<number | null>(null);
+  const dashboardSignature = (data: RegionDashboard | null) => data ? JSON.stringify(data) : '';
+  const showRefreshNotice = (notice:{kind:'updated'|'latest';text:string}) => {
+    setRefreshNotice(notice);
+    if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
+    noticeTimer.current = window.setTimeout(() => setRefreshNotice(null), 3500);
+  };
   const refreshDashboard = async (showLoading = false, manual = false) => {
     const seq = ++refreshSeq.current;
     if (showLoading) setLoading(true);
@@ -74,8 +82,15 @@ export default function App() {
     try {
       const next = await getRegionDashboard(periodPreset, customRange ?? undefined);
       if (seq === refreshSeq.current) {
+        const hadData = dashboard !== null;
+        const changed = hadData && dashboardSignature(dashboard) !== dashboardSignature(next);
         setDashboard(next);
         setError(null);
+        if (manual || hadData) {
+          showRefreshNotice(changed
+            ? {kind:'updated',text:'Data terbaru ditemukan dan dashboard sudah diperbarui.'}
+            : {kind:'latest',text:'Data sudah terbaru. Tidak ada perubahan baru.'});
+        }
       }
     } catch (err) {
       // Keep the last successful dashboard visible when a background/manual refresh fails.
@@ -250,6 +265,7 @@ export default function App() {
 
   return (
     <div className={`app-shell theme-${theme}`}>
+      {refreshNotice && <div className={`refresh-toast ${refreshNotice.kind}`} role="status" aria-live="polite"><span className="refresh-toast-dot"/><div><strong>{refreshNotice.kind==='updated'?'Data Diperbarui':'Data Sudah Terbaru'}</strong><small>{refreshNotice.text}</small></div><button onClick={()=>setRefreshNotice(null)} aria-label="Tutup notifikasi">×</button></div>}
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Navigasi utama">
         <div className="brand">
           <div className="brand-mark"><img src="/sicepat-icon.svg" alt="SiCepat"/></div>
