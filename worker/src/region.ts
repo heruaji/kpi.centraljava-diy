@@ -233,14 +233,10 @@ function lmScore(items:Row[]){
   },0);
 }
 
-export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
-  // Read sources sequentially by segment. This intentionally avoids one Worker
-  // invocation opening all Google Sheets requests at the same time.
-  const sla=await readSheet(env,'SLA','A:AC');
-  const sto=await readSheet(env,'STO','A:I');
-  const lm=await readSheet(env,'KPI LM','A:AQ');
-  const fm=await readSheet(env,'KPI FM','A:AO');
-  const mm=await readSheet(env,'KPI MM','A:AJ');
+export type DashboardSources={sla:Row[];sto:Row[];lm:Row[];fm:Row[];mm:Row[]};
+
+export async function buildRegionDashboardFromSources(env:EnvSource,sources:DashboardSources,preset?:PeriodPreset,customRange?:{start:string;end:string}){
+  const {sla,sto,lm,fm,mm}=sources;
   const dated=sla.map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
   const lmDated=lm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
   const fmDated=fm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
@@ -423,4 +419,14 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     trend,
     areas
   };
+}
+
+
+export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
+  const sla=await readSheet(env,'SLA','A:AC');
+  const sto=await readSheet(env,'STO','A:I');
+  const lm=await readSheet(env,'KPI LM','A:AQ');
+  const fm=await readSheet(env,'KPI FM','A:AO');
+  const mm=await readSheet(env,'KPI MM','A:AJ');
+  return buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},preset,customRange);
 }
