@@ -234,13 +234,13 @@ function lmScore(items:Row[]){
 }
 
 export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
-  const [sla,sto,lm,fm,mm]=await Promise.all([
-    readSheet(env,'SLA','A:AC'),
-    readSheet(env,'STO','A:I'),
-    readSheet(env,'KPI LM','A:AQ'),
-    readSheet(env,'KPI FM','A:AO'),
-    readSheet(env,'KPI MM','A:AJ')
-  ]);
+  // Read sources sequentially by segment. This intentionally avoids one Worker
+  // invocation opening all Google Sheets requests at the same time.
+  const sla=await readSheet(env,'SLA','A:AC');
+  const sto=await readSheet(env,'STO','A:I');
+  const lm=await readSheet(env,'KPI LM','A:AQ');
+  const fm=await readSheet(env,'KPI FM','A:AO');
+  const mm=await readSheet(env,'KPI MM','A:AJ');
   const dated=sla.map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
   const stoAreaByHub=new Map<string,string>();
   for(const r of sto){
