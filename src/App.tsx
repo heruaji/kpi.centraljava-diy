@@ -203,7 +203,7 @@ export default function App() {
   const selectedKpi = selectedBranch?.kpiDailyDetails?.find(kpi => kpi.key === selectedKpiKey) ?? null;
   const trend = selectedBranch?.trend ?? selectedArea?.trend ?? dashboard?.trend ?? [];
   const branchTrendMetric = selectedBranch?.function === 'FM' ? 'kpiFm' : selectedBranch?.function === 'MM' ? 'kpiMm' : 'kpiLm';
-  const activeTrendMetric = selectedBranch ? branchTrendMetric : trendMetric;
+  const activeTrendMetric = activeModule==='control' ? trendMetric : selectedBranch ? branchTrendMetric : trendMetric;
   const driverLabels={volume:'Volume',backlog:'Backlog',failedDelivery:'Failed Delivery',codTransfer:'COD Transfer'} as const;
   const driverDaily=selectedBranch?.operationalTrend ?? [];
   const driverMax=selectedDriver?Math.max(1,...driverDaily.map(d=>d[selectedDriver])):1;
@@ -325,17 +325,11 @@ export default function App() {
       area: () => { setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); }
     };
   })();
-  const openControlTowerModule = (kind:'SLA'|'LM'|'FM'|'MM',areaId:string,branchId?:string|null) => {
-    // Control Tower is only the entry point. Reuse the dedicated module/drilldown.
-    setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); setSelectedAreaId(null);
-    if(kind==='SLA'){
-      setActiveModule('sla'); setSlaAreaId(areaId); setSlaBranchDetailId(branchId??null);
-      setKpiAreaId(null); setKpiBranchDetailId(null); setKpiDailyDate(null);
-    }else{
-      setActiveModule('kpi'); setKpiFunction(kind); setKpiAreaId(areaId); setKpiBranchDetailId(branchId??null); setKpiDailyDate(null);
-      setSlaAreaId(null); setSlaBranchDetailId(null);
-    }
-    setMobileOpen(false);
+  const controlDetailKind = trendMetric==='sla'?'SLA':trendMetric==='kpiLm'?'LM':trendMetric==='kpiFm'?'FM':'MM';
+  const controlDetailBranches = selectedArea?.branches?.filter(b=>controlDetailKind==='SLA'?b.function==='LM':b.function===controlDetailKind) ?? [];
+  const openControlDetailBranch = (branchId:string) => {
+    // Keep Control Tower as the active module. Detail is an embedded view, not a module navigation.
+    setSelectedBranchId(branchId); setSelectedKpiKey(null); setSelectedDriver(null);
   };
   const territoryClose = () => setMobileOpen(false);
 
@@ -490,8 +484,8 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
             </article>}
             {!selectedArea && !selectedBranch && <article className="panel full area-comparison"><div className="panel-title"><div><span>PERBANDINGAN KINERJA AREA</span><h3>Area Performance Comparison</h3><small>Daftar kinerja area di wilayah Central Java – DIY</small></div><div className="area-table-tools"><input className="table-search" type="search" placeholder="Cari area..." value={areaQuery} onChange={e=>setAreaQuery(e.target.value)}/><select className="table-sort" value={areaSort} onChange={e=>setAreaSort(e.target.value as typeof areaSort)}><option value="name">Nama Area</option><option value="sla">SLA tertinggi</option><option value="lm">KPI LM tertinggi</option><option value="fm">KPI FM tertinggi</option><option value="mm">KPI MM tertinggi</option></select><span className="area-count">{filteredAreas.length} area</span></div></div><div className="table-wrap area-performance-table"><table><thead><tr><th>No</th><th>Nama Area</th><th>SLA (≥ 98%)</th><th>KPI Last Mile</th><th>KPI First Mile</th><th>KPI Middle Mile</th><th>Productivity</th><th>Status</th></tr></thead><tbody>{filteredAreas.length ? filteredAreas.map((area,index) => (
                <tr key={area.id} className="clickable-row" onClick={()=>setSelectedAreaId(area.id)}>
-                 <td>{index+1}</td><td><strong>{area.name}</strong></td><td className={area.sla!=null&&area.sla>=98?'metric-good':''}><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('SLA',area.id)}}>{fmtPercent(area.sla)}</button></td><td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('LM',area.id)}}>{fmtPercent(area.kpiLm)}</button></td>
-                 <td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('FM',area.id)}}>{fmtPercent(area.kpiFm)}</button></td><td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();openControlTowerModule('MM',area.id)}}>{fmtPercent(area.kpiMm)}</button></td>
+                 <td>{index+1}</td><td><strong>{area.name}</strong></td><td className={area.sla!=null&&area.sla>=98?'metric-good':''}><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();setTrendMetric('sla');setSelectedAreaId(area.id)}}>{fmtPercent(area.sla)}</button></td><td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();setTrendMetric('kpiLm');setSelectedAreaId(area.id)}}>{fmtPercent(area.kpiLm)}</button></td>
+                 <td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();setTrendMetric('kpiFm');setSelectedAreaId(area.id)}}>{fmtPercent(area.kpiFm)}</button></td><td><button className="metric-nav-link" onClick={(e)=>{e.stopPropagation();setTrendMetric('kpiMm');setSelectedAreaId(area.id)}}>{fmtPercent(area.kpiMm)}</button></td>
                  <td>{fmtPercent(area.productivity)}</td><td><span className={`status-pill status-${area.status.toLowerCase()}`}>{area.status}</span></td>
                </tr>
              )) : <tr><td colSpan={8}>{error || 'Memuat data sumber...'}</td></tr>}</tbody></table></div></article>}
@@ -533,13 +527,10 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
                 {selectedBranch.penaltyDetails?.length ? selectedBranch.penaltyDetails.map(item=><tr key={item.key}><td><strong>{item.label}</strong></td><td>{fmtPercent(item.actual)}</td><td>{item.targetLabel}</td><td><span className={`tier-badge tier-${item.tier.toLowerCase()}`}>{item.tier}</span></td><td>{item.maxPenalty}%</td><td><strong>{item.penalty.toFixed(1)}</strong></td></tr>) : <tr><td colSpan={6}>Penalty detail belum tersedia untuk unit ini.</td></tr>}
               </tbody></table></div>
             </article>}
-            {selectedArea && !selectedBranch && <article className="panel full branch-directory-panel"><div className="panel-title branch-directory-title"><div><span>DETAIL PERFORMANCE</span><h3>Buka Menu Performance</h3><small>Gunakan menu yang sudah tersedia agar detail SLA dan KPI tetap konsisten.</small></div></div>
-              <div className="control-module-links">
-                <button onClick={()=>openControlTowerModule('SLA',selectedArea.id)}><span>SLA</span><strong>SLA Performance</strong><small>Lihat SLA seluruh gerai di ${selectedArea.name}</small></button>
-                <button onClick={()=>openControlTowerModule('LM',selectedArea.id)}><span>LM</span><strong>KPI Last Mile</strong><small>Lihat KPI LM seluruh gerai di ${selectedArea.name}</small></button>
-                <button onClick={()=>openControlTowerModule('FM',selectedArea.id)}><span>FM</span><strong>KPI First Mile</strong><small>Lihat KPI FM seluruh gerai di ${selectedArea.name}</small></button>
-                <button onClick={()=>openControlTowerModule('MM',selectedArea.id)}><span>MM</span><strong>KPI Middle Mile</strong><small>Lihat KPI MM seluruh gerai di ${selectedArea.name}</small></button>
-              </div>
+            {selectedArea && !selectedBranch && <article className="panel full branch-directory-panel"><div className="panel-title branch-directory-title"><div><span>DETAIL PERFORMANCE</span><h3>${controlDetailKind} Performance — ${selectedArea.name}</h3><small>Detail mengikuti pilihan metrik pada grafik Performance Trend di atas.</small></div><span className="branch-count">{controlDetailBranches.length} gerai</span></div>
+              <div className="table-wrap branch-directory-table control-detail-table"><table><thead><tr><th>No</th><th>Gerai</th><th>{controlDetailKind==='SLA'?'SLA':`KPI ${controlDetailKind}`}</th><th>Status</th></tr></thead><tbody>
+                {controlDetailBranches.length?controlDetailBranches.map((branch,index)=>{const value=controlDetailKind==='SLA'?(branch.sla??null):(branch.kpiScore??null);const status=controlDetailKind==='SLA'?(value==null?'No Data':value>=98?'Achieved':'Need Review'):kpiCategory(value).label;return <tr key={branch.id} className="clickable-row" onClick={()=>openControlDetailBranch(branch.id)}><td>{index+1}</td><td><strong>{branch.name}</strong></td><td><strong>{fmtPercent(value)}</strong></td><td>{controlDetailKind==='SLA'?<span className={`status-pill ${value!=null&&value>=98?'status-good':'status-bad'}`}>{status}</span>:<span className={`kpi-health-chip ${kpiCategory(value).tone}`}>{status}</span>}</td></tr>}):<tr><td colSpan={4}>Data {controlDetailKind} belum tersedia pada area ini.</td></tr>}
+              </tbody></table></div>
             </article>}
           </div>
           </div>
