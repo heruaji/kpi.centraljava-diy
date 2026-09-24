@@ -57,16 +57,21 @@ const normHub=(v:unknown)=>String(v||'')
   .replace(/\b(branch|cabang|gerai|hub|lm|fm|mm)\b/g,' ')
   .replace(/[^a-z0-9]+/g,' ')
   .trim();
-const matchesBranch=(r:Row,name:string,code:string)=>{
-  const granular=normHub(r.GRANULAR_AREA ?? r['Hub Name'] ?? r['Nama Hub']);
+const branchIdentity=(r:Row,source:'SLA'|'LM'|'FM'|'MM')=>{
+  // GRANULAR_AREA is the branch key for SLA only. KPI sheets use their own hub columns.
+  if(source==='SLA') return r.GRANULAR_AREA;
+  if(source==='FM') return r['Hub Name'] ?? r['Nama Hub'];
+  if(source==='LM') return r['Hub Name'] ?? r['Nama Hub'] ?? r.HUB_NAME ?? r.HUB;
+  return r['Hub Name'] ?? r['Nama Hub'] ?? r.HUB_NAME ?? r.HUB;
+};
+const matchesBranch=(r:Row,name:string,code:string,source:'SLA'|'LM'|'FM'|'MM'='SLA')=>{
+  const granular=normHub(branchIdentity(r,source));
   const target=normHub(name);
   const sourceCode=String(r['Kode Analytic'] ?? r['Analytic Code'] ?? r.CODE ?? '').trim().toLowerCase();
   const targetCode=String(code||'').trim().toLowerCase();
   if(sourceCode&&targetCode&&sourceCode===targetCode) return true;
   if(!granular||!target) return false;
   if(granular===target) return true;
-  // Sheet KPI and STO frequently differ only by operational prefixes/suffixes.
-  // Accept the same normalized hub name without weakening short-name matching.
   return Math.min(granular.length,target.length)>=5 &&
     (granular.startsWith(target+' ')||target.startsWith(granular+' '));
 };
@@ -305,18 +310,18 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const code=String(r['Kode Analytic']||'');
       const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'—');
       const fn=String(r.Fungsi||'—').toUpperCase();
-      const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
-      const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
-      const previousPreviousSlaItems=previousPreviousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
+      const slaItems=items.filter(x=>matchesBranch(x,branchName,code,'SLA'));
+      const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code,'SLA'));
+      const previousPreviousSlaItems=previousPreviousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code,'SLA'));
       // Match branch directly against the period source. Do not depend on the area
       // pre-filter: District Area labels can differ slightly from STO while
       // GRANULAR_AREA still identifies the branch correctly.
-      const lmBranch=lmSelected.filter(x=>matchesBranch(x,branchName,code));
-      const fmBranch=fmSelected.filter(x=>matchesBranch(x,branchName,code));
-      const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
-      const lmPreviousBranch=lmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
-      const fmPreviousBranch=fmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
-      const mmPreviousBranch=mmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
+      const lmBranch=lmSelected.filter(x=>matchesBranch(x,branchName,code,'LM'));
+      const fmBranch=fmSelected.filter(x=>matchesBranch(x,branchName,code,'FM'));
+      const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code,'MM'));
+      const lmPreviousBranch=lmPreviousSelected.filter(x=>matchesBranch(x,branchName,code,'LM'));
+      const fmPreviousBranch=fmPreviousSelected.filter(x=>matchesBranch(x,branchName,code,'FM'));
+      const mmPreviousBranch=mmPreviousSelected.filter(x=>matchesBranch(x,branchName,code,'MM'));
       const previousSourceItems=fn==='LM'?lmPreviousBranch:fn==='FM'?fmPreviousBranch:mmPreviousBranch;
       const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
       const score=fn==='LM'?lmScore(lmBranch):fn==='FM'?fmScore(fmBranch):fn==='MM'?mmScore(mmBranch):null;
