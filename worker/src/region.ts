@@ -295,11 +295,14 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
       const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
       const previousPreviousSlaItems=previousPreviousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
-      const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
-      const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
+      // Match branch directly against the period source. Do not depend on the area
+      // pre-filter: District Area labels can differ slightly from STO while
+      // GRANULAR_AREA still identifies the branch correctly.
+      const lmBranch=lmSelected.filter(x=>matchesBranch(x,branchName,code));
+      const fmBranch=fmSelected.filter(x=>matchesBranch(x,branchName,code));
       const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
-      const lmPreviousBranch=lmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
-      const fmPreviousBranch=fmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const lmPreviousBranch=lmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
+      const fmPreviousBranch=fmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
       const mmPreviousBranch=mmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
       const previousSourceItems=fn==='LM'?lmPreviousBranch:fn==='FM'?fmPreviousBranch:mmPreviousBranch;
       const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
