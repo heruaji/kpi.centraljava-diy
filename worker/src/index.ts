@@ -17,11 +17,14 @@ const FRESH_MS=5*60*1000;
 
 async function ensureDb(env:Env){
   if(!env.DB) return;
+  // Keep D1 lightweight: only calculated dashboard snapshots belong here.
+  // Remove the temporary raw-source ingestion schema introduced during the experiment.
   const statements=[
     `CREATE TABLE IF NOT EXISTS dashboard_snapshots (cache_key TEXT PRIMARY KEY,period TEXT NOT NULL,range_start TEXT,range_end TEXT,updated_at TEXT NOT NULL,payload TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at)`,
-    `CREATE TABLE IF NOT EXISTS dashboard_sync_runs (id INTEGER PRIMARY KEY AUTOINCREMENT,cache_key TEXT NOT NULL,period TEXT NOT NULL,range_start TEXT,range_end TEXT,status TEXT NOT NULL,started_at TEXT NOT NULL,finished_at TEXT,error TEXT)`,
-    `CREATE INDEX IF NOT EXISTS idx_dashboard_sync_runs_key ON dashboard_sync_runs(cache_key, started_at)`
+    `DROP TABLE IF EXISTS source_rows`,
+    `DROP TABLE IF EXISTS source_sync_state`,
+    `DROP TABLE IF EXISTS dashboard_sync_runs`
   ];
   await env.DB.batch(statements.map(sql=>env.DB!.prepare(sql)));
 }
