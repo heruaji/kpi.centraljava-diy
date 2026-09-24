@@ -843,3 +843,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* ===== PRODUCTIVITY: comparison controls ===== */
 .productivity-panel-tools{display:flex;align-items:center;justify-content:flex-end;gap:7px}.productivity-sort{height:30px;max-width:170px;padding:0 26px 0 9px;border:1px solid var(--ct-border);border-radius:6px;background:var(--ct-card);color:var(--ct-text);font:inherit;font-size:8px;font-weight:650;outline:none}.productivity-sort:focus{border-color:var(--ct-soft)}.productivity-branch-tools .productivity-sort{margin-left:auto}.theme-dark .productivity-sort{background:#102131;color:#edf3f8;border-color:#34495c}@media(max-width:720px){.productivity-panel-tools{width:100%;justify-content:space-between}.productivity-sort{max-width:150px}.productivity-branch-tools{flex-wrap:wrap!important}.productivity-branch-tools .productivity-sort{margin-left:0}}
+
+
+/* ===== PRODUCTIVITY: latest daily snapshot ===== */
+.productivity-daily-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 8px}.productivity-daily-summary .metric-card{min-height:88px}.productivity-daily-summary .metric-card>strong{font-variant-numeric:tabular-nums}@media(max-width:720px){.productivity-daily-summary{grid-template-columns:1fr}}
