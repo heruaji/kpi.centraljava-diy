@@ -9,12 +9,6 @@
     "not_found_handling": "single-page-application",
     "run_worker_first": ["/api/*"]
   },
-  "kv_namespaces": [
-    {
-      "binding": "DASHBOARD_CACHE",
-      "id": "REPLACE_WITH_DASHBOARD_CACHE_KV_ID"
-    }
-  ],
   "vars": {
     "SHEET_ID": "1knhNraKDgmu7JfiPDZIjEU1sstiQNY0i9mYABaY-oJQ"
   }
