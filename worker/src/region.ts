@@ -51,29 +51,12 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 ];
 
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
-const normHub=(v:unknown)=>String(v||'')
-  .trim().toLowerCase()
-  .replace(/^t?\d+\s*-\s*/,'')
-  .replace(/\b(branch|cabang|gerai|hub|lm|fm|mm)\b/g,' ')
-  .replace(/[^a-z0-9]+/g,' ')
-  .trim();
-const branchIdentity=(r:Row,source:'SLA'|'LM'|'FM'|'MM')=>{
-  // GRANULAR_AREA is the branch key for SLA only. KPI sheets use their own hub columns.
-  if(source==='SLA') return r.GRANULAR_AREA;
-  if(source==='FM') return r['Hub Name'] ?? r['Nama Hub'];
-  if(source==='LM') return r['Hub Name'] ?? r['Nama Hub'] ?? r.HUB_NAME ?? r.HUB;
-  return r['Hub Name'] ?? r['Nama Hub'] ?? r.HUB_NAME ?? r.HUB;
-};
-const matchesBranch=(r:Row,name:string,code:string,source:'SLA'|'LM'|'FM'|'MM'='SLA')=>{
-  const granular=normHub(branchIdentity(r,source));
+const normHub=(v:unknown)=>String(v||'').trim().toLowerCase().replace(/^t?\d+\s*-\s*/,'');
+const matchesBranch=(r:Row,name:string,code:string)=>{
+  const candidates=[r['Hub Name'],r['Nama Hub'],r.GRANULAR_AREA,r['Sortation Name']].map(normHub).filter(Boolean);
   const target=normHub(name);
-  const sourceCode=String(r['Kode Analytic'] ?? r['Analytic Code'] ?? r.CODE ?? '').trim().toLowerCase();
-  const targetCode=String(code||'').trim().toLowerCase();
-  if(sourceCode&&targetCode&&sourceCode===targetCode) return true;
-  if(!granular||!target) return false;
-  if(granular===target) return true;
-  return Math.min(granular.length,target.length)>=5 &&
-    (granular.startsWith(target+' ')||target.startsWith(granular+' '));
+  const codeKey=String(code||'').toLowerCase();
+  return candidates.some(v=>v===target||v.includes(target)||target.includes(v)||(codeKey&&String(r['Hub Name']||r['Nama Hub']||r['Sortation Name']||'').toLowerCase().includes(codeKey)));
 };
 type KpiDetail={key:string;label:string;actual:number|null;target:number;targetLabel:string;tier:string;weight:number;score:number};
 const tierLabel=(v:ReturnType<typeof tier>)=>v??'—';
@@ -256,9 +239,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const shiftMonth=(isoDate:string,months:number)=>{const [year,month,day]=isoDate.split('-').map(Number);const target=new Date(Date.UTC(year,month-1+months,1));const lastDay=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();return `${target.getUTCFullYear()}-${String(target.getUTCMonth()+1).padStart(2,'0')}-${String(Math.min(day,lastDay)).padStart(2,'0')}`};
   const previousRange={start:shiftMonth(range.start,-1),end:shiftMonth(range.end,-1)};
-  const previousPreviousRange={start:shiftMonth(range.start,-2),end:shiftMonth(range.end,-2)};
   const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
-  const previousPreviousSelected=dated.filter(r=>(r.__date as string)>=previousPreviousRange.start && (r.__date as string)<=previousPreviousRange.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const lmPreviousSelected=lmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
@@ -310,18 +291,14 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const code=String(r['Kode Analytic']||'');
       const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'—');
       const fn=String(r.Fungsi||'—').toUpperCase();
-      const slaItems=items.filter(x=>matchesBranch(x,branchName,code,'SLA'));
-      const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code,'SLA'));
-      const previousPreviousSlaItems=previousPreviousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code,'SLA'));
-      // Match branch directly against the period source. Do not depend on the area
-      // pre-filter: District Area labels can differ slightly from STO while
-      // GRANULAR_AREA still identifies the branch correctly.
-      const lmBranch=lmSelected.filter(x=>matchesBranch(x,branchName,code,'LM'));
-      const fmBranch=fmSelected.filter(x=>matchesBranch(x,branchName,code,'FM'));
-      const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code,'MM'));
-      const lmPreviousBranch=lmPreviousSelected.filter(x=>matchesBranch(x,branchName,code,'LM'));
-      const fmPreviousBranch=fmPreviousSelected.filter(x=>matchesBranch(x,branchName,code,'FM'));
-      const mmPreviousBranch=mmPreviousSelected.filter(x=>matchesBranch(x,branchName,code,'MM'));
+      const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
+      const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
+      const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
+      const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
+      const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
+      const lmPreviousBranch=lmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const fmPreviousBranch=fmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const mmPreviousBranch=mmPreviousSelected.filter(x=>matchesBranch(x,branchName,code));
       const previousSourceItems=fn==='LM'?lmPreviousBranch:fn==='FM'?fmPreviousBranch:mmPreviousBranch;
       const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
       const score=fn==='LM'?lmScore(lmBranch):fn==='FM'?fmScore(fmBranch):fn==='MM'?mmScore(mmBranch):null;
@@ -341,7 +318,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
-        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:fn==='LM'?aggregate(slaItems).productivityLm:null,productivityPrevious:fn==='LM'?aggregate(previousSlaItems).productivityLm:null,productivityPreviousPrevious:fn==='LM'?aggregate(previousPreviousSlaItems).productivityLm:null,
+        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
           backlog:sum(slaItems,'VOLUME_BACKLOG'),
