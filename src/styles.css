@@ -831,3 +831,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .productivity-area-table tbody td,.theme-dark .productivity-branch-table tbody td,.theme-dark .productivity-daily-table tbody td{color:#edf3f8!important}
 .theme-dark .productivity-area-table tbody strong,.theme-dark .productivity-branch-table tbody strong,.theme-dark .productivity-daily-table tbody strong{color:#fff!important}
 .theme-dark .productivity-delta.neutral{color:#aebdcb!important}
+
+
+/* ===== PRODUCTIVITY: daily LM detail ===== */
+.productivity-daily-head{display:flex;align-items:flex-end;justify-content:space-between;gap:10px;margin:12px 0 7px}.productivity-daily-head>div>span{display:block;margin-bottom:3px;font-size:8px;font-weight:750;letter-spacing:.055em;color:var(--ct-soft)}.productivity-daily-head strong{font-size:11px}.productivity-daily-head>small{font-size:8px;color:var(--ct-muted)}.productivity-daily-table th,.productivity-daily-table td{text-align:center!important}.productivity-daily-table th:nth-child(2),.productivity-daily-table td:nth-child(2){text-align:left!important}.theme-dark .productivity-daily-head>div>span{color:#cbd5e1!important}.theme-dark .productivity-daily-head strong{color:#fff!important}.theme-dark .productivity-daily-head>small{color:#b7c5d3!important}
