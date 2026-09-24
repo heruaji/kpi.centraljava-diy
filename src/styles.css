@@ -1129,3 +1129,15 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .area-performance-table th:nth-child(2),.area-performance-table td:nth-child(2){text-align:left!important}
 .area-performance-table th{font-size:9px!important}
 .area-performance-table td{font-size:10px!important}
+
+/* Control Tower reuses existing SLA/KPI modules instead of duplicating detail tables */
+.metric-nav-link{appearance:none;border:0;background:transparent;color:inherit;font:inherit;font-weight:inherit;padding:3px 6px;border-radius:5px;cursor:pointer}
+.metric-nav-link:hover{background:var(--ct-card2);text-decoration:underline;text-underline-offset:2px}
+.control-module-links{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px}
+.control-module-links button{text-align:left;border:1px solid var(--ct-border);background:var(--ct-card2);color:var(--ct-text);border-radius:8px;padding:12px;cursor:pointer}
+.control-module-links button:hover{border-color:var(--ct-accent);transform:translateY(-1px)}
+.control-module-links span{display:block;font-size:8px;font-weight:800;color:var(--ct-muted);margin-bottom:4px}
+.control-module-links strong{display:block;font-size:11px}
+.control-module-links small{display:block;margin-top:4px;font-size:9px;color:var(--ct-muted)}
+@media(max-width:900px){.control-module-links{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.control-module-links{grid-template-columns:1fr}}
