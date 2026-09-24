@@ -1,4 +1,5 @@
 import { buildRegionDashboard } from './region';
+import { readSheet } from './data-source';
 import type { PeriodPreset } from './period';
 
 export interface Env {
@@ -15,6 +16,52 @@ const CACHE_VERSION='v2-native-area';
 const cacheKey=(preset?:string,start?:string|null,end?:string|null)=>`${CACHE_VERSION}:region:${preset||'MTD'}:${start||''}:${end||''}`;
 const SNAPSHOT_TTL=60*60*24*7;
 const FRESH_MS=5*60*1000;
+
+const SOURCE_SEGMENTS={
+  SLA:{sheet:'SLA',range:'A:AC'},
+  LM:{sheet:'KPI LM',range:'A:AQ'},
+  FM:{sheet:'KPI FM',range:'A:AO'},
+  MM:{sheet:'KPI MM',range:'A:AJ'},
+} as const;
+type SourceSegment=keyof typeof SOURCE_SEGMENTS;
+
+async function ensureSourceDb(env:Env){
+  if(!env.DB) return;
+  const statements=[
+    `CREATE TABLE IF NOT EXISTS source_rows (source TEXT NOT NULL,row_no INTEGER NOT NULL,row_json TEXT NOT NULL,synced_at TEXT NOT NULL,PRIMARY KEY(source,row_no))`,
+    `CREATE INDEX IF NOT EXISTS idx_source_rows_source ON source_rows(source)`,
+    `CREATE TABLE IF NOT EXISTS source_sync_state (source TEXT PRIMARY KEY,status TEXT NOT NULL,row_count INTEGER NOT NULL DEFAULT 0,started_at TEXT,finished_at TEXT,error TEXT)`
+  ];
+  await env.DB.batch(statements.map(sql=>env.DB!.prepare(sql)));
+}
+async function syncSourceSegment(env:Env,source:SourceSegment){
+  if(!env.DB) throw new Error('D1 is not configured');
+  await ensureSourceDb(env);
+  const def=SOURCE_SEGMENTS[source];
+  const startedAt=new Date().toISOString();
+  await env.DB.prepare(`INSERT INTO source_sync_state(source,status,row_count,started_at,finished_at,error)
+    VALUES(?,?,?,?,NULL,NULL) ON CONFLICT(source) DO UPDATE SET status=excluded.status,row_count=0,started_at=excluded.started_at,finished_at=NULL,error=NULL`)
+    .bind(source,'RUNNING',0,startedAt).run();
+  try{
+    const rows=await readSheet(env,def.sheet,def.range);
+    // Replace one source atomically in D1. Chunk batches keep each Worker/D1 call small.
+    await env.DB.prepare('DELETE FROM source_rows WHERE source=?').bind(source).run();
+    const syncedAt=new Date().toISOString();
+    const chunkSize=50;
+    for(let i=0;i<rows.length;i+=chunkSize){
+      const chunk=rows.slice(i,i+chunkSize);
+      await env.DB.batch(chunk.map((row,j)=>env.DB!.prepare('INSERT INTO source_rows(source,row_no,row_json,synced_at) VALUES(?,?,?,?)')
+        .bind(source,i+j+1,JSON.stringify(row),syncedAt)));
+    }
+    await env.DB.prepare('UPDATE source_sync_state SET status=?,row_count=?,finished_at=?,error=NULL WHERE source=?')
+      .bind('READY',rows.length,new Date().toISOString(),source).run();
+    return {source,status:'READY',rowCount:rows.length};
+  }catch(error){
+    await env.DB.prepare('UPDATE source_sync_state SET status=?,finished_at=?,error=? WHERE source=?')
+      .bind('FAILED',new Date().toISOString(),error instanceof Error?error.message:'Unknown error',source).run();
+    throw error;
+  }
+}
 
 async function ensureDb(env:Env){
   if(!env.DB) return;
@@ -89,6 +136,21 @@ export default {
     const url=new URL(request.url); const origin=env.ALLOWED_ORIGIN||'*';
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
     if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE,d1:!!env.DB,cacheVersion:CACHE_VERSION},200,origin);
+    if(url.pathname==='/api/sync/source'){
+      if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
+      if(env.SYNC_TOKEN && request.headers.get('authorization')!==`Bearer ${env.SYNC_TOKEN}`) return json({ok:false,error:'Unauthorized'},401,origin);
+      const source=String(url.searchParams.get('source')||'').toUpperCase() as SourceSegment;
+      if(!(source in SOURCE_SEGMENTS)) return json({ok:false,error:'source harus SLA, LM, FM, atau MM'},400,origin);
+      ctx.waitUntil(syncSourceSegment(env,source).catch(()=>undefined));
+      return json({ok:true,status:'SYNC_STARTED',source},202,origin);
+    }
+    if(url.pathname==='/api/sync/status'){
+      try{
+        await ensureSourceDb(env);
+        const rows=env.DB?await env.DB.prepare('SELECT source,status,row_count,started_at,finished_at,error FROM source_sync_state ORDER BY source').all():{results:[]};
+        return json({ok:true,sources:rows.results||[]},200,origin);
+      }catch(error){return json({ok:false,error:error instanceof Error?error.message:'Unknown error'},500,origin)}
+    }
     if(url.pathname==='/api/sync/dashboard'){
       if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
       if(env.SYNC_TOKEN && request.headers.get('authorization')!==`Bearer ${env.SYNC_TOKEN}`) return json({ok:false,error:'Unauthorized'},401,origin);
