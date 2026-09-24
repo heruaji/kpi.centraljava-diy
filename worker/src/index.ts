@@ -8,6 +8,7 @@ export interface Env {
   GOOGLE_PRIVATE_KEY?: string;
   DASHBOARD_CACHE?: KVNamespace;
   DB?: D1Database;
+  SYNC_TOKEN?: string;
 }
 const json=(body:unknown,status=200,origin='*',extra:Record<string,string>={})=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':origin,...extra}});
 const CACHE_VERSION='v2-native-area';
@@ -25,7 +26,19 @@ async function ensureDb(env:Env){
     updated_at TEXT NOT NULL,
     payload TEXT NOT NULL
   );
-  CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at);`);
+  CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at);
+  CREATE TABLE IF NOT EXISTS dashboard_sync_runs (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    cache_key TEXT NOT NULL,
+    period TEXT NOT NULL,
+    range_start TEXT,
+    range_end TEXT,
+    status TEXT NOT NULL,
+    started_at TEXT NOT NULL,
+    finished_at TEXT,
+    error TEXT
+  );
+  CREATE INDEX IF NOT EXISTS idx_dashboard_sync_runs_key ON dashboard_sync_runs(cache_key, started_at);`);
 }
 async function readDbSnapshot(env:Env,key:string):Promise<Snapshot|null>{
   if(!env.DB) return null;
@@ -55,11 +68,45 @@ async function saveSnapshot(env:Env,key:string,data:unknown){
   await env.DASHBOARD_CACHE.put(key,JSON.stringify({updatedAt:new Date().toISOString(),data}),{expirationTtl:SNAPSHOT_TTL});
 }
 
+async function rebuildAndPersist(env:Env,key:string,period:string,start:string|null,end:string|null){
+  await ensureDb(env);
+  let runId:number|undefined;
+  if(env.DB){
+    const run=await env.DB.prepare('INSERT INTO dashboard_sync_runs(cache_key,period,range_start,range_end,status,started_at) VALUES(?,?,?,?,?,?)')
+      .bind(key,period,start,end,'RUNNING',new Date().toISOString()).run();
+    runId=Number(run.meta.last_row_id);
+  }
+  try{
+    const data=await buildRegionDashboard(env,period as PeriodPreset,start&&end?{start,end}:undefined);
+    await saveDbSnapshot(env,key,period,start,end,data);
+    await saveSnapshot(env,key,data);
+    if(env.DB&&runId) await env.DB.prepare('UPDATE dashboard_sync_runs SET status=?, finished_at=? WHERE id=?').bind('READY',new Date().toISOString(),runId).run();
+    return data;
+  }catch(error){
+    if(env.DB&&runId) await env.DB.prepare('UPDATE dashboard_sync_runs SET status=?, finished_at=?, error=? WHERE id=?')
+      .bind('FAILED',new Date().toISOString(),error instanceof Error?error.message:'Unknown error',runId).run();
+    throw error;
+  }
+}
+
 export default {
+  async scheduled(_event:ScheduledEvent,env:Env,ctx:ExecutionContext){
+    const period='MTD';
+    ctx.waitUntil(rebuildAndPersist(env,cacheKey(period,null,null),period,null,null).catch(()=>undefined));
+  },
   async fetch(request:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
     const url=new URL(request.url); const origin=env.ALLOWED_ORIGIN||'*';
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
     if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE,d1:!!env.DB,cacheVersion:CACHE_VERSION},200,origin);
+    if(url.pathname==='/api/sync/dashboard'){
+      if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
+      if(env.SYNC_TOKEN && request.headers.get('authorization')!==`Bearer ${env.SYNC_TOKEN}`) return json({ok:false,error:'Unauthorized'},401,origin);
+      const period=(url.searchParams.get('period')||'MTD') as PeriodPreset;
+      const start=url.searchParams.get('start'); const end=url.searchParams.get('end');
+      const key=cacheKey(period,start,end);
+      ctx.waitUntil(rebuildAndPersist(env,key,period,start,end).catch(()=>undefined));
+      return json({ok:true,status:'SYNC_STARTED',period,start,end},202,origin);
+    }
     if(url.pathname==='/api/dashboard/region'){
       const preset=url.searchParams.get('period') as PeriodPreset|null;
       const start=url.searchParams.get('start'); const end=url.searchParams.get('end');
@@ -74,12 +121,7 @@ export default {
       const fresh=snapshot && Date.now()-Date.parse(snapshot.updatedAt)<FRESH_MS;
       if(snapshot && fresh && !force) return json(snapshot.data,200,origin,{'x-dashboard-cache':'HIT','x-dashboard-updated-at':snapshot.updatedAt});
 
-      const rebuild=async()=>{
-        const data=await buildRegionDashboard(env,preset||undefined,start&&end?{start,end}:undefined);
-        await saveDbSnapshot(env,key,preset||'MTD',start,end,data);
-        await saveSnapshot(env,key,data);
-        return data;
-      };
+      const rebuild=()=>rebuildAndPersist(env,key,preset||'MTD',start,end);
 
       // When a valid snapshot exists, never make the browser wait for the heavy
       // Google Sheets rebuild. Refresh it in the background and serve last-good.
