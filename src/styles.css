@@ -931,3 +931,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .combo-tooltip-fo{position:relative;z-index:100}
 .combo-hover-zone{pointer-events:all}
 .combo-productivity-line,.combo-manpower-line{vector-effect:non-scaling-stroke}
+
+
+/* Performance Drivers */
+.drivers-module{display:grid;gap:14px}
+.drivers-overview-panel{min-width:0}
+.drivers-area-table td:nth-child(n+3),.drivers-area-table th:nth-child(n+3){text-align:right;font-variant-numeric:tabular-nums}
+.drivers-area-table td:nth-child(2) strong{display:block}
+.drivers-area-table td:nth-child(2) small{display:block;margin-top:3px;color:var(--ct-muted);font-size:8px}
+@media(max-width:720px){.drivers-area-table{min-width:700px}}
