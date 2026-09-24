@@ -10,7 +10,8 @@ export interface Env {
   DB?: D1Database;
 }
 const json=(body:unknown,status=200,origin='*',extra:Record<string,string>={})=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':origin,...extra}});
-const cacheKey=(preset?:string,start?:string|null,end?:string|null)=>`region:${preset||'MTD'}:${start||''}:${end||''}`;
+const CACHE_VERSION='v2-native-area';
+const cacheKey=(preset?:string,start?:string|null,end?:string|null)=>`${CACHE_VERSION}:region:${preset||'MTD'}:${start||''}:${end||''}`;
 const SNAPSHOT_TTL=60*60*24*7;
 const FRESH_MS=5*60*1000;
 
@@ -58,7 +59,7 @@ export default {
   async fetch(request:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
     const url=new URL(request.url); const origin=env.ALLOWED_ORIGIN||'*';
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
-    if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE,d1:!!env.DB},200,origin);
+    if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE,d1:!!env.DB,cacheVersion:CACHE_VERSION},200,origin);
     if(url.pathname==='/api/dashboard/region'){
       const preset=url.searchParams.get('period') as PeriodPreset|null;
       const start=url.searchParams.get('start'); const end=url.searchParams.get('end');
