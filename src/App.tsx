@@ -12,6 +12,7 @@ const navigation = [
 ];
 
 const fmtPercent = (value: number | null) => value == null ? '—' : `${value.toFixed(2)}`;
+const fmtNumber = (value: number | null) => value == null ? '—' : new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(value);
 const fmtDate = (value: string | null) => value ? new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }).format(new Date(`${value}T00:00:00`)) : '—';
 const fmtMonth = (value: string | null | undefined) => value ? new Intl.DateTimeFormat('id-ID', { month: 'short', year: 'numeric' }).format(new Date(`${value}-01T00:00:00`)) : 'periode lalu';
 
