@@ -63,49 +63,18 @@ async function saveSnapshot(env:Env,key:string,data:unknown){
   await env.DASHBOARD_CACHE.put(key,JSON.stringify({updatedAt:new Date().toISOString(),data}),{expirationTtl:SNAPSHOT_TTL});
 }
 
-async function readD1Source(env:Env,source:SourceSegment):Promise<Row[]>{
-  if(!env.DB) return [];
-  await ensureSourceDb(env);
-  const result=await env.DB.prepare('SELECT row_json FROM source_rows WHERE source=? ORDER BY row_no').bind(source).all<{row_json:string}>();
-  return (result.results||[]).map(r=>{try{return JSON.parse(r.row_json) as Row}catch{return {}}}).filter(r=>Object.keys(r).length);
-}
-async function d1SourcesReady(env:Env){
-  if(!env.DB) return false;
-  await ensureSourceDb(env);
-  const result=await env.DB.prepare("SELECT source,status FROM source_sync_state WHERE source IN ('SLA','STO','LM','FM','MM')").all<{source:string;status:string}>();
-  const ready=new Set((result.results||[]).filter(r=>r.status==='READY').map(r=>r.source));
-  return ['SLA','STO','LM','FM','MM'].every(x=>ready.has(x));
-}
-
-const SYNC_ORDER:SourceSegment[]=['SLA','LM','FM','MM','STO'];
-async function syncAllSourcesSequentially(env:Env){
-  const results:{source:SourceSegment;status:string;rowCount?:number;error?:string}[]=[];
-  for(const source of SYNC_ORDER){
-    try{
-      const result=await syncSourceSegment(env,source);
-      results.push(result);
-    }catch(error){
-      results.push({source,status:'FAILED',error:error instanceof Error?error.message:'Unknown error'});
-      // Do not aggregate a mixed-generation dataset.
-      return {ok:false,results};
-    }
-  }
-  return {ok:true,results};
-}
-
-
-async function rebuildAndPersist(env:Env,key:string,period:string,start:string|null,end:string|null){
+async function rebuildAndPersist(env:Env,key:string,period:string,start:string|null,end:string|null,previous:Snapshot|null=null){
   const data=await buildRegionDashboard(env,period as PeriodPreset,start&&end?{start,end}:undefined);
-  await saveDbSnapshot(env,key,period,start,end,data);
-  await saveSnapshot(env,key,data);
-  return data;
+  const changed=!previous || JSON.stringify(previous.data)!==JSON.stringify(data);
+  if(changed){
+    await saveDbSnapshot(env,key,period,start,end,data);
+    await saveSnapshot(env,key,data);
+    return {data,changed:true,updatedAt:new Date().toISOString()};
+  }
+  return {data:previous.data,changed:false,updatedAt:previous.updatedAt};
 }
 
 export default {
-  async scheduled(_event:ScheduledEvent,env:Env,ctx:ExecutionContext){
-    const period='MTD';
-    ctx.waitUntil(rebuildAndPersist(env,cacheKey(period,null,null),period,null,null).catch(()=>undefined));
-  },
   async fetch(request:Request,env:Env,ctx:ExecutionContext):Promise<Response>{
     const url=new URL(request.url); const origin=env.ALLOWED_ORIGIN||'*';
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
@@ -117,33 +86,31 @@ export default {
       if((start||end)&&(!validDate(start)||!validDate(end)||start!>end!)) return json({ok:false,error:'Custom range tidak valid'},400,origin);
       const key=cacheKey(preset||undefined,start,end);
       const force=url.searchParams.get('refresh')==='1';
-      let kvSnapshot:Snapshot|null=null;
-      let dbSnapshot:Snapshot|null=null;
+      let kvSnapshot:Snapshot|null=null; let dbSnapshot:Snapshot|null=null;
       try{kvSnapshot=await readSnapshot(env,key)}catch{}
       if(!kvSnapshot){try{dbSnapshot=await readDbSnapshot(env,key)}catch{}}
       let snapshot=kvSnapshot??dbSnapshot;
-      // A cache-version bump must not force the browser to wait for a heavy
-      // Google Sheets rebuild. Reuse the previous last-good snapshot while v3
-      // is rebuilt in the background.
-      if(!snapshot && !force){
+      if(!snapshot){
         const legacyKey=cacheKey(preset||undefined,start,end,LEGACY_CACHE_VERSION);
         try{snapshot=await readSnapshot(env,legacyKey)}catch{}
         if(!snapshot){try{snapshot=await readDbSnapshot(env,legacyKey)}catch{}}
       }
       if(dbSnapshot && env.DASHBOARD_CACHE) ctx.waitUntil(saveSnapshot(env,key,dbSnapshot.data));
-      const fresh=snapshot && Date.now()-Date.parse(snapshot.updatedAt)<FRESH_MS;
-      if(snapshot && fresh && !force) return json(snapshot.data,200,origin,{'x-dashboard-cache':'HIT','x-dashboard-updated-at':snapshot.updatedAt});
-      const rebuild=()=>rebuildAndPersist(env,key,preset||'MTD',start,end);
-      if(snapshot && !force){
-        ctx.waitUntil(rebuild().catch(()=>undefined));
-        return json(snapshot.data,200,origin,{'x-dashboard-cache':'STALE','x-dashboard-updated-at':snapshot.updatedAt});
+      const checkedAt=new Date().toISOString();
+
+      // Normal dashboard loads are read-only: never rebuild, write D1/KV, or touch Sheets.
+      if(!force){
+        if(snapshot) return json(snapshot.data,200,origin,{'x-dashboard-cache':'HIT','x-dashboard-updated-at':snapshot.updatedAt,'x-dashboard-checked-at':checkedAt,'x-dashboard-changed':'0'});
+        return json({ok:false,error:'Dashboard belum memiliki snapshot. Klik Refresh Data untuk membuat data awal.'},503,origin,{'x-dashboard-checked-at':checkedAt});
       }
+
+      // Only an explicit Refresh Data click reads Sheets. Persist only when calculated content changed.
       try{
-        const data=await rebuild();
-        return json(data,200,origin,{'x-dashboard-cache':env.DASHBOARD_CACHE?'MISS':'BYPASS','x-dashboard-updated-at':new Date().toISOString()});
+        const result=await rebuildAndPersist(env,key,preset||'MTD',start,end,snapshot);
+        return json(result.data,200,origin,{'x-dashboard-cache':result.changed?'REFRESHED':'UNCHANGED','x-dashboard-updated-at':result.updatedAt,'x-dashboard-checked-at':checkedAt,'x-dashboard-changed':result.changed?'1':'0'});
       }catch(error){
-        if(snapshot) return json(snapshot.data,200,origin,{'x-dashboard-cache':'STALE-ERROR','x-dashboard-updated-at':snapshot.updatedAt});
-        return json({ok:false,error:error instanceof Error?error.message:'Unknown error'},500,origin);
+        if(snapshot) return json(snapshot.data,200,origin,{'x-dashboard-cache':'REFRESH-ERROR','x-dashboard-updated-at':snapshot.updatedAt,'x-dashboard-checked-at':checkedAt,'x-dashboard-changed':'0'});
+        return json({ok:false,error:error instanceof Error?error.message:'Unknown error'},500,origin,{'x-dashboard-checked-at':checkedAt});
       }
     }
     return json({ok:false,error:'Not found'},404,origin);
