@@ -37,10 +37,15 @@ async function saveDbSnapshot(env:Env,key:string,period:string,start:string|null
   if(!env.DB) return;
   await ensureDb(env);
   const updatedAt=new Date().toISOString();
+  const payload=JSON.stringify(data);
+  // D1/SQLite has a per-value size ceiling. Dashboard snapshots can exceed it,
+  // so D1 is metadata/status storage only; the full snapshot lives in KV.
+  const bytes=new TextEncoder().encode(payload).byteLength;
+  if(bytes>1_500_000) return;
   await env.DB.prepare(`INSERT INTO dashboard_snapshots(cache_key,period,range_start,range_end,updated_at,payload)
     VALUES(?,?,?,?,?,?)
     ON CONFLICT(cache_key) DO UPDATE SET period=excluded.period,range_start=excluded.range_start,range_end=excluded.range_end,updated_at=excluded.updated_at,payload=excluded.payload`)
-    .bind(key,period,start,end,updatedAt,JSON.stringify(data)).run();
+    .bind(key,period,start,end,updatedAt,payload).run();
 }
 
 type Snapshot={updatedAt:string;data:unknown};
