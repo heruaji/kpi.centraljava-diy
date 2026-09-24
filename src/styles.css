@@ -963,3 +963,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .drivers-daily-table thead th{position:sticky;top:0;z-index:5;background:var(--ui-card)}
 .theme-light .drivers-daily-table thead th{background:#f8fafc}
 .theme-dark .drivers-daily-table thead th{background:#172231}
+
+
+/* Performance Drivers card comparison */
+.driver-metric-card{display:flex;flex-direction:column}
+.driver-card-comparison{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:10px;padding-top:8px;border-top:1px solid var(--ui-border);font-size:9px}
+.driver-card-comparison>span{color:var(--ui-muted)}
+.driver-card-comparison b{font-weight:700}
+.driver-card-comparison b.good{color:#22c55e}
+.driver-card-comparison b.review{color:#ef4444}
+.driver-card-comparison b.neutral{color:var(--ui-muted)}
