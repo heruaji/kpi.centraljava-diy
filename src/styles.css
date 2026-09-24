@@ -973,3 +973,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .driver-card-comparison b.good{color:#22c55e}
 .driver-card-comparison b.review{color:#ef4444}
 .driver-card-comparison b.neutral{color:var(--ui-muted)}
+
+
+/* Performance Drivers daily trend */
+.driver-mini-trends{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:12px 0 16px}
+.driver-mini-trend{min-width:0;padding:11px 12px 9px;border:1px solid var(--ui-border);border-radius:10px;background:var(--ui-card)}
+.driver-mini-head{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:8px}
+.driver-mini-head span{color:var(--ui-muted);font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.04em}
+.driver-mini-head strong{font-size:13px;font-variant-numeric:tabular-nums}
+.driver-mini-bars{display:flex;align-items:flex-end;gap:3px;height:92px;overflow-x:auto;padding-top:4px}
+.driver-mini-col{display:flex;flex:1 0 16px;min-width:16px;height:100%;align-items:center;justify-content:flex-end;flex-direction:column;gap:4px}
+.driver-mini-col i{display:block;width:70%;min-height:3px;border-radius:3px 3px 1px 1px;background:#4f9f63;opacity:.9}
+.driver-mini-col small{color:var(--ui-muted);font-size:7px;line-height:1}
+.theme-light .driver-mini-trend{background:#fff}
+.theme-dark .driver-mini-trend{background:#111b29}
+@media(max-width:720px){.driver-mini-trends{grid-template-columns:1fr}}
