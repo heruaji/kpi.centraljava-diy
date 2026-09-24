@@ -229,12 +229,24 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     const area=String(r['District Area']||'').trim()||stoAreaByHub.get(hub)||stoAreaByHub.get(hub.replace(/^\d+\s*-\s*/,''))||'';
     return {...r,__date:excelDate(r.GRANULAR_DATE),__area:area};
   }).filter(r=>r.__date);
-  const mmDated=mm.map(r=>{
-    const hub=String(r['Hub Name']||r['Nama Hub']||r.HUB_NAME||r.HUB||'').trim();
-    const explicitArea=String(r['District Area']||r.District||r.AREA||r['Area Name']||'').trim();
-    const area=explicitArea||stoAreaByHub.get(hub)||stoAreaByHub.get(hub.replace(/^\d+\s*-\s*/,''))||'';
-    return {...r,__date:excelDate(r.GRANULAR_DATE),__area:area};
-  }).filter(r=>r.__date);
+  // KPI MM does not carry the same area key as SLA. Resolve its hub/sortation
+  // against STO, then use the STO District as the dashboard area.
+  const resolveStoArea=(row:Row)=>{
+    const identities=[
+      row['Hub Name'],row['Nama Hub'],row.HUB_NAME,row.HUB,
+      row['Sortation Name'],row['Sortation'],row['Nama Sortation'],
+      row['Branch Name'],row['Nama Cabang/Gerai']
+    ].map(normHub).filter(Boolean);
+    if(!identities.length) return '';
+    for(const master of sto){
+      const masterNames=[master['Nama Cabang/Gerai'],master.Nama].map(normHub).filter(Boolean);
+      if(identities.some(source=>masterNames.some(target=>source===target||source.includes(target)||target.includes(source)))){
+        return String(master.District||'').trim();
+      }
+    }
+    return '';
+  };
+  const mmDated=mm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:resolveStoArea(r)})).filter(r=>r.__date);
   const maxDate=dated.map(r=>r.__date as string).sort().at(-1) || null;
   const lmMaxDate=lmDated.map(r=>r.__date as string).sort().at(-1) || null;
   const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
