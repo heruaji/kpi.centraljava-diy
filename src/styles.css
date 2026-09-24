@@ -1106,3 +1106,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-area-all-table table{min-width:760px!important}
 .kpi-area-all-table th:nth-child(n+3),.kpi-area-all-table td:nth-child(n+3){text-align:center!important}
 .kpi-area-all-table td:nth-child(n+3) .kpi-health-chip{display:inline-flex!important;margin-left:8px!important;vertical-align:middle!important}
+
+/* KPI point matrix: KPI components stay in columns, territory/gerai stay in rows */
+.kpi-points-matrix{overflow:auto!important}
+.kpi-points-matrix table{width:max-content!important;min-width:100%!important}
+.kpi-points-matrix th,.kpi-points-matrix td{white-space:nowrap!important;text-align:center!important;min-width:112px!important}
+.kpi-points-matrix th:nth-child(1),.kpi-points-matrix td:nth-child(1){min-width:52px!important}
+.kpi-points-matrix th:nth-child(2),.kpi-points-matrix td:nth-child(2){position:sticky!important;left:0!important;z-index:3!important;text-align:left!important;min-width:190px!important;background:var(--ct-card)!important}
+.kpi-points-matrix thead th:nth-child(2){z-index:7!important;background:var(--ct-card2)!important}
+.kpi-gerai-points{margin:12px 0!important;border:1px solid var(--ct-border)!important;border-radius:8px!important}
