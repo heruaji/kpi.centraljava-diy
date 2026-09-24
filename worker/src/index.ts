@@ -154,7 +154,8 @@ async function rebuildAndPersist(env:Env,key:string,period:string,start:string|n
       ]);
       data=await buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},period as PeriodPreset,start&&end?{start,end}:undefined);
     }else{
-      throw new Error('D1 source data belum READY. Jalankan backend source sync terlebih dahulu.');
+      const state=env.DB?await env.DB.prepare('SELECT source,status,row_count,finished_at,error FROM source_sync_state ORDER BY source').all():{results:[]};
+      throw new Error(`D1 source data belum READY: ${JSON.stringify(state.results||[])}`);
     }
     await saveDbSnapshot(env,key,period,start,end,data);
     await saveSnapshot(env,key,data);
@@ -183,11 +184,14 @@ export default {
     if(url.pathname==='/api/sync/all'){
       if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
       if(env.SYNC_TOKEN && request.headers.get('authorization')!==`Bearer ${env.SYNC_TOKEN}`) return json({ok:false,error:'Unauthorized'},401,origin);
-      ctx.waitUntil((async()=>{
+      try{
         const sync=await syncAllSourcesSequentially(env);
-        if(sync.ok) await rebuildAndPersist(env,cacheKey('MTD',null,null),'MTD',null,null);
-      })().catch(()=>undefined));
-      return json({ok:true,status:'FULL_SYNC_STARTED',order:SYNC_ORDER},202,origin);
+        if(!sync.ok) return json({ok:false,status:'SYNC_FAILED',results:sync.results},500,origin);
+        await rebuildAndPersist(env,cacheKey('MTD',null,null),'MTD',null,null);
+        return json({ok:true,status:'READY',results:sync.results},200,origin);
+      }catch(error){
+        return json({ok:false,status:'SYNC_FAILED',error:error instanceof Error?error.message:'Unknown error'},500,origin);
+      }
     }
     if(url.pathname==='/api/sync/source'){
       if(request.method!=='POST') return json({ok:false,error:'Method not allowed'},405,origin);
