@@ -888,3 +888,23 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .combo-legend i.target{width:20px;height:0;border-top:2px dashed #ef4444}
 .theme-light .combo-productivity-line{stroke:#111827}.theme-light .combo-productivity-point{fill:#111827;stroke:#fff}.theme-light .combo-productivity-label{fill:#111827;stroke:#fff}.theme-light .combo-manpower-point{stroke:#fff}.theme-light .combo-manpower-label,.theme-light .combo-target-label{stroke:#fff}.theme-light .combo-volume-label{fill:#fff}.theme-light .combo-legend i.actual{background:#111827}.theme-light .combo-legend i.actual:after{background:#111827}
 @media(max-width:700px){.productivity-combo-chart{height:300px}.productivity-combo-scroll{margin-left:-8px;margin-right:-8px}.combo-legend{gap:10px 14px}}
+
+
+/* Dark-mode readability correction for productivity combo chart */
+.theme-dark .productivity-combo-scroll{background:#111b29}
+.theme-dark .combo-grid{stroke:rgba(148,163,184,.22)}
+.theme-dark .combo-axis-label,.theme-dark .combo-date-label{fill:#94a3b8}
+.theme-dark .combo-volume-bar{fill:#4f9f63;opacity:.9}
+.theme-dark .combo-volume-label{fill:#ffffff;stroke:#4f9f63;stroke-width:2px;paint-order:stroke;font-weight:800}
+.theme-dark .combo-productivity-line{stroke:#e2e8f0;stroke-width:2}
+.theme-dark .combo-productivity-point{fill:#e2e8f0;stroke:#111b29;stroke-width:2}
+.theme-dark .combo-productivity-label{fill:#e2e8f0;stroke:#111b29;stroke-width:4px;font-size:9px}
+.theme-dark .combo-manpower-line{stroke:#ff8a34;stroke-width:2}
+.theme-dark .combo-manpower-point{fill:#ff8a34;stroke:#111b29;stroke-width:2}
+.theme-dark .combo-manpower-label{fill:#ff9a52;stroke:#111b29;stroke-width:4px;font-size:9px}
+.theme-dark .combo-target-line{stroke:#ff4d5a;stroke-width:1.5;stroke-dasharray:7 5}
+.theme-dark .combo-target-label{fill:#ff6b75;stroke:#111b29;stroke-width:4px}
+.theme-dark .combo-legend{border-top-color:rgba(148,163,184,.16)}
+.theme-dark .combo-legend span{color:#94a3b8}
+.theme-dark .combo-legend i.actual{background:#e2e8f0}
+.theme-dark .combo-legend i.actual:after{background:#e2e8f0}
