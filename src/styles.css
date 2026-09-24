@@ -996,3 +996,16 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .driver-mini-bar-wrap i{display:block;width:70%;min-height:3px;border-radius:3px 3px 1px 1px;background:#4f9f63;opacity:.9}
 .driver-mini-bar-wrap b{position:absolute;bottom:calc(var(--bar-height,0%) + 2px);left:50%;transform:translateX(-50%);font-size:6.5px;line-height:1;color:var(--ui-muted);font-weight:700;white-space:nowrap;pointer-events:none}
 .driver-mini-col:hover .driver-mini-bar-wrap b{color:var(--ui-text)}
+
+
+/* Final audit: mobile content-driven layout */
+@media(max-width:760px){
+  html,body,#root,.app-shell,.main{min-height:100%;height:auto}
+  .main{overflow:visible}
+  .content{height:auto;min-height:0;overflow:visible}
+  .panel,.productivity-module,.drivers-module{height:auto;min-height:0}
+  .dashboard-grid,.metric-grid,.driver-grid{height:auto}
+  .table-wrap{max-width:100%}
+  .productivity-combo-scroll,.table-wrap{overscroll-behavior-inline:contain}
+  .drivers-daily-table{max-height:420px;overflow:auto}
+}
