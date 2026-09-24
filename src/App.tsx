@@ -263,6 +263,35 @@ export default function App() {
     ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
     : 'MTD • Memuat...';
 
+  const territoryNav = (() => {
+    if (activeModule === 'sla') return {
+      areaId: slaAreaId, branchId: slaBranchDetailId, areaLabel: 'Area SLA', branchLabel: 'Gerai SLA',
+      region: () => { setSlaBranchDetailId(null); setSlaAreaId(null); },
+      area: () => setSlaBranchDetailId(null)
+    };
+    if (activeModule === 'kpi') return {
+      areaId: kpiAreaId, branchId: kpiBranchDetailId, areaLabel: `Area KPI ${kpiFunction}`, branchLabel: `Gerai KPI ${kpiFunction}`,
+      region: () => { setKpiDailyDate(null); setKpiBranchDetailId(null); setKpiAreaId(null); },
+      area: () => { setKpiDailyDate(null); setKpiBranchDetailId(null); }
+    };
+    if (activeModule === 'productivity') return {
+      areaId: productivityAreaId, branchId: productivityBranchId, areaLabel: 'Area Productivity', branchLabel: 'Gerai Productivity',
+      region: () => { setProductivityBranchId(null); setProductivityAreaId(null); },
+      area: () => setProductivityBranchId(null)
+    };
+    if (activeModule === 'drivers') return {
+      areaId: driversAreaId, branchId: driversBranchId, areaLabel: 'Area Drivers', branchLabel: 'Gerai Drivers',
+      region: () => { setDriversBranchId(null); setDriversAreaId(null); },
+      area: () => setDriversBranchId(null)
+    };
+    return {
+      areaId: selectedAreaId, branchId: selectedBranchId, areaLabel: 'Area Control Tower', branchLabel: 'Branch Command',
+      region: () => { setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); setSelectedAreaId(null); },
+      area: () => { setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); }
+    };
+  })();
+  const territoryClose = () => setMobileOpen(false);
+
   return (
     <div className={`app-shell theme-${theme}`}>
       {refreshNotice && <div className={`refresh-toast ${refreshNotice.kind}`} role="status" aria-live="polite"><span className="refresh-toast-dot"/><div><strong>{refreshNotice.kind==='updated'?'Data Diperbarui':'Data Sudah Terbaru'}</strong><small>{refreshNotice.text}</small></div><button onClick={()=>setRefreshNotice(null)} aria-label="Tutup notifikasi">×</button></div>}
@@ -280,9 +309,9 @@ export default function App() {
             </button>
           )})}
           <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>
-          <button title={collapsed?'Region Overview':undefined} className={!selectedArea ? 'nav-item active' : 'nav-item'} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setMobileOpen(false)}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
-          <button title={collapsed?'Area Control Tower':undefined} className={selectedArea && !selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedArea} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setMobileOpen(false)}}><Target size={18}/><span className="nav-label">Area Control Tower</span></button>
-          <button title={collapsed?'Branch Command':undefined} className={selectedBranch ? 'nav-item active' : 'nav-item'} disabled={!selectedBranch} onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setMobileOpen(false)}}><Route size={18}/><span className="nav-label">Branch Command</span></button>
+          <button title={collapsed?'Region Overview':undefined} className={!territoryNav.areaId ? 'nav-item active' : 'nav-item'} onClick={()=>{territoryNav.region();territoryClose()}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
+          <button title={collapsed?territoryNav.areaLabel:undefined} className={territoryNav.areaId && !territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.areaId} onClick={()=>{territoryNav.area();territoryClose()}}><Target size={18}/><span className="nav-label">{territoryNav.areaLabel}</span></button>
+          <button title={collapsed?territoryNav.branchLabel:undefined} className={territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.branchId} onClick={territoryClose}><Route size={18}/><span className="nav-label">{territoryNav.branchLabel}</span></button>
         </nav>
         <button className="collapse-btn" aria-label={collapsed?'Buka menu':'Tutup menu'} title={collapsed?'Buka menu':'Tutup menu'} onClick={() => setCollapsed(v => !v)}>
           <span className="collapse-icon">{collapsed ? <ChevronRight size={17}/> : <ChevronLeft size={17}/>}</span><span className="collapse-label">Collapse Menu</span>
