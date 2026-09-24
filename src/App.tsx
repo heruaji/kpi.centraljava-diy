@@ -67,11 +67,12 @@ export default function App() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshNotice, setRefreshNotice] = useState<{kind:'updated'|'latest';text:string}|null>(null);
+  const [dashboardUpdatedAt, setDashboardUpdatedAt] = useState<string | null>(null);
+  const [dashboardCheckedAt, setDashboardCheckedAt] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   const refreshSeq = useRef(0);
   const noticeTimer = useRef<number | null>(null);
-  const dashboardSignature = (data: RegionDashboard | null) => data ? JSON.stringify(data) : '';
   const showRefreshNotice = (notice:{kind:'updated'|'latest';text:string}) => {
     setRefreshNotice(notice);
     if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
@@ -82,16 +83,17 @@ export default function App() {
     if (showLoading) setLoading(true);
     if (manual) setRefreshing(true);
     try {
-      const next = await getRegionDashboard(periodPreset, customRange ?? undefined);
+      const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual);
       if (seq === refreshSeq.current) {
-        const hadData = dashboard !== null;
-        const changed = hadData && dashboardSignature(dashboard) !== dashboardSignature(next);
-        setDashboard(next);
+        setDashboard(result.data);
+        setDashboardUpdatedAt(result.updatedAt);
+        setDashboardCheckedAt(result.checkedAt);
         setError(null);
-        if (manual || hadData) {
-          showRefreshNotice(changed
-            ? {kind:'updated',text:'Data terbaru ditemukan dan dashboard sudah diperbarui.'}
-            : {kind:'latest',text:'Data sudah terbaru. Tidak ada perubahan baru.'});
+        if (manual) {
+          const stamp=result.updatedAt?new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(result.updatedAt)):'—';
+          showRefreshNotice(result.changed
+            ? {kind:'updated',text:`Data baru ditemukan dan dashboard diperbarui • ${stamp}`}
+            : {kind:'latest',text:`Tidak ada perubahan data • Terakhir diperbarui ${stamp}`});
         }
       }
     } catch (err) {
@@ -104,11 +106,8 @@ export default function App() {
   };
 
   useEffect(() => {
+    // Initial/period loads only read the last snapshot. Sheets are checked exclusively by Refresh Data.
     void refreshDashboard(true);
-    const timer = window.setInterval(() => {
-      if (document.visibilityState === 'visible') void refreshDashboard(false);
-    }, 5 * 60 * 1000);
-    return () => window.clearInterval(timer);
   }, [periodPreset, customRange]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
@@ -442,7 +441,7 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
           <div className={activeModule==='control'?'':'module-hidden'}>
           <div className="section-heading">
             <div className="scope-heading"><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : selectedBranch ? 'BRANCH PERFORMANCE' : selectedArea ? 'AREA PERFORMANCE' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Control Tower Performance Summary'}</h2>{selectedKpi ? <button className="back-scope" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Branch</button> : selectedBranch ? <button className="back-scope" onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null)}}>← Kembali ke Area</button> : selectedArea && <button className="back-scope" onClick={()=>setSelectedAreaId(null)}>← Kembali ke Region</button>}</div>
-            <span className="freshness" title="Tanggal data terbaru yang tersedia"><i></i>{error ? `Error: ${error}` : loading ? 'Memuat data...' : `Data Freshness: ${fmtDate(freshDate)}`}{!error&&!loading&&<b>Live</b>}</span>
+            <span className="freshness" title={dashboardCheckedAt?`Terakhir dicek: ${new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(dashboardCheckedAt))}`:'Snapshot dashboard'}><i></i>{error ? `Error: ${error}` : loading ? 'Memuat data...' : dashboardUpdatedAt?`Update terakhir: ${new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(dashboardUpdatedAt))}`:`Data: ${fmtDate(freshDate)}`}{!error&&!loading&&<b>Snapshot</b>}</span>
           </div>
 
           {!selectedKpi && <div className="metric-grid">
