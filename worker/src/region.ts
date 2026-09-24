@@ -309,7 +309,8 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const branchTrend=branchDayKeys.map(date=>{
         const day=sourceItems.filter(x=>x.__date===date);
         const slaDay=slaItems.filter(x=>x.__date===date);
-        return {date,sla:aggregate(slaDay).sla,productivity:aggregate(slaDay).productivityLm??aggregate(slaDay).productivityFm,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
+        const dailyAgg=aggregate(slaDay);
+        return {date,sla:dailyAgg.sla,productivity:fn==='LM'?dailyAgg.productivityLm:null,productivityVolume:fn==='LM'?sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'):null,productivityManpower:fn==='LM'?sum(slaDay,'TOTAL_MP_LM_SIGESIT'):null,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
       });
       const operationalTrend=branchDayKeys.map(date=>{
         const day=slaItems.filter(x=>x.__date===date);
