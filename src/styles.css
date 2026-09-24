@@ -956,3 +956,10 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .drivers-area-table th,.drivers-area-table td,
 .drivers-daily-table th,.drivers-daily-table td{text-align:center!important}
 .drivers-area-table th:nth-child(2),.drivers-area-table td:nth-child(2){text-align:left!important}
+
+
+/* Performance Drivers daily table: sticky header */
+.drivers-daily-table{max-height:420px;overflow:auto;position:relative}
+.drivers-daily-table thead th{position:sticky;top:0;z-index:5;background:var(--ui-card)}
+.theme-light .drivers-daily-table thead th{background:#f8fafc}
+.theme-dark .drivers-daily-table thead th{background:#172231}
