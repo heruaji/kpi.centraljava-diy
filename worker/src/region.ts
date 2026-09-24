@@ -238,7 +238,9 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const shiftMonth=(isoDate:string,months:number)=>{const [year,month,day]=isoDate.split('-').map(Number);const target=new Date(Date.UTC(year,month-1+months,1));const lastDay=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();return `${target.getUTCFullYear()}-${String(target.getUTCMonth()+1).padStart(2,'0')}-${String(Math.min(day,lastDay)).padStart(2,'0')}`};
   const previousRange={start:shiftMonth(range.start,-1),end:shiftMonth(range.end,-1)};
+  const previousPreviousRange={start:shiftMonth(range.start,-2),end:shiftMonth(range.end,-2)};
   const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
+  const previousPreviousSelected=dated.filter(r=>(r.__date as string)>=previousPreviousRange.start && (r.__date as string)<=previousPreviousRange.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const lmPreviousSelected=lmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
@@ -292,6 +294,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       const fn=String(r.Fungsi||'—').toUpperCase();
       const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
       const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
+      const previousPreviousSlaItems=previousPreviousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
       const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
       const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
       const mmBranch=mmSelected.filter(x=>matchesBranch(x,branchName,code));
@@ -317,7 +320,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
-        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,
+        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:fn==='LM'?aggregate(slaItems).productivityLm:null,productivityPrevious:fn==='LM'?aggregate(previousSlaItems).productivityLm:null,productivityPreviousPrevious:fn==='LM'?aggregate(previousPreviousSlaItems).productivityLm:null,
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
           backlog:sum(slaItems,'VOLUME_BACKLOG'),
