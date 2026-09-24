@@ -98,7 +98,19 @@ export default function App() {
       setDriversAreaId(n.driversAreaId??null); setDriversBranchId(n.driversBranchId??null);
       setMobileOpen(false); setPeriodOpen(false);
     };
-    const onPop=(e:PopStateEvent)=>restore(e.state);
+    const onPop=(e:PopStateEvent)=>{
+      if(e.state?.kpiNav){restore(e.state);return}
+      // Keep the first browser Back action inside the SPA instead of leaving the dashboard.
+      restoringHistory.current=true;
+      setMobileOpen(false); setPeriodOpen(false);
+      setSelectedKpiKey(null); setSelectedDriver(null);
+      setSelectedBranchId(null); setSelectedAreaId(null);
+      setSlaBranchDetailId(null); setSlaAreaId(null);
+      setKpiDailyDate(null); setKpiBranchDetailId(null); setKpiAreaId(null);
+      setProductivityBranchId(null); setProductivityAreaId(null);
+      setDriversBranchId(null); setDriversAreaId(null);
+      window.history.replaceState({...window.history.state,kpiNav:{activeModule}},'');
+    };
     window.addEventListener('popstate',onPop);
     return()=>window.removeEventListener('popstate',onPop);
   },[]);
