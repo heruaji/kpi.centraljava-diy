@@ -336,10 +336,24 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     const kpiFm=fmScore(fmItems);
     const kpiMm=mmScore(mmItems);
     const health=kpiLm??kpiFm??kpiMm;
-    const branches=sto.filter(r=>String(r.District||'')===name).map((r,branchIndex)=>{
-      const code=String(r['Kode Analytic']||'');
-      const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'—');
-      const fn=String(r.Fungsi||'—').toUpperCase();
+    const nativeBranches=new Map<string,{name:string;function:string;code:string;city:string}>();
+    const addNative=(branchName:string,fn:string)=>{
+      const clean=branchName.trim(); if(!clean) return;
+      const key=`${fn}|${normHub(clean)}`;
+      if(!nativeBranches.has(key)) nativeBranches.set(key,{name:clean,function:fn,code:'',city:'—'});
+    };
+    // LM/FM branch membership comes only from the corresponding KPI source.
+    lmItems.forEach(r=>addNative(String(r.__branch||''),'LM'));
+    fmItems.forEach(r=>addNative(String(r.__branch||''),'FM'));
+    // MM has no native Area column, so only MM keeps STO as its area/branch master.
+    sto.filter(r=>String(r.District||'')===name && String(r.Fungsi||'').toUpperCase()==='MM').forEach(r=>{
+      const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'').trim(); if(!branchName) return;
+      nativeBranches.set(`MM|${normHub(branchName)}`,{name:branchName,function:'MM',code:String(r['Kode Analytic']||''),city:String(r['KAB/ KOTA']||'—')});
+    });
+    const branches=[...nativeBranches.values()].map((r,branchIndex)=>{
+      const code=r.code;
+      const branchName=r.name;
+      const fn=r.function;
       const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
       const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
       const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
@@ -366,7 +380,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
         return {date,volume:sum(day,'VOLUME_SLA_ALL'),backlog:sum(day,'VOLUME_BACKLOG'),failedDelivery:sum(day,'VOLUME_FD'),codTransfer:sum(day,'VOLUME_COD_TF')};
       });
       return {
-        id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:String(r['KAB/ KOTA']||'—'),
+        id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:r.city,
         sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
