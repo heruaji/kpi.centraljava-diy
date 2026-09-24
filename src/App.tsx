@@ -113,6 +113,15 @@ export default function App() {
     window.history.pushState({...window.history.state,kpiNav:navSnapshot},'');
   },[navKey]);
 
+  useEffect(() => {
+    setSelectedKpiKey(null); setSelectedDriver(null);
+    setSelectedAreaId(null); setSelectedBranchId(null);
+    setSlaAreaId(null); setSlaBranchDetailId(null);
+    setKpiAreaId(null); setKpiBranchDetailId(null); setKpiDailyDate(null);
+    setProductivityAreaId(null); setProductivityBranchId(null);
+    setDriversAreaId(null); setDriversBranchId(null);
+  }, [periodPreset, customRange]);
+
   useEffect(() => { localStorage.setItem('kpi-dashboard-module', activeModule); }, [activeModule]);
   useEffect(() => {
     if (!mobileOpen && !periodOpen) return;
