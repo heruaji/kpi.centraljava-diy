@@ -923,3 +923,11 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .combo-tooltip-fo:has(+ .combo-hover-zone:hover),.combo-tooltip-fo:has(+ .combo-hover-zone:focus){opacity:1}
 .theme-light .combo-tooltip{background:rgba(255,255,255,.98);border-color:#dfe3e8;color:#111827;box-shadow:0 10px 28px rgba(15,23,42,.14)}
 .theme-light .combo-tooltip strong,.theme-light .combo-tooltip b{color:#111827}.theme-light .combo-tooltip span{color:#64748b}
+
+
+/* Combo chart layering: tooltip always above chart data */
+.productivity-combo-chart{isolation:isolate}
+.combo-volume-bar,.combo-volume-label,.combo-productivity-line,.combo-manpower-line,.combo-productivity-point,.combo-manpower-point,.combo-productivity-label,.combo-manpower-label{pointer-events:none}
+.combo-tooltip-fo{position:relative;z-index:100}
+.combo-hover-zone{pointer-events:all}
+.combo-productivity-line,.combo-manpower-line{vector-effect:non-scaling-stroke}
