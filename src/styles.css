@@ -1026,3 +1026,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   .drivers-daily-table{height:auto!important;max-height:420px!important;overflow-y:auto!important}
   .productivity-daily-table,.sla-daily-table,.kpi-matrix-wrap,.drivers-daily-table{overflow-x:auto!important;-webkit-overflow-scrolling:touch}
 }
+
+
+/* Refresh control */
+.refresh-button{min-width:112px;justify-content:center;transition:transform .16s ease,background .16s ease,border-color .16s ease}.refresh-button:hover:not(:disabled){transform:translateY(-1px)}.refresh-button:active:not(:disabled){transform:translateY(0) scale(.97)}.refresh-button:disabled{cursor:wait;opacity:.72}.refresh-spin{animation:refresh-spin .75s linear infinite}@keyframes refresh-spin{to{transform:rotate(360deg)}}
