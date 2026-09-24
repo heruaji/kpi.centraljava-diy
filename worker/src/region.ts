@@ -403,7 +403,15 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       const mmDay=mmItems.filter(r=>r.__date===date);
       return {date,sla:aggregate(slaDay).sla,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
-    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches};
+    // Area penalty is recalculated from the area's raw numerator/denominator,
+    // exactly like KPI aggregation. Never average branch penalty scores.
+    const penaltyDetailsLm=lmPenaltyDetails(lmItems);
+    const penaltyDetailsFm=fmPenaltyDetails(fmItems);
+    const penaltyDetailsMm=mmPenaltyDetails(mmItems);
+    const penaltyLm=lmPenalty(lmItems);
+    const penaltyFm=fmPenalty(fmItems);
+    const penaltyMm=mmPenalty(mmItems);
+    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches,penaltyLm,penaltyFm,penaltyMm,penaltyDetailsLm,penaltyDetailsFm,penaltyDetailsMm};
   });
 
   return {
