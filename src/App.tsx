@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type { RegionDashboard } from './types/dashboard';
 import { getRegionDashboard, latestFreshness, type DashboardPeriod } from './services/dashboard';
 import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Gauge, Menu, Moon, Route, Sun, Target, TrendingUp, X } from 'lucide-react';
@@ -76,6 +76,43 @@ export default function App() {
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
   useEffect(() => { localStorage.setItem('kpi-dashboard-theme', theme); }, [theme]);
+  const historyReady = useRef(false);
+  const restoringHistory = useRef(false);
+  const navSnapshot = {
+    activeModule, selectedAreaId, selectedBranchId, selectedKpiKey,
+    slaAreaId, slaBranchDetailId, kpiAreaId, kpiBranchDetailId, kpiDailyDate,
+    productivityAreaId, productivityBranchId, driversAreaId, driversBranchId
+  };
+  const navKey = JSON.stringify(navSnapshot);
+
+  useEffect(() => {
+    const restore = (state:any) => {
+      const n=state?.kpiNav;
+      if(!n)return;
+      restoringHistory.current=true;
+      setActiveModule(n.activeModule??'control');
+      setSelectedAreaId(n.selectedAreaId??null); setSelectedBranchId(n.selectedBranchId??null); setSelectedKpiKey(n.selectedKpiKey??null);
+      setSlaAreaId(n.slaAreaId??null); setSlaBranchDetailId(n.slaBranchDetailId??null);
+      setKpiAreaId(n.kpiAreaId??null); setKpiBranchDetailId(n.kpiBranchDetailId??null); setKpiDailyDate(n.kpiDailyDate??null);
+      setProductivityAreaId(n.productivityAreaId??null); setProductivityBranchId(n.productivityBranchId??null);
+      setDriversAreaId(n.driversAreaId??null); setDriversBranchId(n.driversBranchId??null);
+      setMobileOpen(false); setPeriodOpen(false);
+    };
+    const onPop=(e:PopStateEvent)=>restore(e.state);
+    window.addEventListener('popstate',onPop);
+    return()=>window.removeEventListener('popstate',onPop);
+  },[]);
+
+  useEffect(() => {
+    if(!historyReady.current){
+      window.history.replaceState({...window.history.state,kpiNav:navSnapshot},'');
+      historyReady.current=true;
+      return;
+    }
+    if(restoringHistory.current){restoringHistory.current=false;return}
+    window.history.pushState({...window.history.state,kpiNav:navSnapshot},'');
+  },[navKey]);
+
   useEffect(() => { localStorage.setItem('kpi-dashboard-module', activeModule); }, [activeModule]);
   useEffect(() => {
     if (!mobileOpen && !periodOpen) return;
