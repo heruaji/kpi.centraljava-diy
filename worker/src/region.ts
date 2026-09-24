@@ -307,9 +307,13 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
     const lmDay=lmSelected.filter(r=>r.__date===date);
     const fmDay=fmSelected.filter(r=>r.__date===date);
     const mmDay=mmSelected.filter(r=>r.__date===date);
+    const dayAggregate=aggregate(slaDay);
     return {
       date,
-      sla:aggregate(slaDay).sla,
+      sla:dayAggregate.sla,
+      productivity:dayAggregate.productivityLm,
+      productivityVolume:sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'),
+      productivityManpower:sum(slaDay,'TOTAL_MP_LM_SIGESIT'),
       kpiLm:lmScore(lmDay),
       kpiFm:fmScore(fmDay),
       kpiMm:mmScore(mmDay),
