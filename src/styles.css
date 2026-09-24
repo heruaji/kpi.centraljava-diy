@@ -847,3 +847,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* ===== PRODUCTIVITY: latest daily snapshot ===== */
 .productivity-daily-summary{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin:12px 0 8px}.productivity-daily-summary .metric-card{min-height:88px}.productivity-daily-summary .metric-card>strong{font-variant-numeric:tabular-nums}@media(max-width:720px){.productivity-daily-summary{grid-template-columns:1fr}}
+
+
+/* ===== PRODUCTIVITY: movement filters ===== */
+.productivity-movement-filter{max-width:138px}.productivity-branch-tools .productivity-movement-filter{margin-left:auto}.productivity-branch-tools .productivity-movement-filter+.productivity-sort{margin-left:0}@media(max-width:720px){.productivity-movement-filter{max-width:132px}.productivity-panel-tools{flex-wrap:wrap}.productivity-branch-tools .productivity-movement-filter{margin-left:0}}
