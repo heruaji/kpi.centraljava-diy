@@ -1146,3 +1146,29 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 [data-theme="dark"] .branch-count{color:var(--ct-text)!important;background:var(--ct-card2)!important;border:1px solid var(--ct-border)!important}
 .control-detail-table.kpi-points-matrix th:nth-child(2){background:var(--ct-card2)!important;text-align:center!important}
 .control-detail-table.kpi-points-matrix td:nth-child(2){background:var(--ct-card)!important;text-align:left!important}
+
+/* Control Tower detail fixes — actual app theme uses .theme-dark */
+.theme-dark .branch-directory-panel .branch-count{
+  color:#f8fafc!important;
+  background:rgba(255,255,255,.10)!important;
+  border-color:rgba(255,255,255,.18)!important;
+}
+.control-detail-table.kpi-points-matrix thead th:nth-child(2){
+  position:sticky!important;
+  left:0!important;
+  z-index:7!important;
+  text-align:center!important;
+  background:var(--ct-card2)!important;
+  color:var(--ct-muted)!important;
+}
+.theme-dark .control-detail-table.kpi-points-matrix thead th:nth-child(2){
+  background:var(--ct-card2)!important;
+  color:var(--ct-muted)!important;
+}
+.theme-light .control-detail-table.kpi-points-matrix thead th:nth-child(2){
+  background:#f1f5f9!important;
+  color:#475569!important;
+}
+.control-detail-table.kpi-points-matrix tbody td:nth-child(2){
+  text-align:left!important;
+}
