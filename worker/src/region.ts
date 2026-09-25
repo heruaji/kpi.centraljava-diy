@@ -485,6 +485,25 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     ],
     penalties,
     trend,
+    operations:{
+      volume:sum(selected,'VOLUME_SLA_ALL'),
+      backlog:sum(selected,'VOLUME_BACKLOG'),
+      backlogRate:pct(ratio(sum(selected,'VOLUME_BACKLOG'),sum(selected,'VOLUME_BACKLOG_ALL'))),
+      failedDelivery:sum(selected,'VOLUME_FD'),
+      failedDeliveryRate:pct(ratio(sum(selected,'VOLUME_FD'),sum(selected,'VOLUME_FD_ALL'))),
+      codTransfer:sum(selected,'VOLUME_COD_TF'),
+      codTransferRate:pct(ratio(sum(selected,'VOLUME_COD_TF'),sum(selected,'VOLUME_COD_ALL'))),
+      comparison:{
+        label:previousRange.end,
+        volume:sum(previousSelected,'VOLUME_SLA_ALL'),
+        backlog:sum(previousSelected,'VOLUME_BACKLOG'),
+        backlogRate:pct(ratio(sum(previousSelected,'VOLUME_BACKLOG'),sum(previousSelected,'VOLUME_BACKLOG_ALL'))),
+        failedDelivery:sum(previousSelected,'VOLUME_FD'),
+        failedDeliveryRate:pct(ratio(sum(previousSelected,'VOLUME_FD'),sum(previousSelected,'VOLUME_FD_ALL'))),
+        codTransfer:sum(previousSelected,'VOLUME_COD_TF'),
+        codTransferRate:pct(ratio(sum(previousSelected,'VOLUME_COD_TF'),sum(previousSelected,'VOLUME_COD_ALL')))
+      }
+    },
     productivityByRole:productivityBundle(selected,previousSelected,previousPreviousSelected),
     areas
   };
