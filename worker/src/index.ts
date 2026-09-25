@@ -1,4 +1,4 @@
-import { buildRegionDashboard } from './region';
+import { buildRegionDashboard, readDashboardFreshness } from './region';
 import type { PeriodPreset } from './period';
 
 export interface Env {
@@ -125,6 +125,29 @@ export default {
 
       if(!env.DB) return json({ok:false,error:'D1 diperlukan untuk background refresh'},503,origin,{'x-dashboard-checked-at':checkedAt});
       await ensureDb(env);
+
+      // First do a lightweight source check. If all source max dates are the same
+      // as the current snapshot, do not run the expensive dashboard calculation.
+      if(snapshot){
+        try{
+          const sourceFreshness=await readDashboardFreshness(env);
+          const currentFreshness=Array.isArray((snapshot.data as any)?.freshness)?(snapshot.data as any).freshness:[];
+          const current=new Map(currentFreshness.map((x:any)=>[String(x.source),x.maxDate??null]));
+          const hasNewData=sourceFreshness.some(x=>x.maxDate && x.maxDate!==current.get(x.source));
+          if(!hasNewData){
+            return json({ok:true,status:'LATEST',changed:false,updatedAt:snapshot.updatedAt},200,origin,{
+              'x-dashboard-cache':'UNCHANGED',
+              'x-dashboard-updated-at':snapshot.updatedAt,
+              'x-dashboard-checked-at':checkedAt,
+              'x-dashboard-changed':'0'
+            });
+          }
+        }catch{
+          // Probe failure must not make Refresh unusable; fall back to the guarded
+          // background rebuild path below.
+        }
+      }
+
       const running=await latestRunningJob(env,key);
       if(running) return json({ok:true,jobId:running.job_id,status:'PROCESSING',startedAt:running.started_at},202,origin,{'x-dashboard-checked-at':checkedAt});
 
