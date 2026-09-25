@@ -1378,3 +1378,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .drivers-metric-grid .driver-summary-progress{height:4px;margin:2px 0 12px;background:var(--ct-border)}
 .drivers-metric-grid .driver-summary-card.achieved .driver-summary-progress i{background:linear-gradient(90deg,#8b5cf6,#22c55e)}
 .drivers-metric-grid .driver-summary-card.needs-review .driver-summary-progress i{background:linear-gradient(90deg,#f59e0b,#ef4444)}
+
+/* Penalty matrix — achievement + penalty pairing */
+.kpi-penalty-matrix thead tr:first-child th[colspan]{text-align:center;border-bottom:1px solid var(--ct-border)}
+.kpi-penalty-matrix .penalty-subhead{font-size:8px;font-weight:600;color:var(--ct-muted);text-transform:uppercase;letter-spacing:.04em;text-align:center}
+.kpi-penalty-matrix .penalty-actual{display:inline-flex;align-items:center;justify-content:center;min-width:58px;padding:3px 7px;border-radius:999px;font-weight:700;font-variant-numeric:tabular-nums}
+.kpi-penalty-matrix .penalty-actual.tier1{color:#34d399;background:rgba(52,211,153,.10);box-shadow:inset 0 0 0 1px rgba(52,211,153,.24)}
+.kpi-penalty-matrix .penalty-actual.tier2{color:#fbbf24;background:rgba(251,191,36,.10);box-shadow:inset 0 0 0 1px rgba(251,191,36,.24)}
+.kpi-penalty-matrix .penalty-actual.tier3{color:#fb7185;background:rgba(251,113,133,.10);box-shadow:inset 0 0 0 1px rgba(251,113,133,.24)}
+.kpi-penalty-matrix .penalty-actual.no-data{color:var(--ct-muted);background:rgba(148,163,184,.08)}
