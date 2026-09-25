@@ -1229,3 +1229,9 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
  .control-sla-compact{overflow-x:auto!important}
  .control-sla-compact table{min-width:560px!important}
 }
+
+/* Control Tower: eight primary KPI cards */
+.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:repeat(4,minmax(0,1fr))}
+.metric-grid:has(.metric-card:nth-child(8)) .metric-card{min-width:0}
+@media(max-width:1100px){.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:620px){.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:1fr}}
