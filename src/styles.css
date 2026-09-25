@@ -1235,3 +1235,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .metric-grid:has(.metric-card:nth-child(8)) .metric-card{min-width:0}
 @media(max-width:1100px){.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:1fr}}
+
+/* Control Tower Area category navigation */
+.control-area-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:8px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
+.control-area-switch-main,.control-area-function-switch{display:flex;gap:6px;flex-wrap:wrap}
+.control-area-switch button{border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;padding:8px 12px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
+.control-area-switch button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.control-area-function-switch{padding-left:10px;border-left:1px solid var(--border)}
+.control-area-overview-table table{min-width:920px}
+
+/* COD Transferred combo chart: bars = volume, smooth line = performance */
+.combo-bars{position:relative}
+.combo-line-overlay{position:absolute;z-index:5;left:0;right:0;top:0;width:100%;height:calc(100% - 24px);overflow:visible;pointer-events:none}
+.combo-line-overlay polyline{fill:none;stroke:currentColor;stroke-width:2.4;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;color:var(--accent)}
+.legend-line{display:inline-block;width:18px;height:2px;border-radius:999px;background:var(--accent)}
+@media(max-width:760px){.control-area-switch{align-items:stretch}.control-area-switch-main{overflow-x:auto;flex-wrap:nowrap}.control-area-switch-main button{white-space:nowrap}.control-area-function-switch{border-left:0;padding-left:0}}
