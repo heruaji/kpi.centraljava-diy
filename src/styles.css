@@ -1206,3 +1206,9 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .ranking-value.tier-2{color:var(--ct-warning)}
 .ranking-value.tier-3{color:var(--ct-muted)}
 .area-performance-table th{white-space:nowrap}
+
+/* Control Tower area ranking alignment: center all columns except Area name */
+.area-performance-table th,
+.area-performance-table td{text-align:center!important}
+.area-performance-table th:nth-child(2),
+.area-performance-table td:nth-child(2){text-align:left!important}
