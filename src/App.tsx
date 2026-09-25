@@ -14,7 +14,7 @@ const DriverApexChart=({daily,metric,label,target}:{daily:any[];metric:'volume'|
   const width=Math.max(100,Math.ceil(daily.length/visibleDays*100));
   const maxRate=Math.max(...rates,target??0,1),minRate=Math.min(...rates,target??100);
   const rateMin=metric==='codTransfer'?Math.max(0,Math.floor((minRate-.5)*2)/2):0;
-  const rateMax=metric==='codTransfer'?Math.min(100.5,Math.ceil((maxRate+.5)*2)/2):Math.ceil((maxRate+.35)*2)/2;
+  const rateMax=metric==='codTransfer'?100:Math.ceil((maxRate+.35)*2)/2;
   const options:ApexOptions={
     chart:{type:'line',height:270,background:'transparent',toolbar:{show:false},zoom:{enabled:false},animations:{enabled:true,speed:300}},
     theme:{mode:'dark'},
