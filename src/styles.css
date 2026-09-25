@@ -1195,3 +1195,5 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th:last-child,
   .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td:last-child{width:100px!important}
 }
+
+.ranking-max{margin-left:2px;font-size:8px;color:var(--ct-muted);font-weight:600}
