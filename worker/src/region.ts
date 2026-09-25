@@ -341,6 +341,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       date,
       sla:dayAggregate.sla,
       codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),
+      codTransferVolume:sum(slaDay,'VOLUME_COD_TF'),
       failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),
       backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),
       productivitySorterFm:dayAggregate.productivitySorterFm,
