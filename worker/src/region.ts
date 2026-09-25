@@ -340,6 +340,13 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     return {
       date,
       sla:dayAggregate.sla,
+      codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),
+      failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),
+      backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),
+      productivitySorterFm:dayAggregate.productivitySorterFm,
+      productivitySorterLm:dayAggregate.productivitySorterLm,
+      productivityCourierFm:dayAggregate.productivityFm,
+      productivityCourierLm:dayAggregate.productivityLm,
       productivity:dayAggregate.productivityLm,
       productivityVolume:sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'),
       productivityManpower:sum(slaDay,'TOTAL_MP_LM_SIGESIT'),
