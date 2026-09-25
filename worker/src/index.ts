@@ -21,6 +21,7 @@ async function ensureDb(env:Env){
     `CREATE TABLE IF NOT EXISTS dashboard_snapshots (cache_key TEXT PRIMARY KEY,period TEXT NOT NULL,range_start TEXT,range_end TEXT,updated_at TEXT NOT NULL,payload TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at)`,
     `CREATE TABLE IF NOT EXISTS dashboard_refresh_jobs (job_id TEXT PRIMARY KEY,cache_key TEXT NOT NULL,status TEXT NOT NULL,started_at TEXT NOT NULL,finished_at TEXT,changed INTEGER NOT NULL DEFAULT 0,error TEXT)`,
+    `CREATE TABLE IF NOT EXISTS dashboard_source_state (source TEXT PRIMARY KEY,row_count INTEGER NOT NULL,max_date TEXT,updated_at TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_refresh_jobs_key ON dashboard_refresh_jobs(cache_key,started_at)`,
     `DROP TABLE IF EXISTS source_rows`,
     `DROP TABLE IF EXISTS source_sync_state`
@@ -68,14 +69,30 @@ async function rebuildAndPersist(env:Env,key:string,period:string,start:string|n
   }
   return {data:previous!.data,changed:false,updatedAt:previous!.updatedAt};
 }
+type SourceFreshness={source:string;maxDate:string|null;rowCount:number};
+async function readSourceState(env:Env):Promise<Map<string,{rowCount:number;maxDate:string|null}>>{
+  const state=new Map<string,{rowCount:number;maxDate:string|null}>();
+  if(!env.DB) return state;
+  await ensureDb(env);
+  const rows=await env.DB.prepare('SELECT source,row_count,max_date FROM dashboard_source_state').all<{source:string;row_count:number;max_date:string|null}>();
+  for(const row of rows.results||[]) state.set(row.source,{rowCount:row.row_count,maxDate:row.max_date});
+  return state;
+}
+async function saveSourceState(env:Env,freshness:SourceFreshness[]){
+  if(!env.DB||!freshness.length) return;
+  await ensureDb(env);
+  const now=new Date().toISOString();
+  await env.DB.batch(freshness.map(x=>env.DB!.prepare(`INSERT INTO dashboard_source_state(source,row_count,max_date,updated_at) VALUES(?,?,?,?) ON CONFLICT(source) DO UPDATE SET row_count=excluded.row_count,max_date=excluded.max_date,updated_at=excluded.updated_at`).bind(x.source,x.rowCount,x.maxDate,now)));
+}
 async function latestRunningJob(env:Env,key:string):Promise<RefreshJob|null>{
   if(!env.DB) return null;
   await ensureDb(env);
   return env.DB.prepare(`SELECT job_id,status,started_at,finished_at,changed,error FROM dashboard_refresh_jobs WHERE cache_key=? AND status='PROCESSING' ORDER BY started_at DESC LIMIT 1`).bind(key).first<RefreshJob>();
 }
-async function runRefreshJob(env:Env,jobId:string,key:string,period:string,start:string|null,end:string|null,previous:Snapshot|null){
+async function runRefreshJob(env:Env,jobId:string,key:string,period:string,start:string|null,end:string|null,previous:Snapshot|null,sourceFreshness:SourceFreshness[]){
   try{
     const result=await rebuildAndPersist(env,key,period,start,end,previous);
+    await saveSourceState(env,sourceFreshness);
     if(env.DB) await env.DB.prepare(`UPDATE dashboard_refresh_jobs SET status='READY',finished_at=?,changed=?,error=NULL WHERE job_id=?`).bind(new Date().toISOString(),result.changed?1:0,jobId).run();
   }catch(error){
     const message=error instanceof Error?error.message:'Unknown error';
@@ -126,26 +143,27 @@ export default {
       if(!env.DB) return json({ok:false,error:'D1 diperlukan untuk background refresh'},503,origin,{'x-dashboard-checked-at':checkedAt});
       await ensureDb(env);
 
-      // First do a lightweight source check. If all source max dates are the same
-      // as the current snapshot, do not run the expensive dashboard calculation.
-      if(snapshot){
-        try{
-          const sourceFreshness=await readDashboardFreshness(env);
-          const currentFreshness=Array.isArray((snapshot.data as any)?.freshness)?(snapshot.data as any).freshness:[];
-          const current=new Map(currentFreshness.map((x:any)=>[String(x.source),x.maxDate??null]));
-          const hasNewData=sourceFreshness.some(x=>x.maxDate && x.maxDate!==current.get(x.source));
+      // Refresh first checks source metadata only. Row count detects appended rows even
+      // when the newest date is unchanged; max date detects a newly opened day.
+      let sourceFreshness:SourceFreshness[]=[];
+      try{
+        sourceFreshness=await readDashboardFreshness(env);
+        const stored=await readSourceState(env);
+        if(snapshot&&stored.size>0){
+          const hasNewData=sourceFreshness.some(x=>{
+            const before=stored.get(x.source);
+            return !before || x.rowCount>before.rowCount || (x.maxDate??'')>(before.maxDate??'');
+          });
           if(!hasNewData){
             return json({ok:true,status:'LATEST',changed:false,updatedAt:snapshot.updatedAt},200,origin,{
-              'x-dashboard-cache':'UNCHANGED',
-              'x-dashboard-updated-at':snapshot.updatedAt,
-              'x-dashboard-checked-at':checkedAt,
-              'x-dashboard-changed':'0'
+              'x-dashboard-cache':'UNCHANGED','x-dashboard-updated-at':snapshot.updatedAt,
+              'x-dashboard-checked-at':checkedAt,'x-dashboard-changed':'0'
             });
           }
-        }catch{
-          // Probe failure must not make Refresh unusable; fall back to the guarded
-          // background rebuild path below.
         }
+      }catch{
+        // If the lightweight check itself fails, keep the guarded background path
+        // instead of returning a 503 to the dashboard.
       }
 
       const running=await latestRunningJob(env,key);
@@ -154,7 +172,7 @@ export default {
       const jobId=crypto.randomUUID();
       const startedAt=new Date().toISOString();
       await env.DB.prepare(`INSERT INTO dashboard_refresh_jobs(job_id,cache_key,status,started_at,changed) VALUES(?,?, 'PROCESSING',?,0)`).bind(jobId,key,startedAt).run();
-      ctx.waitUntil(runRefreshJob(env,jobId,key,preset||'MTD',start,end,snapshot));
+      ctx.waitUntil(runRefreshJob(env,jobId,key,preset||'MTD',start,end,snapshot,sourceFreshness));
       return json({ok:true,jobId,status:'PROCESSING',startedAt},202,origin,{'x-dashboard-checked-at':checkedAt});
     }
     return json({ok:false,error:'Not found'},404,origin);
