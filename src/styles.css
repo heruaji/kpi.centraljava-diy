@@ -1201,10 +1201,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 /* Control Tower ranking matrix */
 .ranking-metric-cell{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap}
 .ranking-metric-cell>strong{font-size:10px}
-.ranking-value{font-weight:800}
-.ranking-value.tier-1{color:var(--ct-good)}
-.ranking-value.tier-2{color:var(--ct-warning)}
-.ranking-value.tier-3{color:var(--ct-muted)}
+.ranking-value{display:inline-flex;align-items:center;justify-content:center;min-width:54px;padding:4px 7px;border-radius:6px;font-weight:800}
+.ranking-value.tier-1{color:#059669!important;background:rgba(16,185,129,.10)!important}
+.ranking-value.tier-2{color:#b45309!important;background:rgba(245,158,11,.11)!important}
+.ranking-value.tier-3{color:#e11d48!important;background:rgba(225,29,72,.09)!important}
+.theme-dark .ranking-value.tier-1{color:#34d399!important;background:rgba(16,185,129,.15)!important}
+.theme-dark .ranking-value.tier-2{color:#fbbf24!important;background:rgba(245,158,11,.14)!important}
+.theme-dark .ranking-value.tier-3{color:#fb7185!important;background:rgba(225,29,72,.14)!important}
 .area-performance-table th{white-space:nowrap}
 
 /* Control Tower area ranking alignment: center all columns except Area name */
