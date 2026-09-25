@@ -30,6 +30,8 @@ export default function App() {
   const [customEnd, setCustomEnd] = useState('');
   const [trendMetric, setTrendMetric] = useState<'sla'|'cod'|'failed'|'backlog'|'sorterFm'|'sorterLm'|'courierFm'|'courierLm'>('sla');
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
+  const [controlAreaCategory, setControlAreaCategory] = useState<'overview'|'sla'|'kpi'|'productivity'|'drivers'>('overview');
+  const [controlAreaKpiFunction, setControlAreaKpiFunction] = useState<'LM'|'FM'|'MM'>('LM');
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [selectedKpiKey, setSelectedKpiKey] = useState<string | null>(null);
   const [branchFunctionFilter, setBranchFunctionFilter] = useState<'ALL'|'LM'|'FM'|'MM'>('ALL');
@@ -355,8 +357,8 @@ export default function App() {
       area: () => { setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); }
     };
   })();
-  const controlDetailKind = 'SLA';
-  const controlDetailBranches = selectedArea?.branches?.filter(b=>controlDetailKind==='SLA'?b.function==='LM':b.function===controlDetailKind) ?? [];
+  const controlDetailKind = controlAreaCategory==='kpi' ? controlAreaKpiFunction : 'SLA';
+  const controlDetailBranches = selectedArea?.branches?.filter(b=>controlAreaCategory==='kpi'?b.function===controlAreaKpiFunction:controlAreaCategory==='sla'?b.function==='LM':true) ?? [];
   const openControlDetailBranch = (branchId:string) => {
     // Keep Control Tower as the active module. Detail is an embedded view, not a module navigation.
     setSelectedBranchId(branchId); setSelectedKpiKey(null); setSelectedDriver(null);
@@ -490,8 +492,15 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
             ))}
           </div>}
 
+          {selectedArea && !selectedBranch && !selectedKpi && <div className="control-area-switch">
+            <div className="control-area-switch-main">
+              {([['overview','Overview'],['sla','SLA'],['kpi','KPI Performance'],['productivity','Productivity'],['drivers','Performance Drivers']] as const).map(([key,label])=><button key={key} className={controlAreaCategory===key?'active':''} onClick={()=>{setControlAreaCategory(key);setSelectedBranchId(null);setSelectedKpiKey(null);setSelectedDriver(null)}}>{label}</button>)}
+            </div>
+            {controlAreaCategory==='kpi'&&<div className="control-area-function-switch">{(['LM','FM','MM'] as const).map(fn=><button key={fn} className={controlAreaKpiFunction===fn?'active':''} onClick={()=>{setControlAreaKpiFunction(fn);setSelectedBranchId(null)}}>{fn}</button>)}</div>}
+          </div>}
+
           <div className="dashboard-grid">
-            {!selectedKpi && <article className={`panel wide performance-trend-panel ${selectedArea ? 'scope-wide' : ''}`}><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `KPI ${selectedBranch.function} — ${selectedBranch.name}` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3><small>{selectedBranch ? 'Performa KPI fungsi unit terpilih' : selectedArea ? 'Performa harian area pada periode aktif' : 'Performa harian seluruh region pada periode aktif'}</small></div>{!selectedArea&&!selectedBranch && <select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA Performance</option><option value="cod">COD Transferred</option><option value="failed">Failed Delivery</option><option value="backlog">Backlog Rate</option><option value="sorterFm">Sorter FM</option><option value="sorterLm">Sorter LM</option><option value="courierFm">Kurir FM</option><option value="courierLm">Kurir LM</option></select>}</div>
+            {!selectedArea && !selectedBranch && !selectedKpi && <article className={`panel wide performance-trend-panel ${selectedArea ? 'scope-wide' : ''}`}><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>{selectedBranch ? `KPI ${selectedBranch.function} — ${selectedBranch.name}` : selectedArea ? `${selectedArea.name} Trend` : 'Region Trend'}</h3><small>{selectedBranch ? 'Performa KPI fungsi unit terpilih' : selectedArea ? 'Performa harian area pada periode aktif' : 'Performa harian seluruh region pada periode aktif'}</small></div>{!selectedArea&&!selectedBranch && <select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA Performance</option><option value="cod">COD Transferred</option><option value="failed">Failed Delivery</option><option value="backlog">Backlog Rate</option><option value="sorterFm">Sorter FM</option><option value="sorterLm">Sorter LM</option><option value="courierFm">Kurir FM</option><option value="courierLm">Kurir LM</option></select>}</div>
               {trend.length ? <div className="trend-chart-shell">
                 <div className="trend-plot" aria-label={`${activeControlTrend.label} daily trend`}>
                   <div className="trend-y-label y100">{activeControlTrend.percent?'100%':fmtNumber(controlTrendScaleMax)}</div><div className="trend-y-label y75">{activeControlTrend.percent?'75%':fmtNumber(controlTrendScaleMax*.75)}</div><div className="trend-y-label y50">{activeControlTrend.percent?'50%':fmtNumber(controlTrendScaleMax*.5)}</div><div className="trend-y-label y25">{activeControlTrend.percent?'25%':fmtNumber(controlTrendScaleMax*.25)}</div><div className="trend-y-label y0">{activeControlTrend.percent?'0%':'0'}</div>
