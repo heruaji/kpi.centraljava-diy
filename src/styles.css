@@ -1237,12 +1237,21 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 @media(max-width:620px){.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:1fr}}
 
 /* Control Tower Area category navigation */
-.control-area-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:8px;border:1px solid var(--border);border-radius:12px;background:var(--panel)}
-.control-area-switch-main,.control-area-function-switch{display:flex;gap:6px;flex-wrap:wrap}
-.control-area-switch button{border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:8px;padding:8px 12px;font:inherit;font-size:11px;font-weight:700;cursor:pointer}
-.control-area-switch button.active{background:var(--accent);border-color:var(--accent);color:#fff}
-.control-area-function-switch{padding-left:10px;border-left:1px solid var(--border)}
+.control-area-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:0;border:0;background:transparent}
+.control-area-switch-main,.control-area-function-switch{display:flex;align-items:center;gap:3px;flex-wrap:wrap;padding:4px;border:1px solid var(--ct-border);border-radius:10px;background:var(--ct-card2)}
+.control-area-switch button{border:0;background:transparent;color:var(--ct-muted);border-radius:7px;padding:8px 12px;font:inherit;font-size:11px;font-weight:700;cursor:pointer;transition:background .15s ease,color .15s ease}
+.control-area-switch button:hover{background:var(--ct-card);color:var(--ct-text)}
+.control-area-switch button.active{background:var(--ct-active);color:var(--ct-active-text)}
+.control-area-function-switch{padding:4px}
 .control-area-overview-table table{min-width:920px}
+.theme-light .control-area-switch-main,.theme-light .control-area-function-switch{background:#f8fafc;border-color:#cbd5e1}
+.theme-light .control-area-switch button{color:#64748b}
+.theme-light .control-area-switch button:hover{background:#f1f5f9;color:#475569}
+.theme-light .control-area-switch button.active{background:#e2e8f0;color:#334155}
+.theme-dark .control-area-switch-main,.theme-dark .control-area-function-switch{background:var(--ct-card2);border-color:var(--ct-border)}
+.theme-dark .control-area-switch button{color:var(--ct-muted)}
+.theme-dark .control-area-switch button:hover{background:var(--ct-card);color:var(--ct-text)}
+.theme-dark .control-area-switch button.active{background:var(--ct-active);color:var(--ct-active-text)}
 
 /* Control Tower Region > Area > Gerai context controls */
 .control-scope-actions{display:flex;justify-content:flex-end;align-items:center;margin:0 0 10px}
