@@ -31,13 +31,18 @@ export async function getRegionDashboard(period:DashboardPeriod='MTD',custom?:{s
   if(!refresh) return fetchSnapshot(query);
 
   const startResponse=await fetch(`${API_BASE}/api/dashboard/region?${query}&refresh=1`);
-  const startBody=await readJson(startResponse) as RefreshStart & {error?:string};
-  if(!(startResponse.status===202&&startBody.jobId)) throw new Error(startBody.error||`API ${startResponse.status}`);
+  const startBody=await readJson(startResponse) as (RefreshStart & {error?:string}) | {ok:boolean;status:'LATEST';changed:false;updatedAt:string;error?:string};
+  if(startResponse.ok&&startBody.status==='LATEST'){
+    const result=await fetchSnapshot(query);
+    return {...result,changed:false};
+  }
+  if(!(startResponse.status===202&&'jobId' in startBody&&startBody.jobId)) throw new Error(startBody.error||`API ${startResponse.status}`);
 
+  const jobId=startBody.jobId;
   const deadline=Date.now()+180_000;
   while(Date.now()<deadline){
     await sleep(2000);
-    const statusResponse=await fetch(`${API_BASE}/api/dashboard/refresh-status?jobId=${encodeURIComponent(startBody.jobId)}`);
+    const statusResponse=await fetch(`${API_BASE}/api/dashboard/refresh-status?jobId=${encodeURIComponent(jobId)}`);
     const status=await readJson(statusResponse) as RefreshStatus;
     if(!statusResponse.ok) throw new Error(status.error||`API ${statusResponse.status}`);
     if(status.status==='ERROR') throw new Error(status.error||'Refresh data gagal');
