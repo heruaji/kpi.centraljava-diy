@@ -1337,7 +1337,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* Performance Drivers regional summary */
 .drivers-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
-.drivers-summary-grid .driver-summary-card{min-height:100px}
-.drivers-summary-grid .driver-summary-card strong{font-variant-numeric:tabular-nums}
+.drivers-summary-grid .driver-summary-card{min-height:132px;display:flex;flex-direction:column}
+.drivers-summary-grid .driver-summary-card strong{font-variant-numeric:tabular-nums;margin:10px 0 8px}
+.driver-summary-head,.driver-summary-foot{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.driver-summary-head>span{font-weight:700;color:var(--ct-text)}
+.driver-summary-head>em{font-style:normal;font-size:9px;color:#20d6a0;border:1px solid #139b78;border-radius:5px;padding:4px 7px;white-space:nowrap}
+.driver-summary-progress{height:4px;border-radius:999px;background:var(--ct-border);overflow:hidden;margin:0 0 10px}
+.driver-summary-progress i{display:block;height:100%;border-radius:inherit;background:linear-gradient(90deg,#f59e0b,#ef4444)}
+.driver-summary-card.achieved .driver-summary-progress i{background:linear-gradient(90deg,#8b5cf6,#22c55e)}
+.driver-summary-foot{margin-top:auto}
+.driver-summary-foot small{font-size:9px}
+.driver-summary-foot b{display:flex;align-items:center;gap:5px;font-size:9px;font-weight:700}
+.driver-summary-foot b span{display:inline;font-size:9px;color:inherit}
+.driver-summary-foot .good{color:#22c55e}.driver-summary-foot .review{color:#f97373}.driver-summary-foot .neutral{color:var(--ct-muted)}
 @media(max-width:900px){.drivers-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.drivers-summary-grid{grid-template-columns:1fr}}
