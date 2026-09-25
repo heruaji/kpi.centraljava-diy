@@ -281,8 +281,28 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       sla:pct(ratio(s('VOLUME_SLA_MEET'),s('VOLUME_SLA_ALL'))),
       productivityLm:ratio(s('TOTAL_PAKET_LM_SIGESIT'),s('TOTAL_MP_LM_SIGESIT')),
       productivityFm:ratio(s('TOTAL_PAKET_FM_SIGESIT'),s('TOTAL_MP_FM_SIGESIT')),
+      productivitySorterLm:ratio(s('TOTAL_PAKET_LM_SORTER'),s('TOTAL_MP_LM_SORTER')),
+      productivitySorterFm:ratio(s('TOTAL_PAKET_FM_SORTER'),s('TOTAL_MP_FM_SORTER')),
     };
   };
+  const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row[],role:'courier'|'sorter',mile:'lm'|'fm')=>{
+    const suffix=role==='courier'?'SIGESIT':'SORTER';
+    const m=mile.toUpperCase();
+    const volumeKey=`TOTAL_PAKET_${m}_${suffix}`;
+    const manpowerKey=`TOTAL_MP_${m}_${suffix}`;
+    const calc=(rows:Row[])=>ratio(sum(rows,volumeKey),sum(rows,manpowerKey));
+    const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
+    return {value:calc(items),previous:calc(previousItems),previousPrevious:calc(previousPreviousItems),volume:sum(items,volumeKey),manpower:sum(items,manpowerKey),trend:dates.map(date=>{const day=items.filter(r=>r.__date===date);return {date,value:calc(day),volume:sum(day,volumeKey),manpower:sum(day,manpowerKey)}})};
+  };
+  const productivityBundle=(items:Row[],previousItems:Row[],previousPreviousItems:Row[])=>({
+    courier:{lm:productivitySet(items,previousItems,previousPreviousItems,'courier','lm'),fm:productivitySet(items,previousItems,previousPreviousItems,'courier','fm')},
+    sorter:{lm:productivitySet(items,previousItems,previousPreviousItems,'sorter','lm'),fm:productivitySet(items,previousItems,previousPreviousItems,'sorter','fm')}
+  });
+  const periodDays=Math.max(1,Math.round((new Date(range.end+'T00:00:00').getTime()-new Date(range.start+'T00:00:00').getTime())/86400000)+1);
+  const prevPrevEndDate=new Date(new Date(previousRange.start+'T00:00:00').getTime()-86400000);
+  const prevPrevStartDate=new Date(prevPrevEndDate.getTime()-(periodDays-1)*86400000);
+  const iso=(d:Date)=>d.toISOString().slice(0,10);
+  const previousPreviousSelected=dated.filter(r=>(r.__date as string)>=iso(prevPrevStartDate)&&(r.__date as string)<=iso(prevPrevEndDate));
   const overall=aggregate(selected);
   const overallLm=lmScore(lmSelected);
   const overallFm=fmScore(fmSelected);
@@ -373,7 +393,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:r.city,
-        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,
+        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,productivityByRole:productivityBundle(slaItems,previousSlaItems,previousPreviousSelected.filter(x=>String(x.District||'')===name&&matchesBranch(x,branchName,code))),
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
           backlog:sum(slaItems,'VOLUME_BACKLOG'),
@@ -411,7 +431,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     const penaltyLm=lmPenalty(lmItems);
     const penaltyFm=fmPenalty(fmItems);
     const penaltyMm=mmPenalty(mmItems);
-    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches,penaltyLm,penaltyFm,penaltyMm,penaltyDetailsLm,penaltyDetailsFm,penaltyDetailsMm};
+    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,productivityByRole:productivityBundle(items,previousItems,previousPreviousSelected.filter(r=>String(r.District||'')===name)),status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches,penaltyLm,penaltyFm,penaltyMm,penaltyDetailsLm,penaltyDetailsFm,penaltyDetailsMm};
   });
 
   return {
@@ -425,6 +445,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     ],
     penalties,
     trend,
+    productivityByRole:productivityBundle(selected,previousSelected,previousPreviousSelected),
     areas
   };
 }
