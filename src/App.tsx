@@ -369,7 +369,7 @@ export default function App() {
   const controlDetailBranches = selectedArea?.branches?.filter(b=>controlAreaCategory==='kpi'?b.function===controlAreaKpiFunction:controlAreaCategory==='sla'?b.function==='LM':true) ?? [];
   const openControlDetailBranch = (branchId:string) => {
     // Keep Control Tower as the active module. Detail is an embedded view, not a module navigation.
-    const branch=selectedArea?.branches?.find(item=>item.id===branchId); if(branch) setControlGeraiKpiFunction(branch.function); setSelectedBranchId(branchId); setSelectedKpiKey(null); setSelectedDriver(null);
+    const branch=selectedArea?.branches?.find(item=>item.id===branchId); if(branch&&(branch.function==='LM'||branch.function==='FM'||branch.function==='MM')) setControlGeraiKpiFunction(branch.function); setSelectedBranchId(branchId); setSelectedKpiKey(null); setSelectedDriver(null);
   };
   const territoryClose = () => setMobileOpen(false);
 
