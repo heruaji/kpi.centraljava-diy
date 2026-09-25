@@ -267,18 +267,18 @@ export default function App() {
     lm:{value:95,label:'95%',direction:'HIGHER'},fm:{value:99,label:'99%',direction:'HIGHER'},mm:{value:96.5,label:'96.5%',direction:'HIGHER'},
     kpi:{value:95,label:'95%',direction:'HIGHER'},productivity:{value:100,label:'100%',direction:'HIGHER'},penalty:{value:.5,label:'0.5%',direction:'LOWER'}
   };
+  const areaControlMetricCards = selectedArea ? (['sla','cod','failed','backlog','sorterFm','sorterLm','courierFm','courierLm'] as const).map(key=>{
+    const cfg=controlTrendConfig[key];
+    const detail=selectedArea.ranking?.details?.find(item=>item.key===key);
+    const value=key==='sla'?selectedArea.sla??null:key==='sorterFm'?selectedArea.productivityByRole?.sorter.fm.value??null:key==='sorterLm'?selectedArea.productivityByRole?.sorter.lm.value??null:key==='courierFm'?selectedArea.productivityByRole?.courier.fm.value??null:key==='courierLm'?selectedArea.productivityByRole?.courier.lm.value??null:detail?.actual??null;
+    return {key,label:cfg.label,value,unit:cfg.percent?'percent' as const:'number' as const,target:cfg.target,direction:cfg.direction};
+  }) : [];
   const visibleCards = !selectedArea && !selectedBranch ? controlMetricCards : selectedBranch ? [
     {key:'sla',label:'SLA Performance',value:selectedBranch.sla ?? null,unit:'percent' as const},
     {key:'kpi',label:`KPI ${selectedBranch.function}`,value:selectedBranch.kpiScore ?? null,unit:'percent' as const},
     {key:'penalty',label:'Pengurang KPI',value:selectedBranch.penalty ?? null,unit:'percent' as const},
     {key:'productivity',label:'Productivity',value:selectedBranch.productivity ?? null,unit:'percent' as const},
-  ] : selectedArea ? [
-    {key:'sla',label:'SLA Performance',value:selectedArea.sla,unit:'percent' as const},
-    {key:'lm',label:'KPI LM',value:selectedArea.kpiLm,unit:'percent' as const},
-    {key:'fm',label:'KPI FM',value:selectedArea.kpiFm,unit:'percent' as const},
-    {key:'mm',label:'KPI MM',value:selectedArea.kpiMm,unit:'percent' as const},
-    {key:'productivity',label:'Productivity',value:selectedArea.productivity,unit:'percent' as const},
-  ] : [];
+  ] : selectedArea ? areaControlMetricCards : [];
   const slaAreaTotal = dashboard?.areas?.length ?? 0;
   const slaAreaAchieved = dashboard?.areas?.filter(a=>a.sla!=null&&a.sla>=98).length ?? 0;
   const slaAreaReview = dashboard?.areas?.filter(a=>a.sla!=null&&a.sla<98).length ?? 0;
