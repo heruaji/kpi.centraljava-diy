@@ -28,7 +28,7 @@ export default function App() {
   const [customRange, setCustomRange] = useState<{start:string;end:string}|null>(null);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
-  const [trendMetric, setTrendMetric] = useState<'sla'|'kpiLm'|'kpiFm'|'kpiMm'>('sla');
+  const [trendMetric, setTrendMetric] = useState<'sla'|'cod'|'failed'|'backlog'|'sorterFm'|'sorterLm'|'courierFm'|'courierLm'>('sla');
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [selectedBranchId, setSelectedBranchId] = useState<string | null>(null);
   const [selectedKpiKey, setSelectedKpiKey] = useState<string | null>(null);
@@ -205,20 +205,48 @@ export default function App() {
   const selectedKpi = selectedBranch?.kpiDailyDetails?.find(kpi => kpi.key === selectedKpiKey) ?? null;
   const trend = selectedBranch?.trend ?? selectedArea?.trend ?? dashboard?.trend ?? [];
   const branchTrendMetric = selectedBranch?.function === 'FM' ? 'kpiFm' : selectedBranch?.function === 'MM' ? 'kpiMm' : 'kpiLm';
-  const activeTrendMetric = activeModule==='control' ? trendMetric : selectedBranch ? branchTrendMetric : trendMetric;
   const driverLabels={volume:'Volume',backlog:'Backlog',failedDelivery:'Failed Delivery',codTransfer:'COD Transfer'} as const;
   const driverDaily=selectedBranch?.operationalTrend ?? [];
   const driverMax=selectedDriver?Math.max(1,...driverDaily.map(d=>d[selectedDriver])):1;
   const kpiTrendMax = selectedKpi ? Math.max(100,...selectedKpi.daily.map(d=>d.actual ?? 0),selectedKpi.daily[0]?.target ?? 0) : 100;
-  const trendLabels: Record<typeof trendMetric,string> = {sla:'SLA',kpiLm:'KPI LM',kpiFm:'KPI FM',kpiMm:'KPI MM'};
-  const trendValues=trend.map(p=>p[activeTrendMetric]).filter((v):v is number=>v!=null);
-  const trendMax=Math.max(100,...trendValues);
-  const trendTarget = selectedBranch ? (selectedBranch.function==='FM'?99:selectedBranch.function==='MM'?96.5:95) : activeTrendMetric==='sla'?98:activeTrendMetric==='kpiLm'?95:activeTrendMetric==='kpiFm'?99:96.5;
+  const controlTrendConfig = {
+    sla:{label:'SLA Performance',field:'sla',target:96,direction:'HIGHER',percent:true},
+    cod:{label:'COD Transferred',field:'codTransferRate',target:99.5,direction:'HIGHER',percent:true},
+    failed:{label:'Failed Delivery',field:'failedDeliveryRate',target:1,direction:'LOWER',percent:true},
+    backlog:{label:'Backlog Rate',field:'backlogRate',target:1.5,direction:'LOWER',percent:true},
+    sorterFm:{label:'Sorter FM',field:'productivitySorterFm',target:980,direction:'HIGHER',percent:false},
+    sorterLm:{label:'Sorter LM',field:'productivitySorterLm',target:780,direction:'HIGHER',percent:false},
+    courierFm:{label:'Kurir FM',field:'productivityCourierFm',target:115,direction:'HIGHER',percent:false},
+    courierLm:{label:'Kurir LM',field:'productivityCourierLm',target:51,direction:'HIGHER',percent:false},
+  } as const;
+  const activeControlTrend=controlTrendConfig[trendMetric];
+  const controlTrendValues=trend.map(point=>point[activeControlTrend.field] as number|null|undefined).filter((v):v is number=>v!=null);
+  const controlTrendScaleMax=activeControlTrend.percent?100:niceAxisMax(Math.max(activeControlTrend.target,...controlTrendValues));
+  const controlTrendTargetPosition=Math.min(100,(activeControlTrend.target/controlTrendScaleMax)*100);
+  const controlRegionRanking = (dashboard?.areas ?? []).flatMap(area=>area.ranking?.details ?? []);
+  const controlMetricCards = (['sla','cod','failed','backlog','sorterFm','sorterLm','courierFm','courierLm'] as const).map(key=>{
+    const cfg=controlTrendConfig[key];
+    const values=controlRegionRanking.filter(item=>item.key===key&&item.actual!=null);
+    // Region actuals come from region-level source fields where available; productivity is weighted by volume/manpower in the backend bundle.
+    let value:number|null=null;
+    if(key==='sla') value=dashboard?.metrics?.find(m=>m.key==='sla')?.value ?? null;
+    else if(key==='sorterFm') value=dashboard?.productivityByRole?.sorter.fm.value ?? null;
+    else if(key==='sorterLm') value=dashboard?.productivityByRole?.sorter.lm.value ?? null;
+    else if(key==='courierFm') value=dashboard?.productivityByRole?.courier.fm.value ?? null;
+    else if(key==='courierLm') value=dashboard?.productivityByRole?.courier.lm.value ?? null;
+    else if(values.length){
+      const weighted=values.reduce((sum,item)=>sum+(item.actual??0),0)/values.length;
+      value=weighted;
+    }
+    return {key,label:cfg.label,value,unit:cfg.percent?'percent' as const:'number' as const,target:cfg.target,direction:cfg.direction};
+  });
   const cardTargets: Record<string,{value:number;label:string;direction:'HIGHER'|'LOWER'}> = {
-    sla:{value:98,label:'98%',direction:'HIGHER'},lm:{value:95,label:'95%',direction:'HIGHER'},fm:{value:99,label:'99%',direction:'HIGHER'},mm:{value:96.5,label:'96.5%',direction:'HIGHER'},
+    sla:{value:96,label:'96%',direction:'HIGHER'},cod:{value:99.5,label:'99.5%',direction:'HIGHER'},failed:{value:1,label:'1%',direction:'LOWER'},backlog:{value:1.5,label:'1.5%',direction:'LOWER'},
+    sorterFm:{value:980,label:'980',direction:'HIGHER'},sorterLm:{value:780,label:'780',direction:'HIGHER'},courierFm:{value:115,label:'115',direction:'HIGHER'},courierLm:{value:51,label:'51',direction:'HIGHER'},
+    lm:{value:95,label:'95%',direction:'HIGHER'},fm:{value:99,label:'99%',direction:'HIGHER'},mm:{value:96.5,label:'96.5%',direction:'HIGHER'},
     kpi:{value:95,label:'95%',direction:'HIGHER'},productivity:{value:100,label:'100%',direction:'HIGHER'},penalty:{value:.5,label:'0.5%',direction:'LOWER'}
   };
-  const visibleCards = selectedBranch ? [
+  const visibleCards = !selectedArea && !selectedBranch ? controlMetricCards : selectedBranch ? [
     {key:'sla',label:'SLA Performance',value:selectedBranch.sla ?? null,unit:'percent' as const},
     {key:'kpi',label:`KPI ${selectedBranch.function}`,value:selectedBranch.kpiScore ?? null,unit:'percent' as const},
     {key:'penalty',label:'Pengurang KPI',value:selectedBranch.penalty ?? null,unit:'percent' as const},
@@ -229,7 +257,7 @@ export default function App() {
     {key:'fm',label:'KPI FM',value:selectedArea.kpiFm,unit:'percent' as const},
     {key:'mm',label:'KPI MM',value:selectedArea.kpiMm,unit:'percent' as const},
     {key:'productivity',label:'Productivity',value:selectedArea.productivity,unit:'percent' as const},
-  ] : cards;
+  ] : [];
   const slaAreaTotal = dashboard?.areas?.length ?? 0;
   const slaAreaAchieved = dashboard?.areas?.filter(a=>a.sla!=null&&a.sla>=98).length ?? 0;
   const slaAreaReview = dashboard?.areas?.filter(a=>a.sla!=null&&a.sla<98).length ?? 0;
@@ -327,7 +355,7 @@ export default function App() {
       area: () => { setSelectedKpiKey(null); setSelectedDriver(null); setSelectedBranchId(null); }
     };
   })();
-  const controlDetailKind = trendMetric==='sla'?'SLA':trendMetric==='kpiLm'?'LM':trendMetric==='kpiFm'?'FM':'MM';
+  const controlDetailKind = 'SLA';
   const controlDetailBranches = selectedArea?.branches?.filter(b=>controlDetailKind==='SLA'?b.function==='LM':b.function===controlDetailKind) ?? [];
   const openControlDetailBranch = (branchId:string) => {
     // Keep Control Tower as the active module. Detail is an embedded view, not a module navigation.
