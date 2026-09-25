@@ -1294,3 +1294,24 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .control-gerai-kpi-switch .control-area-function-switch button{border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:7px;padding:7px 12px;font:inherit;font-size:10px;font-weight:800;cursor:pointer}
 .control-gerai-kpi-switch .control-area-function-switch button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 @media(max-width:620px){.control-gerai-kpi-switch{align-items:stretch;flex-direction:column}.control-gerai-kpi-switch .control-area-function-switch{width:100%}.control-gerai-kpi-switch .control-area-function-switch button{flex:1}}
+
+/* FAQ reference — independent navigation above sidebar collapse */
+.sidebar nav{display:flex;flex-direction:column;min-height:0;flex:1}
+.sidebar .faq-nav{margin-top:auto}
+.faq-module{display:flex;flex-direction:column;gap:12px}
+.faq-tabs{align-self:flex-start;margin:0}
+.faq-stack{display:flex;flex-direction:column;gap:14px}
+.faq-card{overflow:hidden}
+.faq-card .panel-title{padding-left:14px;border-left:4px solid var(--ct-primary)}
+.faq-card.faq-lm .panel-title{border-left-color:#22b8cf}
+.faq-card.faq-fm .panel-title{border-left-color:#f59e0b}
+.faq-card.faq-mm .panel-title{border-left-color:#65b96e}
+.faq-table table{min-width:820px}
+.faq-table th:nth-child(1){width:18%}.faq-table th:nth-child(2){width:42%}.faq-table th:nth-child(n+3){width:13.33%}
+.faq-table td{vertical-align:top}
+.faq-tier{display:inline-flex;align-items:center;justify-content:center;min-width:84px;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:750;white-space:nowrap}
+.faq-tier.tier-1{background:rgba(16,185,129,.12);color:#059669}
+.faq-tier.tier-2{background:rgba(245,158,11,.14);color:#d97706}
+.faq-tier.tier-3{background:rgba(239,68,68,.12);color:#dc2626}
+.theme-dark .faq-tier.tier-1{color:#6ee7b7}.theme-dark .faq-tier.tier-2{color:#fcd34d}.theme-dark .faq-tier.tier-3{color:#fca5a5}
+@media(max-width:760px){.faq-tabs{width:100%}.faq-tabs button{flex:1}.faq-table{overflow-x:auto}}
