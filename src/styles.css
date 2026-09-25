@@ -1333,3 +1333,11 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .driver-chart-legend{display:flex;justify-content:center;gap:18px;padding:8px 0 2px;font-size:9px;color:var(--ct-muted)}.driver-chart-legend span{display:flex;align-items:center;gap:5px}.driver-chart-legend .bar-key{width:9px;height:9px;border-radius:2px;background:#3d9658}.driver-chart-legend .line-key{width:15px;height:0;border-top:2px solid #e8eef7;position:relative}.driver-chart-legend .line-key:after{content:"";position:absolute;width:4px;height:4px;border:1px solid #e8eef7;border-radius:50%;background:var(--ct-surface);left:5px;top:-4px}
 .theme-light .driver-smooth-line path{stroke:#334155}.theme-light .driver-smooth-line circle{stroke:#334155}.theme-light .driver-chart-legend .line-key{border-color:#334155}.theme-light .driver-chart-legend .line-key:after{border-color:#334155}
 @media(max-width:900px){.driver-xy-chart{min-width:620px}.driver-mini-trend{overflow-x:auto}.driver-chart-legend{min-width:620px}}
+
+
+/* Performance Drivers regional summary */
+.drivers-summary-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:0 0 14px}
+.drivers-summary-grid .driver-summary-card{min-height:100px}
+.drivers-summary-grid .driver-summary-card strong{font-variant-numeric:tabular-nums}
+@media(max-width:900px){.drivers-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:520px){.drivers-summary-grid{grid-template-columns:1fr}}
