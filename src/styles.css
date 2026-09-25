@@ -1372,3 +1372,9 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .apex-driver-card .apexcharts-legend{padding-top:2px!important}
 .apex-driver-card .apexcharts-xaxis-label,.apex-driver-card .apexcharts-yaxis-label{font-family:Inter,sans-serif!important}
 @media(max-width:720px){.driver-apex-inner{min-width:720px}}
+
+/* Gerai driver detail: use colored status bar only */
+.drivers-metric-grid .driver-summary-foot{border-top:0!important;padding-top:0!important}
+.drivers-metric-grid .driver-summary-progress{height:4px;margin:2px 0 12px;background:var(--ct-border)}
+.drivers-metric-grid .driver-summary-card.achieved .driver-summary-progress i{background:linear-gradient(90deg,#8b5cf6,#22c55e)}
+.drivers-metric-grid .driver-summary-card.needs-review .driver-summary-progress i{background:linear-gradient(90deg,#f59e0b,#ef4444)}
