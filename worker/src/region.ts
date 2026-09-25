@@ -431,8 +431,6 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
           codTransferRate:pct(ratio(sum(day,'VOLUME_COD_TF'),sum(day,'VOLUME_COD_ALL')))
         };
       });
-      return {date,volume:sum(day,'VOLUME_SLA_ALL'),backlog:sum(day,'VOLUME_BACKLOG'),failedDelivery:sum(day,'VOLUME_FD'),codTransfer:sum(day,'VOLUME_COD_TF')};
-      });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:r.city,
         sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,productivityByRole:productivityBundle(slaItems,previousSlaItems,previousPreviousSelected.filter(x=>String(x.District||'')===name&&matchesBranch(x,branchName,code))),
