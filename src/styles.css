@@ -1171,3 +1171,27 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .scope-heading:has(>.back-scope.back-nav){padding-right:170px!important}
 .operational-detail-actions .back-scope.back-nav,.kpi-detail-actions .back-scope.back-nav{margin-left:auto!important}
 @media(max-width:760px){.panel-title>.back-scope.back-nav,.productivity-detail-head>.back-scope.back-nav,.kpi-gerai-head>.back-scope.back-nav,.sla-daily-head>.back-scope.back-nav{align-self:flex-end!important}.scope-heading:has(>.back-scope.back-nav){padding-right:0!important;padding-top:40px!important}.scope-heading>.back-scope.back-nav{left:0!important;right:auto!important}}
+
+/* Desktop KPI matrices use the extra workspace when the sidebar is collapsed. */
+@media(min-width:1100px){
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix{overflow-x:hidden!important}
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix table,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix th,
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix td,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td{min-width:0!important;padding-left:6px!important;padding-right:6px!important;font-size:9px!important}
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix th:nth-child(1),
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix td:nth-child(1),
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th:nth-child(1),
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td:nth-child(1){width:44px!important}
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix th:nth-child(2),
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix td:nth-child(2),
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th:nth-child(2),
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td:nth-child(2){position:static!important;width:180px!important;min-width:0!important}
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix th:last-child,
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix td:last-child,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th:last-child,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td:last-child{width:100px!important}
+}
