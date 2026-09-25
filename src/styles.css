@@ -1243,20 +1243,3 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .control-area-switch button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .control-area-function-switch{padding-left:10px;border-left:1px solid var(--border)}
 .control-area-overview-table table{min-width:920px}
-
-/* COD Transferred combo chart: bars = volume, smooth line = performance */
-.combo-bars{position:relative}
-.combo-line-overlay{position:absolute;z-index:5;left:0;right:0;top:0;width:100%;height:calc(100% - 24px);overflow:visible;pointer-events:none}
-.combo-line-overlay polyline{fill:none;stroke:currentColor;stroke-width:2.4;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;color:var(--accent)}
-.legend-line{display:inline-block;width:18px;height:2px;border-radius:999px;background:var(--accent)}
-@media(max-width:760px){.control-area-switch{align-items:stretch}.control-area-switch-main{overflow-x:auto;flex-wrap:nowrap}.control-area-switch-main button{white-space:nowrap}.control-area-function-switch{border-left:0;padding-left:0}}
-
-/* COD combo correction: plot line against the same inner chart bounds as the bars */
-.combo-bars .trend-track{background:rgba(148,163,184,.055)}
-.combo-line-overlay{top:0;height:100%;color:#f8fafc}
-.combo-line-overlay polyline{stroke-width:2;filter:none}
-.combo-percent-axis{position:absolute;inset:0;z-index:6;pointer-events:none}
-.combo-percent-axis span{position:absolute;left:calc(100% + 8px);transform:translateY(-50%);font-size:9px;color:var(--ct-muted);white-space:nowrap}
-.combo-percent-axis .y100{top:20px}.combo-percent-axis .y75{top:25%}.combo-percent-axis .y50{top:50%}.combo-percent-axis .y25{top:75%}.combo-percent-axis .y0{bottom:16px}
-.performance-trend-panel:has(.combo-bars) .trend-plot{margin-right:42px}
-.performance-trend-panel:has(.combo-bars) .trend-target-line{right:0!important}
