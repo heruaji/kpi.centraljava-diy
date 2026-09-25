@@ -420,7 +420,18 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       });
       const operationalTrend=branchDayKeys.map(date=>{
         const day=slaItems.filter(x=>x.__date===date);
-        return {date,volume:sum(day,'VOLUME_SLA_ALL'),backlog:sum(day,'VOLUME_BACKLOG'),failedDelivery:sum(day,'VOLUME_FD'),codTransfer:sum(day,'VOLUME_COD_TF')};
+        return {
+          date,
+          volume:sum(day,'VOLUME_SLA_ALL'),
+          backlog:sum(day,'VOLUME_BACKLOG'),
+          backlogRate:pct(ratio(sum(day,'VOLUME_BACKLOG'),sum(day,'VOLUME_BACKLOG_ALL'))),
+          failedDelivery:sum(day,'VOLUME_FD'),
+          failedDeliveryRate:pct(ratio(sum(day,'VOLUME_FD'),sum(day,'VOLUME_FD_ALL'))),
+          codTransfer:sum(day,'VOLUME_COD_TF'),
+          codTransferRate:pct(ratio(sum(day,'VOLUME_COD_TF'),sum(day,'VOLUME_COD_ALL')))
+        };
+      });
+      return {date,volume:sum(day,'VOLUME_SLA_ALL'),backlog:sum(day,'VOLUME_BACKLOG'),failedDelivery:sum(day,'VOLUME_FD'),codTransfer:sum(day,'VOLUME_COD_TF')};
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:r.city,
