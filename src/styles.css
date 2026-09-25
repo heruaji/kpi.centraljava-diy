@@ -1162,3 +1162,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .productivity-area-trend{margin:14px 0 18px;padding:14px 16px 12px;border:1px solid var(--ct-border);border-radius:10px;background:var(--ct-card2)}
 .productivity-area-trend .productivity-daily-head{margin-bottom:10px}
 .productivity-area-trend .trend-chart-shell{margin-top:4px}
+
+/* Unified back navigation — same control and header position across modules */
+.back-scope.back-nav{display:inline-flex!important;align-items:center!important;justify-content:center!important;flex:0 0 auto!important;min-height:32px!important;height:32px!important;margin:0!important;padding:0 11px!important;border:1px solid var(--ct-border)!important;border-radius:7px!important;background:var(--ct-card)!important;color:var(--ct-text)!important;font-size:9px!important;font-weight:700!important;line-height:1!important;white-space:nowrap!important;text-decoration:none!important;cursor:pointer!important}
+.back-scope.back-nav:hover{background:var(--ct-card2)!important;border-color:var(--ct-soft)!important;color:var(--ct-text)!important;text-decoration:none!important}
+.panel-title>.back-scope.back-nav,.productivity-detail-head>.back-scope.back-nav,.kpi-gerai-head>.back-scope.back-nav,.sla-daily-head>.back-scope.back-nav{margin-left:auto!important;align-self:flex-start!important}
+.scope-heading{position:relative!important}.scope-heading>.back-scope.back-nav{position:absolute!important;top:0!important;right:0!important;margin:0!important}
+.scope-heading:has(>.back-scope.back-nav){padding-right:170px!important}
+.operational-detail-actions .back-scope.back-nav,.kpi-detail-actions .back-scope.back-nav{margin-left:auto!important}
+@media(max-width:760px){.panel-title>.back-scope.back-nav,.productivity-detail-head>.back-scope.back-nav,.kpi-gerai-head>.back-scope.back-nav,.sla-daily-head>.back-scope.back-nav{align-self:flex-end!important}.scope-heading:has(>.back-scope.back-nav){padding-right:0!important;padding-top:40px!important}.scope-heading>.back-scope.back-nav{left:0!important;right:auto!important}}
