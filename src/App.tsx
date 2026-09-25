@@ -427,8 +427,10 @@ export default function App() {
           <button title={collapsed?'Region Overview':undefined} className={!territoryNav.areaId ? 'nav-item active' : 'nav-item'} onClick={()=>{territoryNav.region();territoryClose()}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
           <button title={collapsed?territoryNav.areaLabel:undefined} className={territoryNav.areaId && !territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.areaId} onClick={()=>{territoryNav.area();territoryClose()}}><Target size={18}/><span className="nav-label">{territoryNav.areaLabel}</span></button>
           <button title={collapsed?territoryNav.branchLabel:undefined} className={territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.branchId} onClick={territoryClose}><Route size={18}/><span className="nav-label">{territoryNav.branchLabel}</span></button>
-          <button className={faqOpen?'nav-item faq-nav active':'nav-item faq-nav'} title={collapsed?'FAQ':undefined} onClick={()=>{setFaqOpen(true);setMobileOpen(false)}}><CircleHelp size={18}/><span className="nav-label">FAQ</span></button>
         </nav>
+        <div className="sidebar-faq-section">
+          <button className={faqOpen?'nav-item faq-nav active':'nav-item faq-nav'} title={collapsed?'FAQ':undefined} onClick={()=>{setFaqOpen(true);setMobileOpen(false)}}><CircleHelp size={18}/><span className="nav-label">FAQ</span></button>
+        </div>
         <button className="collapse-btn" aria-label={collapsed?'Buka menu':'Tutup menu'} title={collapsed?'Buka menu':'Tutup menu'} onClick={() => setCollapsed(v => !v)}>
           <span className="collapse-icon">{collapsed ? <ChevronRight size={17}/> : <ChevronLeft size={17}/>}</span><span className="collapse-label">Collapse Menu</span>
         </button>
