@@ -225,6 +225,8 @@ export default function App() {
   const controlTrendValues=trend.map(point=>point[activeControlTrend.field] as number|null|undefined).filter((v):v is number=>v!=null);
   const controlTrendScaleMax=activeControlTrend.percent?100:niceAxisMax(Math.max(activeControlTrend.target,...controlTrendValues));
   const controlTrendTargetPosition=Math.min(100,(activeControlTrend.target/controlTrendScaleMax)*100);
+  const codVolumeMax=niceAxisMax(Math.max(1,...trend.map(point=>point.codTransferVolume??0)));
+  const codLinePoints=trend.map((point,index)=>{const x=trend.length<=1?500:(index/(trend.length-1))*1000;const y=100-Math.max(0,Math.min(100,point.codTransferRate??0));return String(x)+','+String(y)}).join(' ');
   const controlRegionRanking = (dashboard?.areas ?? []).flatMap(area=>area.ranking?.details ?? []);
   const controlMetricCards = (['sla','cod','failed','backlog','sorterFm','sorterLm','courierFm','courierLm'] as const).map(key=>{
     const cfg=controlTrendConfig[key];
