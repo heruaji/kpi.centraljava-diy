@@ -7,7 +7,7 @@ export interface KpiDetail { key:string; label:string; actual:number|null; targe
 export interface KpiDaily { date:string; numerator:number; denominator:number; actual:number|null; target:number; targetLabel:string; gap:number|null; tier:string }
 export interface KpiDetailDaily { key:string; label:string; targetLabel:string; daily:KpiDaily[] }
 export interface PenaltyDetail { key:string; label:string; actual:number|null; targetLabel:string; tier:string; maxPenalty:number; penalty:number }
-export interface OperationalTrendPoint { date:string; volume:number; backlog:number; failedDelivery:number; codTransfer:number }
+export interface OperationalTrendPoint { date:string; volume:number; backlog:number; backlogRate?:number|null; failedDelivery:number; failedDeliveryRate?:number|null; codTransfer:number; codTransferRate?:number|null }
 export interface BranchOperations { volume:number; backlog:number; backlogRate:number|null; failedDelivery:number; failedDeliveryRate:number|null; codTransfer:number; codTransferRate:number|null; comparison:{label:string;volume:number;backlogRate:number|null;failedDeliveryRate:number|null;codTransferRate:number|null} }
 export interface ProductivitySet { value:number|null; previous:number|null; previousPrevious?:number|null; volume:number; manpower:number; trend?:ProductivityTrendPoint[] }
 export interface ProductivityTrendPoint { date:string; value:number|null; volume:number; manpower:number }
