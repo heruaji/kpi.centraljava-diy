@@ -1362,3 +1362,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .driver-summary-foot .good{color:#22c55e}.driver-summary-foot .review{color:#f97373}.driver-summary-foot .neutral{color:var(--ct-muted)}
 @media(max-width:900px){.drivers-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:520px){.drivers-summary-grid{grid-template-columns:1fr}}
+
+/* ApexCharts operational drivers */
+.driver-apex-scroll{width:100%;overflow-x:auto;overflow-y:hidden;overscroll-behavior-inline:contain;scrollbar-width:thin;-webkit-overflow-scrolling:touch}
+.driver-apex-inner{min-width:100%;height:270px}
+.apex-driver-card{overflow:hidden}
+.apex-driver-card .apexcharts-canvas,.apex-driver-card .apexcharts-svg{background:transparent!important}
+.apex-driver-card .apexcharts-tooltip{border:1px solid var(--ct-border)!important;box-shadow:0 8px 24px rgba(0,0,0,.24)!important}
+.apex-driver-card .apexcharts-legend{padding-top:2px!important}
+.apex-driver-card .apexcharts-xaxis-label,.apex-driver-card .apexcharts-yaxis-label{font-family:Inter,sans-serif!important}
+@media(max-width:720px){.driver-apex-inner{min-width:720px}}
