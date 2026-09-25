@@ -1158,3 +1158,7 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .productivity-context-switch .function-switch button{min-width:64px;height:27px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--ct-muted);font:inherit;font-size:9px;font-weight:700;cursor:pointer}
 .productivity-context-switch .function-switch button.active{background:var(--ct-primary);color:#fff}
 @media(max-width:520px){.productivity-context-switch{display:grid;grid-template-columns:1fr 1fr}.productivity-context-switch .function-switch button{min-width:0;flex:1}}
+
+.productivity-area-trend{margin:14px 0 18px;padding:14px 16px 12px;border:1px solid var(--ct-border);border-radius:10px;background:var(--ct-card2)}
+.productivity-area-trend .productivity-daily-head{margin-bottom:10px}
+.productivity-area-trend .trend-chart-shell{margin-top:4px}
