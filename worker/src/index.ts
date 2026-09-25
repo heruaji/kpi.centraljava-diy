@@ -14,18 +14,16 @@ const CACHE_VERSION='v3-native-sheet-lookup';
 const LEGACY_CACHE_VERSION='v2-native-area';
 const cacheKey=(preset?:string,start?:string|null,end?:string|null,version=CACHE_VERSION)=>`${version}:region:${preset||'MTD'}:${start||''}:${end||''}`;
 const SNAPSHOT_TTL=60*60*24*7;
-const FRESH_MS=5*60*1000;
 
 async function ensureDb(env:Env){
   if(!env.DB) return;
-  // Keep D1 lightweight: only calculated dashboard snapshots belong here.
-  // Remove the temporary raw-source ingestion schema introduced during the experiment.
   const statements=[
     `CREATE TABLE IF NOT EXISTS dashboard_snapshots (cache_key TEXT PRIMARY KEY,period TEXT NOT NULL,range_start TEXT,range_end TEXT,updated_at TEXT NOT NULL,payload TEXT NOT NULL)`,
     `CREATE INDEX IF NOT EXISTS idx_dashboard_snapshots_updated_at ON dashboard_snapshots(updated_at)`,
+    `CREATE TABLE IF NOT EXISTS dashboard_refresh_jobs (job_id TEXT PRIMARY KEY,cache_key TEXT NOT NULL,status TEXT NOT NULL,started_at TEXT NOT NULL,finished_at TEXT,changed INTEGER NOT NULL DEFAULT 0,error TEXT)`,
+    `CREATE INDEX IF NOT EXISTS idx_dashboard_refresh_jobs_key ON dashboard_refresh_jobs(cache_key,started_at)`,
     `DROP TABLE IF EXISTS source_rows`,
-    `DROP TABLE IF EXISTS source_sync_state`,
-    `DROP TABLE IF EXISTS dashboard_sync_runs`
+    `DROP TABLE IF EXISTS source_sync_state`
   ];
   await env.DB.batch(statements.map(sql=>env.DB!.prepare(sql)));
 }
@@ -41,8 +39,6 @@ async function saveDbSnapshot(env:Env,key:string,period:string,start:string|null
   await ensureDb(env);
   const updatedAt=new Date().toISOString();
   const payload=JSON.stringify(data);
-  // D1/SQLite has a per-value size ceiling. Dashboard snapshots can exceed it,
-  // so D1 is metadata/status storage only; the full snapshot lives in KV.
   const bytes=new TextEncoder().encode(payload).byteLength;
   if(bytes>1_500_000) return;
   await env.DB.prepare(`INSERT INTO dashboard_snapshots(cache_key,period,range_start,range_end,updated_at,payload)
@@ -51,8 +47,8 @@ async function saveDbSnapshot(env:Env,key:string,period:string,start:string|null
     .bind(key,period,start,end,updatedAt,payload).run();
 }
 
-
 type Snapshot={updatedAt:string;data:unknown};
+type RefreshJob={job_id:string;status:string;started_at:string;finished_at:string|null;changed:number;error:string|null};
 
 async function readSnapshot(env:Env,key:string):Promise<Snapshot|null>{
   if(!env.DASHBOARD_CACHE) return null;
@@ -62,7 +58,6 @@ async function saveSnapshot(env:Env,key:string,data:unknown){
   if(!env.DASHBOARD_CACHE) return;
   await env.DASHBOARD_CACHE.put(key,JSON.stringify({updatedAt:new Date().toISOString(),data}),{expirationTtl:SNAPSHOT_TTL});
 }
-
 async function rebuildAndPersist(env:Env,key:string,period:string,start:string|null,end:string|null,previous:Snapshot|null=null){
   const data=await buildRegionDashboard(env,period as PeriodPreset,start&&end?{start,end}:undefined);
   const changed=!previous || JSON.stringify(previous.data)!==JSON.stringify(data);
@@ -71,7 +66,21 @@ async function rebuildAndPersist(env:Env,key:string,period:string,start:string|n
     await saveSnapshot(env,key,data);
     return {data,changed:true,updatedAt:new Date().toISOString()};
   }
-  return {data:previous.data,changed:false,updatedAt:previous.updatedAt};
+  return {data:previous!.data,changed:false,updatedAt:previous!.updatedAt};
+}
+async function latestRunningJob(env:Env,key:string):Promise<RefreshJob|null>{
+  if(!env.DB) return null;
+  await ensureDb(env);
+  return env.DB.prepare(`SELECT job_id,status,started_at,finished_at,changed,error FROM dashboard_refresh_jobs WHERE cache_key=? AND status='PROCESSING' ORDER BY started_at DESC LIMIT 1`).bind(key).first<RefreshJob>();
+}
+async function runRefreshJob(env:Env,jobId:string,key:string,period:string,start:string|null,end:string|null,previous:Snapshot|null){
+  try{
+    const result=await rebuildAndPersist(env,key,period,start,end,previous);
+    if(env.DB) await env.DB.prepare(`UPDATE dashboard_refresh_jobs SET status='READY',finished_at=?,changed=?,error=NULL WHERE job_id=?`).bind(new Date().toISOString(),result.changed?1:0,jobId).run();
+  }catch(error){
+    const message=error instanceof Error?error.message:'Unknown error';
+    if(env.DB) await env.DB.prepare(`UPDATE dashboard_refresh_jobs SET status='ERROR',finished_at=?,error=? WHERE job_id=?`).bind(new Date().toISOString(),message,jobId).run();
+  }
 }
 
 export default {
@@ -79,6 +88,17 @@ export default {
     const url=new URL(request.url); const origin=env.ALLOWED_ORIGIN||'*';
     if(request.method==='OPTIONS') return new Response(null,{headers:{'access-control-allow-origin':origin,'access-control-allow-methods':'GET,OPTIONS','access-control-allow-headers':'content-type'}});
     if(url.pathname==='/api/health') return json({ok:true,service:'kpi-centraljava-diy-api',cache:!!env.DASHBOARD_CACHE,d1:!!env.DB,cacheVersion:CACHE_VERSION},200,origin);
+
+    if(url.pathname==='/api/dashboard/refresh-status'){
+      const jobId=url.searchParams.get('jobId');
+      if(!jobId) return json({ok:false,error:'jobId wajib diisi'},400,origin);
+      if(!env.DB) return json({ok:false,error:'D1 tidak tersedia'},503,origin);
+      await ensureDb(env);
+      const job=await env.DB.prepare('SELECT job_id,status,started_at,finished_at,changed,error FROM dashboard_refresh_jobs WHERE job_id=?').bind(jobId).first<RefreshJob>();
+      if(!job) return json({ok:false,error:'Refresh job tidak ditemukan'},404,origin);
+      return json({ok:true,jobId:job.job_id,status:job.status,startedAt:job.started_at,finishedAt:job.finished_at,changed:job.changed===1,error:job.error},200,origin);
+    }
+
     if(url.pathname==='/api/dashboard/region'){
       const preset=url.searchParams.get('period') as PeriodPreset|null;
       const start=url.searchParams.get('start'); const end=url.searchParams.get('end');
@@ -98,20 +118,21 @@ export default {
       if(dbSnapshot && env.DASHBOARD_CACHE) ctx.waitUntil(saveSnapshot(env,key,dbSnapshot.data));
       const checkedAt=new Date().toISOString();
 
-      // Normal dashboard loads are read-only: never rebuild, write D1/KV, or touch Sheets.
       if(!force){
         if(snapshot) return json(snapshot.data,200,origin,{'x-dashboard-cache':'HIT','x-dashboard-updated-at':snapshot.updatedAt,'x-dashboard-checked-at':checkedAt,'x-dashboard-changed':'0'});
         return json({ok:false,error:'Dashboard belum memiliki snapshot. Klik Refresh Data untuk membuat data awal.'},503,origin,{'x-dashboard-checked-at':checkedAt});
       }
 
-      // Only an explicit Refresh Data click reads Sheets. Persist only when calculated content changed.
-      try{
-        const result=await rebuildAndPersist(env,key,preset||'MTD',start,end,snapshot);
-        return json(result.data,200,origin,{'x-dashboard-cache':result.changed?'REFRESHED':'UNCHANGED','x-dashboard-updated-at':result.updatedAt,'x-dashboard-checked-at':checkedAt,'x-dashboard-changed':result.changed?'1':'0'});
-      }catch(error){
-        if(snapshot) return json(snapshot.data,200,origin,{'x-dashboard-cache':'REFRESH-ERROR','x-dashboard-updated-at':snapshot.updatedAt,'x-dashboard-checked-at':checkedAt,'x-dashboard-changed':'0'});
-        return json({ok:false,error:error instanceof Error?error.message:'Unknown error'},500,origin,{'x-dashboard-checked-at':checkedAt});
-      }
+      if(!env.DB) return json({ok:false,error:'D1 diperlukan untuk background refresh'},503,origin,{'x-dashboard-checked-at':checkedAt});
+      await ensureDb(env);
+      const running=await latestRunningJob(env,key);
+      if(running) return json({ok:true,jobId:running.job_id,status:'PROCESSING',startedAt:running.started_at},202,origin,{'x-dashboard-checked-at':checkedAt});
+
+      const jobId=crypto.randomUUID();
+      const startedAt=new Date().toISOString();
+      await env.DB.prepare(`INSERT INTO dashboard_refresh_jobs(job_id,cache_key,status,started_at,changed) VALUES(?,?, 'PROCESSING',?,0)`).bind(jobId,key,startedAt).run();
+      ctx.waitUntil(runRefreshJob(env,jobId,key,preset||'MTD',start,end,snapshot));
+      return json({ok:true,jobId,status:'PROCESSING',startedAt},202,origin,{'x-dashboard-checked-at':checkedAt});
     }
     return json({ok:false,error:'Not found'},404,origin);
   }
