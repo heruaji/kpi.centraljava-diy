@@ -1239,6 +1239,17 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 @media(max-width:1100px){.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:repeat(2,minmax(0,1fr))}}
 @media(max-width:620px){.metric-grid:has(.metric-card:nth-child(8)){grid-template-columns:1fr}}
 
+/* Shared compact Control Tower tables and pagination */
+.control-tower-content .table-wrap th,.control-tower-content .table-wrap td{padding-top:7px!important;padding-bottom:7px!important;line-height:1.2!important}
+.control-tower-content .table-wrap th{height:32px!important}
+.control-tower-content .table-wrap td{height:34px!important}
+.table-pagination{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:9px;font-size:10px;color:var(--ct-muted)}
+.table-pagination>div{display:flex;align-items:center;gap:4px}
+.table-pagination button{min-width:28px;height:28px;padding:0 7px;border:1px solid var(--ct-border);border-radius:6px;background:var(--ct-card2);color:var(--ct-text);font:inherit;font-weight:700;cursor:pointer}
+.table-pagination button:hover:not(:disabled){background:var(--ct-card)}
+.table-pagination button.active{background:var(--ct-active);color:var(--ct-active-text);box-shadow:inset 0 0 0 1px var(--ct-text)}
+.table-pagination button:disabled{opacity:.4;cursor:default}
+
 /* Control Tower Area category navigation */
 .control-area-switch{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:0;border:0;background:transparent}
 .control-area-switch-main,.control-area-function-switch{display:flex;align-items:center;gap:3px;flex-wrap:wrap;padding:4px;border:1px solid var(--ct-border);border-radius:10px;background:var(--ct-card2)}
