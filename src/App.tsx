@@ -261,7 +261,7 @@ export default function App() {
     ? ['COD FAS','NON COD FAS','EDC','COD FD','HD','LOST','TMT','FRAUD','REMITTANCE']
     : kpiFunction==='FM'
       ? ['SDOB 10 PM','SDOB 00 AM','SDOB 02 AM','N0 PICKUP ATTEMPT','N0 PICKUP SUCCESS','LOST','FAS RETUR','SCANNING','HD','TMT RTS']
-      : ['SDOB 04','SDOB 06','SDOB 08','SDOB 10','SDOB 12','SDOB 14','SDOB 16','HD','TMT']) as string[];
+      : ['SDOB 04','SDOB 06','SDOB 10','INBOUND','SCANNING','LOST RATE','CC RATE','HD']) as string[];
   const branchKpiValue=(b:typeof kpiSelectedBranch,key:string)=>b?.kpiDetails?.find(k=>k.key===key)?.actual??null;
   const branchKpiStatus=(b:typeof kpiSelectedBranch,key:string)=>b?.kpiDetails?.find(k=>k.key===key)?.tier??'—';
   const areaPenaltyDetails=(a:NonNullable<typeof kpiSelectedArea>)=>kpiFunction==='LM'?(a.penaltyDetailsLm??[]):kpiFunction==='FM'?(a.penaltyDetailsFm??[]):(a.penaltyDetailsMm??[]);
