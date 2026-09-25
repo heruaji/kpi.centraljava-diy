@@ -1243,3 +1243,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .control-area-switch button.active{background:var(--accent);border-color:var(--accent);color:#fff}
 .control-area-function-switch{padding-left:10px;border-left:1px solid var(--border)}
 .control-area-overview-table table{min-width:920px}
+
+/* Control Tower Region > Area > Gerai context controls */
+.control-scope-actions{display:flex;justify-content:flex-end;align-items:center;margin:0 0 10px}
+.control-scope-actions .back-nav{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--panel);text-decoration:none}
+.control-gerai-kpi-switch{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:0 0 12px;padding:9px 11px;border:1px solid var(--border);border-radius:10px;background:var(--panel)}
+.control-gerai-kpi-switch>div:first-child{display:flex;flex-direction:column;gap:2px}.control-gerai-kpi-switch span{font-size:9px;color:var(--muted);font-weight:700}.control-gerai-kpi-switch strong{font-size:12px}
+.control-gerai-kpi-switch .control-area-function-switch button{border:1px solid var(--border);background:transparent;color:var(--muted);border-radius:7px;padding:7px 12px;font:inherit;font-size:10px;font-weight:800;cursor:pointer}
+.control-gerai-kpi-switch .control-area-function-switch button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+@media(max-width:620px){.control-gerai-kpi-switch{align-items:stretch;flex-direction:column}.control-gerai-kpi-switch .control-area-function-switch{width:100%}.control-gerai-kpi-switch .control-area-function-switch button{flex:1}}
