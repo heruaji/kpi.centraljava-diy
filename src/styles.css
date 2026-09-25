@@ -1320,3 +1320,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .faq-tier.tier-3{background:rgba(239,68,68,.12);color:#dc2626}
 .theme-dark .faq-tier.tier-1{color:#6ee7b7}.theme-dark .faq-tier.tier-2{color:#fcd34d}.theme-dark .faq-tier.tier-3{color:#fca5a5}
 @media(max-width:760px){.faq-tabs{width:100%}.faq-tabs button{flex:1}.faq-table{overflow-x:auto}}
+
+/* Operational Drivers: counts use bars, rates use smooth line presentation */
+.driver-mini-line{position:relative;height:112px;padding:6px 8px 18px}
+.driver-mini-line svg{display:block;width:100%;height:88px;overflow:visible}
+.driver-mini-line polyline{fill:none;stroke:currentColor;stroke-width:1.8;vector-effect:non-scaling-stroke;stroke-linecap:round;stroke-linejoin:round;opacity:.9}
+.driver-mini-line circle{fill:var(--ct-surface);stroke:currentColor;stroke-width:1.2;vector-effect:non-scaling-stroke}
+.driver-mini-trend.rate-chart{color:#4f9f69}
+.driver-mini-trend.rate-chart .driver-mini-head{color:var(--ct-text)}
+.driver-line-labels{position:absolute;left:8px;right:8px;bottom:0;display:flex;justify-content:space-between;color:var(--ct-muted)}
+.driver-line-labels small{font-size:8px;line-height:1}
