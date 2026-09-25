@@ -1197,3 +1197,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 }
 
 .ranking-max{margin-left:2px;font-size:8px;color:var(--ct-muted);font-weight:600}
+
+/* Control Tower ranking matrix */
+.ranking-metric-cell{display:flex;flex-direction:column;align-items:center;gap:2px;white-space:nowrap}
+.ranking-metric-cell>strong{font-size:10px}
+.ranking-tier{font-size:7.5px;font-weight:700;line-height:1.15}
+.ranking-tier.tier-1{color:var(--ct-good)}
+.ranking-tier.tier-2{color:var(--ct-warning)}
+.ranking-tier.tier-3{color:var(--ct-muted)}
+.area-performance-table th{white-space:nowrap}
