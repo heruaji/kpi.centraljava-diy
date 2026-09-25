@@ -1149,3 +1149,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .branch-directory-panel .branch-count{color:var(--ct-text)!important;background:var(--ct-card2)!important;border:1px solid var(--ct-border)!important}
 .control-detail-table.sla-branch-table th,.control-detail-table.sla-branch-table td{text-align:center!important}
 .control-detail-table.sla-branch-table th:nth-child(2),.control-detail-table.sla-branch-table td:nth-child(2){text-align:left!important}
+
+/* Productivity context selectors */
+.productivity-context-switch{display:flex;align-items:flex-end;gap:12px;flex-wrap:wrap;margin:0 0 14px;padding:10px 12px;border:1px solid var(--ct-border);border-radius:10px;background:var(--ct-card)}
+.productivity-switch-group{display:flex;flex-direction:column;gap:5px}
+.productivity-switch-group>small{font-size:8px;font-weight:750;letter-spacing:.08em;color:var(--ct-muted)}
+.productivity-context-switch .function-switch{display:flex;padding:3px;border:1px solid var(--ct-border);border-radius:8px;background:var(--ct-card2)}
+.productivity-context-switch .function-switch button{min-width:64px;height:27px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--ct-muted);font:inherit;font-size:9px;font-weight:700;cursor:pointer}
+.productivity-context-switch .function-switch button.active{background:var(--ct-primary);color:#fff}
+@media(max-width:520px){.productivity-context-switch{display:grid;grid-template-columns:1fr 1fr}.productivity-context-switch .function-switch button{min-width:0;flex:1}}
