@@ -1215,3 +1215,17 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .area-performance-table td{text-align:center!important}
 .area-performance-table th:nth-child(2),
 .area-performance-table td:nth-child(2){text-align:left!important}
+
+/* Control Tower SLA detail: use available desktop width, no oversized columns */
+.control-sla-compact{overflow-x:hidden!important}
+.control-sla-compact table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+.control-sla-compact th,.control-sla-compact td{height:34px!important;padding:5px 9px!important;font-size:9px!important}
+.control-sla-compact th:nth-child(1),.control-sla-compact td:nth-child(1){width:54px!important;text-align:center!important}
+.control-sla-compact th:nth-child(2),.control-sla-compact td:nth-child(2){width:auto!important;text-align:left!important}
+.control-sla-compact th:nth-child(3),.control-sla-compact td:nth-child(3){width:150px!important;text-align:center!important}
+.control-sla-compact th:nth-child(4),.control-sla-compact td:nth-child(4){width:150px!important;text-align:center!important}
+.control-sla-compact .status-pill{min-width:68px!important;padding:3px 7px!important;font-size:8px!important}
+@media(max-width:760px){
+ .control-sla-compact{overflow-x:auto!important}
+ .control-sla-compact table{min-width:560px!important}
+}
