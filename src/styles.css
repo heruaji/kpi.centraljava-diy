@@ -1297,7 +1297,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* FAQ reference — independent navigation above sidebar collapse */
 .sidebar nav{display:flex;flex-direction:column;min-height:0;flex:1}
-.sidebar .faq-nav{margin-top:auto}
+.sidebar .faq-nav{margin-top:0}
+.sidebar-faq-section{flex:0 0 auto;margin:0 24px 10px;padding-top:10px;border-top:1px solid var(--ct-border)}
+.sidebar-faq-section .faq-nav{width:100%;margin:0}
+.sidebar.collapsed .sidebar-faq-section{margin-left:24px;margin-right:8px}
+.sidebar.collapsed .sidebar-faq-section .faq-nav{width:44px!important;max-width:44px!important}
+@media(max-width:900px){.sidebar-faq-section{margin:0 12px 10px}}
 .faq-module{display:flex;flex-direction:column;gap:12px}
 .faq-tabs{align-self:flex-start;margin:0}
 .faq-stack{display:flex;flex-direction:column;gap:14px}
