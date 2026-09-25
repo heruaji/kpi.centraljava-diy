@@ -336,7 +336,7 @@ export default function App() {
   const territoryClose = () => setMobileOpen(false);
 
   return (
-    <div className={`app-shell theme-${theme}`}>
+    <div className={`app-shell theme-${theme} ${collapsed?'sidebar-is-collapsed':''}`}>
       {refreshNotice && <div className={`refresh-toast ${refreshNotice.kind}`} role="status" aria-live="polite"><span className="refresh-toast-dot"/><div><strong>{refreshNotice.kind==='updated'?'Data Diperbarui':'Data Sudah Terbaru'}</strong><small>{refreshNotice.text}</small></div><button onClick={()=>setRefreshNotice(null)} aria-label="Tutup notifikasi">×</button></div>}
       <aside className={`sidebar ${collapsed ? 'collapsed' : ''} ${mobileOpen ? 'mobile-open' : ''}`} aria-label="Navigasi utama">
         <div className="brand">
