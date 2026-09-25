@@ -491,6 +491,24 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
 }
 
 
+export async function readDashboardFreshness(env:EnvSource){
+  // Cheap refresh probe: read only the date column from each source instead of
+  // recalculating the complete dashboard when Sheets has no newer data.
+  const [sla,lm,fm,mm]=await Promise.all([
+    readSheet(env,'SLA','A:A'),
+    readSheet(env,'KPI LM','A:A'),
+    readSheet(env,'KPI FM','A:A'),
+    readSheet(env,'KPI MM','A:A')
+  ]);
+  const max=(items:Row[],key:string)=>items.map(r=>excelDate(r[key])).filter((v):v is string=>!!v).sort().at(-1)||null;
+  return [
+    {source:'SLA',maxDate:max(sla,'PERIODE')},
+    {source:'LM',maxDate:max(lm,'GRANULAR_DATE')},
+    {source:'FM',maxDate:max(fm,'GRANULAR_DATE')},
+    {source:'MM',maxDate:max(mm,'GRANULAR_DATE')}
+  ];
+}
+
 export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
   // Productivity courier/sorter fields extend beyond the old A:AC projection.
   // Read the full working SLA field set so LM/FM courier and sorter numerators/denominators are available.
