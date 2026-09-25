@@ -298,6 +298,29 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     courier:{lm:productivitySet(items,previousItems,previousPreviousItems,'courier','lm'),fm:productivitySet(items,previousItems,previousPreviousItems,'courier','fm')},
     sorter:{lm:productivitySet(items,previousItems,previousPreviousItems,'sorter','lm'),fm:productivitySet(items,previousItems,previousPreviousItems,'sorter','fm')}
   });
+  const rankingMetric=(key:string,label:string,actual:number|null,tier1:number,tier2:number,maxScore:number,direction:'HIGHER'|'LOWER')=>{
+    if(actual==null) return {key,label,actual,tier:'No Data' as const,score:0,maxScore};
+    const isTier1=direction==='HIGHER'?actual>=tier1:actual<=tier1;
+    const isTier2=direction==='HIGHER'?actual>=tier2:actual<=tier2;
+    return {key,label,actual,tier:isTier1?'Tier 1' as const:isTier2?'Tier 2' as const:'Tier 3' as const,score:isTier1?maxScore:isTier2?maxScore/2:0,maxScore};
+  };
+  const areaRanking=(items:Row[])=>{
+    const a=aggregate(items);
+    const cod=pct(ratio(sum(items,'VOLUME_COD_TF'),sum(items,'VOLUME_COD_ALL')));
+    const failed=pct(ratio(sum(items,'VOLUME_FD'),sum(items,'VOLUME_FD_ALL')));
+    const backlog=pct(ratio(sum(items,'VOLUME_BACKLOG'),sum(items,'VOLUME_BACKLOG_ALL')));
+    const details=[
+      rankingMetric('sla','SLA Performance',a.sla,96,95,30,'HIGHER'),
+      rankingMetric('cod','COD Transferred',cod,99.5,99,5,'HIGHER'),
+      rankingMetric('failed','Failed Delivery',failed,1,1.5,20,'LOWER'),
+      rankingMetric('backlog','Backlog Rate',backlog,1.5,2,10,'LOWER'),
+      rankingMetric('sorterFm','Productivity Sorter FM',a.productivitySorterFm,980,750,5,'HIGHER'),
+      rankingMetric('sorterLm','Productivity Sorter LM',a.productivitySorterLm,780,550,5,'HIGHER'),
+      rankingMetric('courierFm','Productivity Kurir FM',a.productivityFm,115,88,10,'HIGHER'),
+      rankingMetric('courierLm','Productivity Kurir LM',a.productivityLm,51,40,15,'HIGHER'),
+    ];
+    return {score:details.reduce((total,item)=>total+item.score,0),details};
+  };
   const periodDays=Math.max(1,Math.round((new Date(range.end+'T00:00:00').getTime()-new Date(range.start+'T00:00:00').getTime())/86400000)+1);
   const prevPrevEndDate=new Date(new Date(previousRange.start+'T00:00:00').getTime()-86400000);
   const prevPrevStartDate=new Date(prevPrevEndDate.getTime()-(periodDays-1)*86400000);
@@ -431,7 +454,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     const penaltyLm=lmPenalty(lmItems);
     const penaltyFm=fmPenalty(fmItems);
     const penaltyMm=mmPenalty(mmItems);
-    return {id:`area-${index+1}`,name,sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,productivityByRole:productivityBundle(items,previousItems,previousPreviousSelected.filter(r=>String(r.District||'')===name)),status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches,penaltyLm,penaltyFm,penaltyMm,penaltyDetailsLm,penaltyDetailsFm,penaltyDetailsMm};
+    return {id:`area-${index+1}`,name,ranking:areaRanking(items),sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,productivityByRole:productivityBundle(items,previousItems,previousPreviousSelected.filter(r=>String(r.District||'')===name)),status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches,penaltyLm,penaltyFm,penaltyMm,penaltyDetailsLm,penaltyDetailsFm,penaltyDetailsMm};
   });
 
   return {
