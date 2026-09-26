@@ -2346,3 +2346,20 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   .sla-area-compact-tools{display:grid!important;grid-template-columns:1fr!important}
   .sla-area-compact-tools .table-search,.sla-area-compact-tools .table-sort{width:100%!important}
 }
+
+
+/* SLA Region Area table: all seven areas visible without vertical scrolling */
+.sla-region-lower-grid .sla-area-table-compact{
+  overflow-x:auto!important;
+  overflow-y:hidden!important;
+}
+.sla-region-lower-grid .sla-area-table-compact thead th{
+  height:34px!important;
+  padding-top:7px!important;
+  padding-bottom:7px!important;
+}
+.sla-region-lower-grid .sla-area-table-compact tbody td{
+  height:42px!important;
+  padding-top:6px!important;
+  padding-bottom:6px!important;
+}
