@@ -288,23 +288,30 @@ export default function App() {
   const driverMax=selectedDriver?Math.max(1,...driverDaily.map(d=>d[selectedDriver])):1;
   const kpiTrendMax = selectedKpi ? Math.max(100,...selectedKpi.daily.map(d=>d.actual ?? 0),selectedKpi.daily[0]?.target ?? 0) : 100;
   const controlTrendConfig = {
-    sla:{label:'SLA Performance',field:'sla',target:96,direction:'HIGHER',percent:true},
-    cod:{label:'COD Transferred',field:'codTransferRate',target:99.5,direction:'HIGHER',percent:true},
-    failed:{label:'Failed Delivery',field:'failedDeliveryRate',target:1,direction:'LOWER',percent:true},
-    backlog:{label:'Backlog Rate',field:'backlogRate',target:1.5,direction:'LOWER',percent:true},
-    sorterFm:{label:'Sorter FM',field:'productivitySorterFm',target:980,direction:'HIGHER',percent:false},
-    sorterLm:{label:'Sorter LM',field:'productivitySorterLm',target:780,direction:'HIGHER',percent:false},
-    courierFm:{label:'Kurir FM',field:'productivityCourierFm',target:115,direction:'HIGHER',percent:false},
-    courierLm:{label:'Kurir LM',field:'productivityCourierLm',target:51,direction:'HIGHER',percent:false},
+    sla:{label:'SLA Performance',field:'sla',target:96,tier2:95,direction:'HIGHER',percent:true},
+    cod:{label:'COD Transferred',field:'codTransferRate',target:99.5,tier2:99,direction:'HIGHER',percent:true},
+    failed:{label:'Failed Delivery',field:'failedDeliveryRate',target:1,tier2:1.5,direction:'LOWER',percent:true},
+    backlog:{label:'Backlog Rate',field:'backlogRate',target:1.5,tier2:2,direction:'LOWER',percent:true},
+    sorterFm:{label:'Sorter FM',field:'productivitySorterFm',target:980,tier2:750,direction:'HIGHER',percent:false},
+    sorterLm:{label:'Sorter LM',field:'productivitySorterLm',target:780,tier2:550,direction:'HIGHER',percent:false},
+    courierFm:{label:'Kurir FM',field:'productivityCourierFm',target:115,tier2:88,direction:'HIGHER',percent:false},
+    courierLm:{label:'Kurir LM',field:'productivityCourierLm',target:51,tier2:40,direction:'HIGHER',percent:false},
   } as const;
   const activeControlTrend=controlTrendConfig[trendMetric];
   const controlTrendValues=trend.map(point=>point[activeControlTrend.field] as number|null|undefined).filter((v):v is number=>v!=null);
-  const controlTrendPeak=Math.max(activeControlTrend.target,...controlTrendValues);
+  const controlTrendPeak=Math.max(activeControlTrend.target,activeControlTrend.tier2,...controlTrendValues);
   const controlTrendAdaptivePercent=trendMetric==='backlog'||trendMetric==='failed';
   const controlTrendScaleMax=controlTrendAdaptivePercent
     ? niceAxisMax(controlTrendPeak*1.25)
     : activeControlTrend.percent?100:niceAxisMax(controlTrendPeak);
   const controlTrendTargetPosition=Math.min(100,(activeControlTrend.target/controlTrendScaleMax)*100);
+  const controlTrendTier2Position=Math.min(100,(activeControlTrend.tier2/controlTrendScaleMax)*100);
+  const controlTrendTier=(value:number|null|undefined)=>{
+    if(value==null) return null;
+    const tier1=activeControlTrend.direction==='HIGHER'?value>=activeControlTrend.target:value<=activeControlTrend.target;
+    const tier2=activeControlTrend.direction==='HIGHER'?value>=activeControlTrend.tier2:value<=activeControlTrend.tier2;
+    return tier1?'Tier 1':tier2?'Tier 2':'Tier 3';
+  };
   const controlRegionRanking = (dashboard?.areas ?? []).flatMap(area=>area.ranking?.details ?? []);
   const controlMetricCards = (['sla','cod','failed','backlog','sorterFm','sorterLm','courierFm','courierLm'] as const).map(key=>{
     const cfg=controlTrendConfig[key];
@@ -638,10 +645,10 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
               {trend.length ? <div className="trend-chart-shell">
                 <div className="trend-plot" aria-label={`${activeControlTrend.label} daily trend`}>
                   <div className="trend-y-label y100">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax):fmtNumber(controlTrendScaleMax)}</div><div className="trend-y-label y75">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax*.75):fmtNumber(controlTrendScaleMax*.75)}</div><div className="trend-y-label y50">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax*.5):fmtNumber(controlTrendScaleMax*.5)}</div><div className="trend-y-label y25">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax*.25):fmtNumber(controlTrendScaleMax*.25)}</div><div className="trend-y-label y0">{activeControlTrend.percent?'0%':'0'}</div><div className="trend-grid-line grid100"/><div className="trend-grid-line grid75"/><div className="trend-grid-line grid50"/><div className="trend-grid-line grid25"/><div className="trend-grid-line grid0"/>
-                  <div className="trend-target-scale"><div className="trend-target-line" style={{bottom:`${controlTrendTargetPosition}%`}}><span>Target {activeControlTrend.percent?`${activeControlTrend.target}%`:activeControlTrend.target}</span></div></div>
-                  <div className="trend-bars">{trend.map(point=>{const value=point[activeControlTrend.field] as number|null|undefined;const achieved=value!=null&&(activeControlTrend.direction==='HIGHER'?value>=activeControlTrend.target:value<=activeControlTrend.target);const height=value==null?0:Math.max(2,Math.min(100,(value/controlTrendScaleMax)*100));return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${activeControlTrend.percent?fmtPercent(value??null):fmtNumber(value??null)}`}><div className="trend-track">{value!=null&&<div className="trend-value" style={{bottom:`calc(${height}% + 4px)`}}>{activeControlTrend.percent?value.toFixed(1):fmtNumber(value)}</div>}<div className={`trend-bar ${achieved?'trend-achieved':'trend-below'}`} style={{height:`${height}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}</div>
+                  <div className="trend-target-scale"><div className="trend-target-line" style={{bottom:`${controlTrendTargetPosition}%`}}><span>Tier 1-${activeControlTrend.percent?`${activeControlTrend.target}%`:activeControlTrend.target}</span></div><div className="control-tier2-line" style={{bottom:`${controlTrendTier2Position}%`}}><span>Tier 2-${activeControlTrend.percent?`${activeControlTrend.tier2}%`:activeControlTrend.tier2}</span></div></div>
+                  <div className="trend-bars">{trend.map(point=>{const value=point[activeControlTrend.field] as number|null|undefined;const tier=controlTrendTier(value);const tierClass=tier==='Tier 1'?'tier-1':tier==='Tier 2'?'tier-2':'tier-3';const height=value==null?0:Math.max(2,Math.min(100,(value/controlTrendScaleMax)*100));return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${activeControlTrend.percent?fmtPercent(value??null):fmtNumber(value??null)} • ${tier??'No Data'}`}><div className="trend-track">{value!=null&&<div className={`trend-value ${tierClass}`} style={{bottom:`calc(${height}% + 4px)`}}>{activeControlTrend.percent?value.toFixed(1):fmtNumber(value)}</div>}<div className={`trend-bar ${tierClass}`} style={{height:`${height}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}</div>
                 </div>
-                <div className="trend-legend"><span><i className="legend-good"/>Tier 1 target tercapai</span><span><i className="legend-review"/>Di luar Tier 1</span><span><i className="legend-target"/>Target ({activeControlTrend.percent?`${activeControlTrend.target}%`:activeControlTrend.target})</span></div>
+                <div className="trend-legend control-tier-legend"><span><i className="legend-tier-1"/>Tier 1</span><span><i className="legend-tier-2"/>Tier 2</span><span><i className="legend-tier-3"/>Tier 3</span></div>
               </div> : <div className="placeholder">Data trend belum tersedia</div>}</article>}
             {!selectedArea && !selectedBranch && !selectedKpi && <article className="panel performance-health-panel"><div className="panel-title"><div><span>REGION HEALTH</span><h3>Performance Health</h3><small>Distribusi status seluruh area pada periode aktif</small></div><span className="health-scope-chip">{dashboard?.areas?.length ?? 0} area</span></div>
               <div className="health-list">
