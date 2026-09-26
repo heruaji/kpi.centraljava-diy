@@ -1999,3 +1999,51 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .control-tier-legend .legend-tier-1{background:#34d399!important}
 .theme-dark .control-tier-legend .legend-tier-2{background:#fbbf24!important}
 .theme-dark .control-tier-legend .legend-tier-3{background:#fb7185!important}
+
+
+/* ===== SLA TREND TIERS — Region / Area / Gerai ===== */
+.sla-module .trend-bar.tier-1{background:linear-gradient(180deg,#10b981,#059669)!important;opacity:1!important}
+.sla-module .trend-bar.tier-2{background:linear-gradient(180deg,#f59e0b,#b45309)!important;opacity:1!important}
+.sla-module .trend-bar.tier-3{background:linear-gradient(180deg,#fb7185,#e11d48)!important;opacity:1!important}
+.sla-module .trend-value.tier-1,.sla-daily-bar-value.tier-1{color:#059669!important}
+.sla-module .trend-value.tier-2,.sla-daily-bar-value.tier-2{color:#b45309!important}
+.sla-module .trend-value.tier-3,.sla-daily-bar-value.tier-3{color:#e11d48!important}
+.sla-module .sla-tier2-line{
+  position:absolute!important;left:0!important;right:0!important;height:0!important;
+  border-top:2px dashed #b45309!important;z-index:5!important;pointer-events:none!important;
+  transform:translateY(11px)
+}
+.sla-module .sla-tier2-line span{
+  position:absolute!important;right:0!important;top:-13px!important;padding:3px 7px!important;
+  border-radius:5px!important;background:#b45309!important;color:#fff!important;
+  font-size:9px!important;font-weight:700!important;white-space:nowrap!important
+}
+.sla-tier-legend .legend-tier-1,.sla-tier-legend .legend-tier-2,.sla-tier-legend .legend-tier-3{
+  width:12px!important;height:12px!important;border:0!important;border-radius:3px!important;display:inline-block!important
+}
+.sla-tier-legend .legend-tier-1{background:#059669!important}
+.sla-tier-legend .legend-tier-2{background:#b45309!important}
+.sla-tier-legend .legend-tier-3{background:#e11d48!important}
+.sla-area-daily-chart{margin:14px 0}
+.sla-tier-daily-bars .sla-daily-bar-track>i.tier-1{background:linear-gradient(180deg,#10b981,#059669)!important}
+.sla-tier-daily-bars .sla-daily-bar-track>i.tier-2{background:linear-gradient(180deg,#f59e0b,#b45309)!important}
+.sla-tier-daily-bars .sla-daily-bar-track>i.tier-3{background:linear-gradient(180deg,#fb7185,#e11d48)!important}
+.sla-tier-daily-bars .sla-detail-tier1-line,.sla-tier-daily-bars .sla-detail-tier2-line{
+  position:absolute!important;left:0!important;right:0!important;height:0!important;z-index:3!important;pointer-events:none!important
+}
+.sla-tier-daily-bars .sla-detail-tier1-line{bottom:96%!important;border-top:1.5px dashed #f59e0b!important}
+.sla-tier-daily-bars .sla-detail-tier2-line{bottom:95%!important;border-top:1.5px dashed #b45309!important}
+.theme-dark .sla-module .trend-bar.tier-1{background:linear-gradient(180deg,#6ee7b7,#34d399)!important}
+.theme-dark .sla-module .trend-bar.tier-2{background:linear-gradient(180deg,#fcd34d,#fbbf24)!important}
+.theme-dark .sla-module .trend-bar.tier-3{background:linear-gradient(180deg,#fca5a5,#fb7185)!important}
+.theme-dark .sla-module .trend-value.tier-1,.theme-dark .sla-daily-bar-value.tier-1{color:#6ee7b7!important}
+.theme-dark .sla-module .trend-value.tier-2,.theme-dark .sla-daily-bar-value.tier-2{color:#fcd34d!important}
+.theme-dark .sla-module .trend-value.tier-3,.theme-dark .sla-daily-bar-value.tier-3{color:#fca5a5!important}
+.theme-dark .sla-module .sla-tier2-line{border-top-color:#fbbf24!important}
+.theme-dark .sla-module .sla-tier2-line span{background:#fbbf24!important;color:#111827!important}
+.theme-dark .sla-tier-legend .legend-tier-1{background:#34d399!important}
+.theme-dark .sla-tier-legend .legend-tier-2{background:#fbbf24!important}
+.theme-dark .sla-tier-legend .legend-tier-3{background:#fb7185!important}
+.theme-dark .sla-tier-daily-bars .sla-daily-bar-track>i.tier-1{background:linear-gradient(180deg,#6ee7b7,#34d399)!important}
+.theme-dark .sla-tier-daily-bars .sla-daily-bar-track>i.tier-2{background:linear-gradient(180deg,#fcd34d,#fbbf24)!important}
+.theme-dark .sla-tier-daily-bars .sla-daily-bar-track>i.tier-3{background:linear-gradient(180deg,#fca5a5,#fb7185)!important}
