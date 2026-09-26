@@ -2156,3 +2156,24 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .drivers-unified-trend .apexcharts-yaxis-texts-g text,
 .theme-dark .drivers-unified-trend .apexcharts-xaxis-title-text,
 .theme-dark .drivers-unified-trend .apexcharts-yaxis-title-text{fill:#94a3b8!important}
+
+
+/* Performance Drivers selector = Performance Trend / Region Trend */
+.drivers-trend-toolbar .drivers-trend-select{
+  height:30px!important;
+  min-width:92px!important;
+  width:auto!important;
+  padding:0 28px 0 9px!important;
+  border:1px solid var(--ui-border)!important;
+  border-radius:7px!important;
+  background:var(--ui-subtle)!important;
+  color:var(--ui-text)!important;
+  font-size:9px!important;
+  font-weight:650!important;
+  box-shadow:none!important;
+}
+.theme-dark .drivers-trend-toolbar .drivers-trend-select{
+  background:#0e1c29!important;
+  border-color:var(--ct-border)!important;
+  color:var(--ct-text)!important;
+}
