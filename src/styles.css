@@ -2058,3 +2058,22 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .sla-table-tier.tier-2{background:rgba(251,191,36,.14);color:#fcd34d}
 .theme-dark .sla-table-tier.tier-3{background:rgba(251,113,133,.14);color:#fda4af}
 .sla-detail-trend-chart .trend-chart-shell{margin-top:10px}
+
+
+/* SLA Gerai detail: chart above, table below */
+.sla-branch-detail-page .sla-daily-layout{
+  display:grid!important;
+  grid-template-columns:minmax(0,1fr)!important;
+  gap:14px!important;
+  align-items:start!important;
+}
+.sla-branch-detail-page .sla-daily-chart,
+.sla-branch-detail-page .sla-daily-table{
+  width:100%!important;
+  min-width:0!important;
+}
+.sla-branch-detail-page .sla-daily-table{
+  height:auto!important;
+  max-height:none!important;
+  margin:0!important;
+}
