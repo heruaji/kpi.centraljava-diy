@@ -1886,3 +1886,32 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .productivity-area-trend .trend-value.tier-1{color:#6ee7b7!important}
 .theme-dark .productivity-area-trend .trend-value.tier-2{color:#fcd34d!important}
 .theme-dark .productivity-area-trend .trend-value.tier-3{color:#fca5a5!important}
+
+
+/* ===== PRODUCTIVITY TIER THRESHOLDS — Tier 1 + Tier 2 across all views ===== */
+.productivity-module .trend-tier2-line{
+  position:absolute;left:0;right:0;border-top:1.5px dashed #b45309;z-index:3;pointer-events:none
+}
+.productivity-module .trend-tier2-line span{
+  position:absolute;right:4px;top:-20px;padding:2px 6px;border-radius:5px;
+  background:#b45309;color:#fff;font-size:9px;font-weight:700;white-space:nowrap
+}
+.productivity-tier-legend .legend-tier2-target{
+  width:16px!important;height:0!important;border-radius:0!important;
+  border-top:2px dashed #b45309!important;background:transparent!important
+}
+.combo-tier2-line{stroke:#b45309;stroke-width:1.5;stroke-dasharray:6 5}
+.combo-tier2-label{
+  fill:#b45309;font-size:9px;font-weight:700;paint-order:stroke;
+  stroke:var(--ui-card);stroke-width:3px;stroke-linejoin:round
+}
+.combo-legend i.tier2-target{
+  width:18px!important;height:0!important;border-radius:0!important;
+  border-top:2px dashed #b45309!important;background:transparent!important
+}
+.theme-dark .productivity-module .trend-tier2-line{border-top-color:#fbbf24}
+.theme-dark .productivity-module .trend-tier2-line span{background:#fbbf24;color:#111827}
+.theme-dark .productivity-tier-legend .legend-tier2-target{border-top-color:#fbbf24!important}
+.theme-dark .combo-tier2-line{stroke:#fbbf24}
+.theme-dark .combo-tier2-label{fill:#fcd34d;stroke:#111b29;stroke-width:4px}
+.theme-dark .combo-legend i.tier2-target{border-top-color:#fbbf24!important}
