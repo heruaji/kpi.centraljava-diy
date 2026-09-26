@@ -10,8 +10,10 @@ export interface Env {
   DB?: D1Database;
 }
 const json=(body:unknown,status=200,origin='*',extra:Record<string,string>={})=>new Response(JSON.stringify(body),{status,headers:{'content-type':'application/json; charset=utf-8','access-control-allow-origin':origin,...extra}});
-const CACHE_VERSION='v6-kpi-area-tier-details';
-const LEGACY_CACHE_VERSION='v5-driver-area-summary';
+const CACHE_VERSION='v7-branch-sla-daily-volumes';
+// Schema v7 adds branch trend slaMeet/slaAll. Do not fall back to an older
+// snapshot because older payloads cannot populate the SLA daily volume table.
+const LEGACY_CACHE_VERSION=CACHE_VERSION;
 const cacheKey=(preset?:string,start?:string|null,end?:string|null,version=CACHE_VERSION)=>`${version}:region:${preset||'MTD'}:${start||''}:${end||''}`;
 const SNAPSHOT_TTL=60*60*24*7;
 
