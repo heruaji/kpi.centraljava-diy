@@ -2047,3 +2047,14 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .sla-tier-daily-bars .sla-daily-bar-track>i.tier-1{background:linear-gradient(180deg,#6ee7b7,#34d399)!important}
 .theme-dark .sla-tier-daily-bars .sla-daily-bar-track>i.tier-2{background:linear-gradient(180deg,#fcd34d,#fbbf24)!important}
 .theme-dark .sla-tier-daily-bars .sla-daily-bar-track>i.tier-3{background:linear-gradient(180deg,#fca5a5,#fb7185)!important}
+
+
+/* SLA branch daily table tier chips */
+.sla-table-tier{display:inline-flex;align-items:center;justify-content:center;min-width:58px;padding:4px 8px;border-radius:999px;font-size:11px;font-weight:700;white-space:nowrap}
+.sla-table-tier.tier-1{background:rgba(5,150,105,.12);color:#047857}
+.sla-table-tier.tier-2{background:rgba(180,83,9,.12);color:#b45309}
+.sla-table-tier.tier-3{background:rgba(225,29,72,.12);color:#be123c}
+.theme-dark .sla-table-tier.tier-1{background:rgba(52,211,153,.14);color:#6ee7b7}
+.theme-dark .sla-table-tier.tier-2{background:rgba(251,191,36,.14);color:#fcd34d}
+.theme-dark .sla-table-tier.tier-3{background:rgba(251,113,133,.14);color:#fda4af}
+.sla-detail-trend-chart .trend-chart-shell{margin-top:10px}
