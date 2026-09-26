@@ -2312,3 +2312,37 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.fair{background:#eab308!important}
 .theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.bad{background:#f97316!important}
 .theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.unsatisfactory{background:#fb7185!important}
+
+
+/* SLA Region: compact Area Performance + selectable Attention */
+.sla-region-lower-grid{
+  display:grid!important;
+  grid-template-columns:minmax(0,1.85fr) minmax(300px,1fr)!important;
+  gap:14px!important;
+  align-items:stretch!important;
+  margin-top:14px!important;
+}
+.sla-region-lower-grid>.panel{min-width:0!important;height:430px!important;display:flex!important;flex-direction:column!important}
+.sla-area-compact-tools{display:flex!important;align-items:center!important;gap:7px!important;margin:10px 0 8px!important}
+.sla-area-compact-tools .table-search{min-width:0!important;flex:1 1 160px!important}
+.sla-area-compact-tools .table-sort{flex:0 0 auto!important}
+.sla-area-table-compact{flex:1 1 auto!important;height:auto!important;min-height:0!important;overflow:auto!important}
+.sla-area-table-compact table{min-width:680px!important}
+.sla-attention-title{margin-bottom:10px!important}
+.sla-attention-select{
+  width:100%!important;height:32px!important;padding:0 30px 0 10px!important;
+  border:1px solid var(--ct-border)!important;border-radius:7px!important;
+  background:var(--ct-card2)!important;color:var(--ct-text)!important;
+  font-size:9px!important;font-weight:700!important;outline:none!important;
+}
+.sla-attention-content{flex:1 1 auto!important;min-height:0!important;margin-top:9px!important;overflow:auto!important}
+.sla-attention-content .sla-priority-list,.sla-attention-content .sla-movement-list{min-height:0!important}
+.theme-dark .sla-attention-select{background:#0e1c29!important;border-color:var(--ct-border)!important;color:var(--ct-text)!important}
+@media(max-width:1050px){
+  .sla-region-lower-grid{grid-template-columns:1fr!important}
+  .sla-region-lower-grid>.panel{height:auto!important;min-height:390px!important}
+}
+@media(max-width:760px){
+  .sla-area-compact-tools{display:grid!important;grid-template-columns:1fr!important}
+  .sla-area-compact-tools .table-search,.sla-area-compact-tools .table-sort{width:100%!important}
+}
