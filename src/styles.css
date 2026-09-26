@@ -1609,3 +1609,42 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   margin-left:auto!important;
   margin-right:auto!important;
 }
+
+
+/* ===== AREA PERFORMANCE COMPARISON — unified table geometry ===== */
+.area-performance-table{
+  overflow-x:auto!important;
+  border:1px solid var(--ct-border)!important;
+  border-radius:8px!important;
+}
+.area-performance-table table{
+  width:100%!important;
+  min-width:920px!important;
+  border-collapse:collapse!important;
+  border-spacing:0!important;
+  table-layout:auto!important;
+}
+.area-performance-table thead,
+.area-performance-table tbody{width:100%!important}
+.area-performance-table th,
+.area-performance-table td{
+  text-align:center!important;
+  vertical-align:middle!important;
+  border-right:1px solid var(--ct-border)!important;
+  border-bottom:1px solid var(--ct-border)!important;
+}
+.area-performance-table th:nth-child(2),
+.area-performance-table td:nth-child(2){text-align:left!important}
+.area-performance-table th:last-child,
+.area-performance-table td:last-child{border-right:0!important}
+.area-performance-table tbody tr:last-child td{border-bottom:0!important}
+.area-performance-table .ranking-metric-cell{
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
+.area-performance-table .ranking-value{
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
