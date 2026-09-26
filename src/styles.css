@@ -1545,3 +1545,48 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .sla-branch-detail-page .sla-daily-table{overflow-x:auto!important}
 .sla-branch-detail-page .sla-daily-table table{min-width:620px!important}
 }
+
+
+/* ===== PRODUCTIVITY: align gerai filters/table with Area Comparison ===== */
+.productivity-branch-panel .productivity-branch-tools{
+  justify-content:flex-end!important;
+  margin:12px 0 8px!important;
+}
+.productivity-branch-panel .productivity-branch-tools .table-search{
+  margin-right:auto!important;
+}
+.productivity-branch-panel .productivity-branch-tools .productivity-movement-filter{
+  margin-left:0!important;
+}
+.productivity-branch-panel .productivity-branch-tools .area-count{
+  margin-left:0!important;
+}
+.productivity-branch-table table{
+  width:100%!important;
+  table-layout:fixed!important;
+}
+.productivity-branch-table th,
+.productivity-branch-table td{
+  text-align:center!important;
+  font-variant-numeric:tabular-nums!important;
+}
+.productivity-branch-table th:nth-child(2),
+.productivity-branch-table td:nth-child(2){
+  text-align:left!important;
+}
+.productivity-branch-table th:nth-child(1),
+.productivity-branch-table td:nth-child(1){width:8%!important}
+.productivity-branch-table th:nth-child(2),
+.productivity-branch-table td:nth-child(2){width:28%!important}
+.productivity-branch-table th:nth-child(3),
+.productivity-branch-table td:nth-child(3){width:18%!important}
+.productivity-branch-table th:nth-child(4),
+.productivity-branch-table td:nth-child(4){width:22%!important}
+.productivity-branch-table th:nth-child(5),
+.productivity-branch-table td:nth-child(5){width:16%!important}
+.productivity-branch-table th:nth-child(6),
+.productivity-branch-table td:nth-child(6){width:8%!important}
+@media(max-width:720px){
+  .productivity-branch-panel .productivity-branch-tools{justify-content:flex-start!important;flex-wrap:wrap!important}
+  .productivity-branch-panel .productivity-branch-tools .table-search{margin-right:0!important;width:100%!important}
+}
