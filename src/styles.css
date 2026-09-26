@@ -2299,3 +2299,16 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .kpi-daily-trend-master .kpi-category-legend .kpi-legend.fair{background:#eab308!important}
 .theme-dark .kpi-daily-trend-master .kpi-category-legend .kpi-legend.bad{background:#f97316!important}
 .theme-dark .kpi-daily-trend-master .kpi-category-legend .kpi-legend.unsatisfactory{background:#fb7185!important}
+
+
+/* KPI legend final palette: match the Daily Trend bars exactly */
+.kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.excellent{background:#059669!important}
+.kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.good{background:#2563eb!important}
+.kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.fair{background:#eab308!important}
+.kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.bad{background:#ea580c!important}
+.kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.unsatisfactory{background:#e11d48!important}
+.theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.excellent{background:#34d399!important}
+.theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.good{background:#60a5fa!important}
+.theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.fair{background:#eab308!important}
+.theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.bad{background:#f97316!important}
+.theme-dark .kpi-daily-trend-master .trend-legend.kpi-category-legend i.kpi-legend.unsatisfactory{background:#fb7185!important}
