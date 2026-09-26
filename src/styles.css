@@ -2211,3 +2211,42 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .drivers-tier-legend .legend-tier-1{background:#34d399!important}
 .theme-dark .drivers-tier-legend .legend-tier-2{background:#f59e0b!important}
 .theme-dark .drivers-tier-legend .legend-tier-3{background:#fb7185!important}
+
+
+/* KPI Daily Trend — approved shared chart contract */
+.kpi-daily-trend-master .kpi-category-line.kpi-category-excellent{
+  border-top:2px dashed #059669!important;
+}
+.kpi-daily-trend-master .kpi-category-line.kpi-category-excellent span{
+  background:#059669!important;color:#fff!important;
+}
+.kpi-daily-trend-master .trend-bar{
+  border-radius:5px 5px 2px 2px!important;opacity:1!important;
+}
+.kpi-daily-trend-master .trend-bar.excellent{background:linear-gradient(180deg,#10b981,#059669)!important}
+.kpi-daily-trend-master .trend-bar.good{background:linear-gradient(180deg,#60a5fa,#2563eb)!important}
+.kpi-daily-trend-master .trend-bar.fair{background:linear-gradient(180deg,#fbbf24,#d97706)!important}
+.kpi-daily-trend-master .trend-bar.bad{background:linear-gradient(180deg,#fb923c,#ea580c)!important}
+.kpi-daily-trend-master .trend-bar.unsatisfactory{background:linear-gradient(180deg,#fb7185,#e11d48)!important}
+.kpi-daily-trend-master .trend-value.excellent{color:#059669!important}
+.kpi-daily-trend-master .trend-value.good{color:#2563eb!important}
+.kpi-daily-trend-master .trend-value.fair{color:#b45309!important}
+.kpi-daily-trend-master .trend-value.bad{color:#c2410c!important}
+.kpi-daily-trend-master .trend-value.unsatisfactory{color:#e11d48!important}
+.kpi-scope-daily-trend{
+  margin:14px 0 18px;padding:14px 16px;border:1px solid var(--ui-border);border-radius:10px;background:var(--ui-surface);
+}
+.kpi-scope-daily-trend .kpi-gerai-chart-title{margin-bottom:8px}
+.theme-dark .kpi-scope-daily-trend{border-color:var(--ct-border);background:var(--ct-panel)}
+.theme-dark .kpi-daily-trend-master .trend-bar.excellent{background:linear-gradient(180deg,#6ee7b7,#34d399)!important}
+.theme-dark .kpi-daily-trend-master .trend-bar.good{background:linear-gradient(180deg,#93c5fd,#60a5fa)!important}
+.theme-dark .kpi-daily-trend-master .trend-bar.fair{background:linear-gradient(180deg,#fde68a,#fbbf24)!important}
+.theme-dark .kpi-daily-trend-master .trend-bar.bad{background:linear-gradient(180deg,#fdba74,#fb923c)!important}
+.theme-dark .kpi-daily-trend-master .trend-bar.unsatisfactory{background:linear-gradient(180deg,#fca5a5,#fb7185)!important}
+.theme-dark .kpi-daily-trend-master .trend-value.excellent{color:#6ee7b7!important}
+.theme-dark .kpi-daily-trend-master .trend-value.good{color:#93c5fd!important}
+.theme-dark .kpi-daily-trend-master .trend-value.fair{color:#fde68a!important}
+.theme-dark .kpi-daily-trend-master .trend-value.bad{color:#fdba74!important}
+.theme-dark .kpi-daily-trend-master .trend-value.unsatisfactory{color:#fca5a5!important}
+.theme-dark .kpi-daily-trend-master .kpi-category-line.kpi-category-excellent{border-top-color:#34d399!important}
+.theme-dark .kpi-daily-trend-master .kpi-category-line.kpi-category-excellent span{background:#34d399!important;color:#102019!important}
