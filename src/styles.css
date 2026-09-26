@@ -1387,3 +1387,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-penalty-matrix .penalty-actual.tier2{color:#fbbf24;background:rgba(251,191,36,.10);box-shadow:inset 0 0 0 1px rgba(251,191,36,.24)}
 .kpi-penalty-matrix .penalty-actual.tier3{color:#fb7185;background:rgba(251,113,133,.10);box-shadow:inset 0 0 0 1px rgba(251,113,133,.24)}
 .kpi-penalty-matrix .penalty-actual.no-data{color:var(--ct-muted);background:rgba(148,163,184,.08)}
+
+/* Penalty matrix — clearer grouped columns and alignment */
+.kpi-penalty-matrix table{border-collapse:separate;border-spacing:0}
+.kpi-penalty-matrix th,.kpi-penalty-matrix td{text-align:center;vertical-align:middle}
+.kpi-penalty-matrix th:nth-child(2),.kpi-penalty-matrix td:nth-child(2){text-align:left}
+.kpi-penalty-matrix thead tr:first-child th[colspan]{border-left:1px solid var(--ct-border)}
+.kpi-penalty-matrix thead tr:first-child th[colspan]:first-of-type{border-left:0}
+.kpi-penalty-matrix thead tr:nth-child(2) th:nth-child(odd),
+.kpi-penalty-matrix tbody td:nth-child(3),
+.kpi-penalty-matrix tbody td:nth-child(5),
+.kpi-penalty-matrix tbody td:nth-child(7),
+.kpi-penalty-matrix tbody td:nth-child(9){border-left:1px solid var(--ct-border)}
+.kpi-penalty-matrix tbody td:last-child{border-left:1px solid var(--ct-border)}
+.kpi-penalty-matrix .penalty-subhead{padding-left:10px;padding-right:10px}
+.kpi-penalty-matrix .penalty-actual{margin-inline:auto}
