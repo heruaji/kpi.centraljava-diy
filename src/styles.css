@@ -1720,3 +1720,21 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .area-performance-table .ranking-value.tier-3{
   color:#fb7185!important;background:transparent!important
 }
+
+
+/* ===== AREA PERFORMANCE COMPARISON — match KPI LM header style ===== */
+.area-performance-table thead th{
+  height:38px!important;
+  padding:0 12px!important;
+  background:var(--ct-card2)!important;
+  color:var(--ct-muted)!important;
+  border-bottom:1px solid var(--ct-border)!important;
+  font-size:10px!important;
+  font-weight:600!important;
+  text-transform:uppercase!important;
+  letter-spacing:.05em!important;
+  line-height:normal!important;
+  vertical-align:middle!important;
+}
+.area-performance-table thead th:nth-child(2){text-align:left!important}
+.area-performance-table thead th:not(:nth-child(2)){text-align:center!important}
