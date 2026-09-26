@@ -1662,3 +1662,28 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   text-align:center!important;
   justify-content:center!important;
 }
+
+
+/* ===== AREA PERFORMANCE COMPARISON — true two-axis cell alignment ===== */
+.area-performance-table thead th{
+  height:36px!important;
+  padding-top:0!important;
+  padding-bottom:0!important;
+  text-align:center!important;
+  vertical-align:middle!important;
+  line-height:36px!important;
+}
+.area-performance-table tbody td{
+  text-align:center!important;
+  vertical-align:middle!important;
+}
+.area-performance-table thead th:nth-child(2),
+.area-performance-table tbody td:nth-child(2){
+  text-align:left!important;
+}
+.area-performance-table tbody td .ranking-metric-cell{
+  height:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+}
