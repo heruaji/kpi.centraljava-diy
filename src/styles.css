@@ -1945,3 +1945,21 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 }
 .theme-dark .productivity-module .trend-tier2-line{border-top-color:#fbbf24!important}
 .theme-dark .productivity-module .trend-tier2-line span{background:#fbbf24!important;color:#111827!important}
+
+
+/* ===== PRODUCTIVITY TIER LEGEND — solid swatches matching bars ===== */
+.productivity-tier-legend .legend-tier-1,
+.productivity-tier-legend .legend-tier-2,
+.productivity-tier-legend .legend-tier-3{
+  width:12px!important;
+  height:12px!important;
+  border:0!important;
+  border-radius:3px!important;
+  display:inline-block!important
+}
+.productivity-tier-legend .legend-tier-1{background:#059669!important}
+.productivity-tier-legend .legend-tier-2{background:#b45309!important}
+.productivity-tier-legend .legend-tier-3{background:#e11d48!important}
+.theme-dark .productivity-tier-legend .legend-tier-1{background:#34d399!important}
+.theme-dark .productivity-tier-legend .legend-tier-2{background:#fbbf24!important}
+.theme-dark .productivity-tier-legend .legend-tier-3{background:#fb7185!important}
