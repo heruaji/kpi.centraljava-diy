@@ -1402,3 +1402,9 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-penalty-matrix tbody td:last-child{border-left:1px solid var(--ct-border)}
 .kpi-penalty-matrix .penalty-subhead{padding-left:10px;padding-right:10px}
 .kpi-penalty-matrix .penalty-actual{margin-inline:auto}
+
+/* Penalty matrix header refinement */
+.kpi-penalty-matrix thead tr:first-child th{font-size:10px;font-weight:700;letter-spacing:.035em;text-align:center!important}
+.kpi-penalty-matrix thead tr:nth-child(2) th{font-size:9px;font-weight:600;text-align:center!important}
+.kpi-penalty-matrix thead tr:first-child th:nth-child(2){text-align:left!important}
+.kpi-penalty-matrix thead tr:first-child th[colspan]{padding-left:0;padding-right:0}
