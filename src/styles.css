@@ -1771,35 +1771,3 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
     text-overflow:ellipsis!important;
   }
 }
-
-
-/* ===== MOBILE PAGE IDENTITY — full-width row below stable controls ===== */
-@media(max-width:760px){
-  .title-row{
-    flex:0 0 100%!important;
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-    margin-top:10px!important;
-  }
-  .title-row>div{
-    width:100%!important;
-    max-width:100%!important;
-    min-width:0!important;
-  }
-  .topbar h1{
-    width:100%!important;
-    max-width:100%!important;
-    white-space:nowrap!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-    line-height:1.2!important;
-  }
-  .breadcrumb{
-    width:100%!important;
-    max-width:100%!important;
-    white-space:nowrap!important;
-    overflow:hidden!important;
-    text-overflow:ellipsis!important;
-  }
-}
