@@ -1593,3 +1593,19 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 
 /* Area Performance Comparison: center SLA column like the other metric columns. */
 .area-performance-table th:nth-child(3),.area-performance-table td:nth-child(3){text-align:center!important}
+
+
+/* Area Performance Comparison: center the SLA pill itself, overriding legacy metric-cell alignment. */
+.area-performance-table th:nth-child(3),
+.area-performance-table td:nth-child(3){text-align:center!important}
+.area-performance-table td:nth-child(3) .ranking-metric-cell{
+  width:100%!important;
+  display:flex!important;
+  align-items:center!important;
+  justify-content:center!important;
+  margin:0 auto!important;
+}
+.area-performance-table td:nth-child(3) .ranking-value{
+  margin-left:auto!important;
+  margin-right:auto!important;
+}
