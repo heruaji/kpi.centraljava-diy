@@ -1771,3 +1771,47 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
     text-overflow:ellipsis!important;
   }
 }
+
+
+/* ===== MOBILE TOPBAR STRUCTURE — controls row + page identity row ===== */
+@media(max-width:760px){
+  .topbar{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    column-gap:10px!important;
+    row-gap:10px!important;
+    align-items:center!important;
+  }
+  .topbar>.mobile-menu{
+    display:flex!important;
+    grid-column:1!important;
+    grid-row:1!important;
+    justify-self:start!important;
+  }
+  .topbar>.topbar-actions{
+    grid-column:2!important;
+    grid-row:1!important;
+    min-width:0!important;
+    justify-self:end!important;
+  }
+  .topbar>.title-row{
+    grid-column:1 / -1!important;
+    grid-row:2!important;
+    width:100%!important;
+    min-width:0!important;
+  }
+  .topbar>.title-row>div{width:100%!important;min-width:0!important}
+  .topbar>.title-row h1{
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+    line-height:1.2!important;
+  }
+  .topbar>.title-row .breadcrumb{
+    max-width:100%!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+}
