@@ -1687,3 +1687,36 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   align-items:center!important;
   justify-content:center!important;
 }
+
+
+/* ===== AREA PERFORMANCE COMPARISON — KPI table visual model ===== */
+/* Keep values/calculation untouched; render tier state as colored text instead of pills. */
+.area-performance-table .ranking-value{
+  display:inline!important;
+  min-width:0!important;
+  padding:0!important;
+  border-radius:0!important;
+  background:transparent!important;
+  box-shadow:none!important;
+}
+.area-performance-table .ranking-value.tier-1{
+  color:#00a86b!important;
+  background:transparent!important;
+}
+.area-performance-table .ranking-value.tier-2{
+  color:#f59e0b!important;
+  background:transparent!important;
+}
+.area-performance-table .ranking-value.tier-3{
+  color:#ff3b30!important;
+  background:transparent!important;
+}
+.theme-dark .area-performance-table .ranking-value.tier-1{
+  color:#34d399!important;background:transparent!important
+}
+.theme-dark .area-performance-table .ranking-value.tier-2{
+  color:#fbbf24!important;background:transparent!important
+}
+.theme-dark .area-performance-table .ranking-value.tier-3{
+  color:#fb7185!important;background:transparent!important
+}
