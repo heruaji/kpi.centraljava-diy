@@ -1871,3 +1871,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .combo-productivity-label.tier-1{fill:#6ee7b7!important}
 .theme-dark .combo-productivity-label.tier-2{fill:#fcd34d!important}
 .theme-dark .combo-productivity-label.tier-3{fill:#fca5a5!important}
+
+
+/* Area Productivity uses the same semantic tier palette as Region Productivity. */
+.productivity-area-trend .trend-bar.tier-1{background:linear-gradient(180deg,#10b981,#059669)!important}
+.productivity-area-trend .trend-bar.tier-2{background:linear-gradient(180deg,#f59e0b,#b45309)!important}
+.productivity-area-trend .trend-bar.tier-3{background:linear-gradient(180deg,#fb7185,#e11d48)!important}
+.productivity-area-trend .trend-value.tier-1{color:#059669!important}
+.productivity-area-trend .trend-value.tier-2{color:#b45309!important}
+.productivity-area-trend .trend-value.tier-3{color:#e11d48!important}
+.theme-dark .productivity-area-trend .trend-bar.tier-1{background:linear-gradient(180deg,#6ee7b7,#34d399)!important}
+.theme-dark .productivity-area-trend .trend-bar.tier-2{background:linear-gradient(180deg,#fcd34d,#fbbf24)!important}
+.theme-dark .productivity-area-trend .trend-bar.tier-3{background:linear-gradient(180deg,#fca5a5,#fb7185)!important}
+.theme-dark .productivity-area-trend .trend-value.tier-1{color:#6ee7b7!important}
+.theme-dark .productivity-area-trend .trend-value.tier-2{color:#fcd34d!important}
+.theme-dark .productivity-area-trend .trend-value.tier-3{color:#fca5a5!important}
