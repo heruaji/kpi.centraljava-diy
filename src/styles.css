@@ -2250,3 +2250,21 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .kpi-daily-trend-master .trend-value.unsatisfactory{color:#fca5a5!important}
 .theme-dark .kpi-daily-trend-master .kpi-category-line.kpi-category-excellent{border-top-color:#34d399!important}
 .theme-dark .kpi-daily-trend-master .kpi-category-line.kpi-category-excellent span{background:#34d399!important;color:#102019!important}
+
+
+/* KPI gerai header: keep back action fixed at the top-right like other detail modules */
+.kpi-gerai-head{
+  display:flex!important;
+  align-items:flex-start!important;
+  justify-content:space-between!important;
+  gap:12px!important;
+}
+.kpi-gerai-head>.back-scope.back-nav{
+  margin-left:auto!important;
+  align-self:flex-start!important;
+  flex:0 0 auto!important;
+}
+@media(max-width:760px){
+  .kpi-gerai-head{flex-direction:column!important}
+  .kpi-gerai-head>.back-scope.back-nav{align-self:flex-end!important}
+}
