@@ -1440,3 +1440,48 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .control-area-nav-actions .back-nav{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--panel);text-decoration:none;white-space:nowrap}
 .control-area-bridge-head + .module-intro{margin-top:4px}
 @media(max-width:760px){.control-area-nav-row{align-items:stretch;flex-direction:column}.control-area-nav-actions{justify-content:space-between;flex-wrap:wrap}}
+
+
+/* ===== TABLE DENSITY POLICY — keep typography unchanged ===== */
+/* Compact operational tables: reduce only cell spacing/min-width; font sizes remain inherited. */
+.sla-area-table table,.sla-branch-table table{width:100%!important;min-width:0!important;table-layout:auto!important}
+.sla-area-table th,.sla-area-table td,.sla-branch-table th,.sla-branch-table td{padding-left:7px!important;padding-right:7px!important}
+.sla-area-table th,.sla-branch-table th{white-space:normal!important}
+.sla-area-table td:not(:nth-child(2)),.sla-branch-table td:not(:nth-child(2)){white-space:nowrap!important}
+
+.sla-daily-table table{width:100%!important;min-width:0!important}
+.sla-daily-table th,.sla-daily-table td{padding-left:7px!important;padding-right:7px!important;white-space:nowrap!important}
+
+.productivity-branch-table table,.drivers-area-table table{width:100%!important;min-width:0!important;table-layout:auto!important}
+.productivity-branch-table th,.productivity-branch-table td,.drivers-area-table th,.drivers-area-table td{padding-left:8px!important;padding-right:8px!important}
+.productivity-branch-table td:not(:nth-child(2)),.drivers-area-table td:not(:nth-child(2)){white-space:nowrap!important}
+
+/* KPI daily matrix is intentionally wide and must retain horizontal scrolling. */
+.kpi-matrix-wrap{overflow-x:auto!important;overscroll-behavior-x:contain!important}
+.kpi-matrix-wrap table{width:max-content!important;min-width:100%!important}
+
+/* Penalty tables stay horizontally scrollable with the full sidebar. */
+.kpi-penalty-matrix{overflow-x:auto!important;overscroll-behavior-x:contain!important}
+.kpi-penalty-matrix table{width:max-content!important;min-width:100%!important}
+
+/* When the desktop sidebar is collapsed, use the reclaimed width to fit Penalty tables.
+   Typography is deliberately untouched; only column width and padding are compacted. */
+@media(min-width:901px){
+.sidebar.collapsed~.main .kpi-penalty-matrix table{width:100%!important;min-width:0!important;table-layout:fixed!important}
+.sidebar.collapsed~.main .kpi-penalty-matrix th,
+.sidebar.collapsed~.main .kpi-penalty-matrix td{min-width:0!important;padding-left:5px!important;padding-right:5px!important;white-space:normal!important}
+.sidebar.collapsed~.main .kpi-penalty-matrix th:first-child,
+.sidebar.collapsed~.main .kpi-penalty-matrix td:first-child{width:42px!important}
+.sidebar.collapsed~.main .kpi-penalty-matrix th:nth-child(2),
+.sidebar.collapsed~.main .kpi-penalty-matrix td:nth-child(2){width:150px!important;text-align:left!important}
+}
+
+/* On narrow screens, preserve readable type and scroll the table instead of shrinking text. */
+@media(max-width:900px){
+.sla-area-table,.sla-branch-table,.sla-daily-table,.productivity-branch-table,.drivers-area-table{overflow-x:auto!important;overscroll-behavior-x:contain!important}
+.sla-area-table table{min-width:760px!important}
+.sla-branch-table table{min-width:860px!important}
+.sla-daily-table table{min-width:620px!important}
+.productivity-branch-table table{min-width:650px!important}
+.drivers-area-table table{min-width:650px!important}
+}
