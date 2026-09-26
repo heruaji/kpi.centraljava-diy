@@ -1915,3 +1915,33 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .combo-tier2-line{stroke:#fbbf24}
 .theme-dark .combo-tier2-label{fill:#fcd34d;stroke:#111b29;stroke-width:4px}
 .theme-dark .combo-legend i.tier2-target{border-top-color:#fbbf24!important}
+
+
+/* ===== PRODUCTIVITY TIER 2 LINE — match Tier 1 target geometry ===== */
+.productivity-module .trend-tier2-line{
+  position:absolute!important;
+  left:0!important;
+  right:0!important;
+  height:0!important;
+  border-top:2px dashed #b45309!important;
+  z-index:4!important;
+  pointer-events:none!important
+}
+.productivity-module .trend-tier2-line span{
+  position:absolute!important;
+  right:-1px!important;
+  top:-11px!important;
+  min-height:22px!important;
+  display:flex!important;
+  align-items:center!important;
+  padding:0 8px!important;
+  border-radius:5px!important;
+  background:#b45309!important;
+  color:#fff!important;
+  font-size:9px!important;
+  font-weight:700!important;
+  line-height:1!important;
+  white-space:nowrap!important
+}
+.theme-dark .productivity-module .trend-tier2-line{border-top-color:#fbbf24!important}
+.theme-dark .productivity-module .trend-tier2-line span{background:#fbbf24!important;color:#111827!important}
