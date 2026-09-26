@@ -1801,3 +1801,40 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
     text-overflow:ellipsis!important;
   }
 }
+
+
+/* ===== MOBILE TOPBAR — hamburger left, actions right, title below ===== */
+@media(max-width:760px){
+  .topbar{
+    display:grid!important;
+    grid-template-columns:auto minmax(0,1fr)!important;
+    grid-template-rows:auto auto!important;
+    column-gap:10px!important;
+    row-gap:10px!important;
+    align-items:center!important;
+  }
+  .mobile-menu{
+    display:flex!important;
+    grid-column:1!important;
+    grid-row:1!important;
+    justify-self:start!important;
+    align-self:center!important;
+  }
+  .topbar-actions{
+    grid-column:2!important;
+    grid-row:1!important;
+    width:auto!important;
+    min-width:0!important;
+    justify-self:end!important;
+    justify-content:flex-end!important;
+    flex:0 1 auto!important;
+    flex-wrap:nowrap!important;
+  }
+  .title-row{
+    grid-column:1 / -1!important;
+    grid-row:2!important;
+    order:initial!important;
+    width:100%!important;
+    margin-top:2px!important;
+  }
+}
