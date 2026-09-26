@@ -239,6 +239,18 @@ export default function App() {
   }, [periodPreset, customRange]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-module', activeModule); }, [activeModule]);
+  // Every navigation level opens from the top of the page instead of preserving
+  // the previous list/detail scroll position.
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: 'auto' });
+  }, [
+    activeModule,
+    selectedAreaId, selectedBranchId, selectedKpiKey,
+    slaAreaId, slaBranchDetailId,
+    kpiAreaId, kpiBranchDetailId, kpiDailyDate,
+    productivityAreaId, productivityBranchId,
+    driversAreaId, driversBranchId
+  ]);
   useEffect(() => {
     if (!mobileOpen && !periodOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
