@@ -8,28 +8,14 @@ import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Gauge,
 const DriverApexChart=({daily,metric,label}:{daily:any[];metric:'volume'|'backlog'|'failedDelivery'|'codTransfer';label:string})=>{
   const rateKey=metric==='backlog'?'backlogRate':metric==='failedDelivery'?'failedDeliveryRate':'codTransferRate';
   const isRate=metric!=='volume';
-  const values=daily.map(d=>Number(isRate?d[rateKey]:d.volume)).map(v=>Number.isFinite(v)?v:0);
+  const points=daily.map(d=>({date:d.date,value:Number(isRate?d[rateKey]:d.volume)})).filter(p=>Number.isFinite(p.value));
   const tier=(v:number)=>metric==='backlog'?v<=1.5?'tier-1':v<=2?'tier-2':'tier-3':metric==='failedDelivery'?v<=1?'tier-1':v<=1.5?'tier-2':'tier-3':metric==='codTransfer'?v>=99.5?'tier-1':v>=99?'tier-2':'tier-3':'volume';
-  const tierColor=(v:number)=>tier(v)==='tier-1'?'#059669':tier(v)==='tier-2'?'#b45309':tier(v)==='tier-3'?'#e11d48':'#c2414b';
-  const maxValue=Math.max(...values,0);
-  const axisMax=metric==='codTransfer'?100:metric==='backlog'||metric==='failedDelivery'?Math.max(metric==='backlog'?2:1.5,Math.ceil((maxValue+2.5)*10)/10):niceAxisMax(maxValue);
-  const thresholds=metric==='backlog'?[[1.5,'Tier 1-1.5%'],[2,'Tier 2-2%']]:metric==='failedDelivery'?[[1,'Tier 1-1%'],[1.5,'Tier 2-1.5%']]:metric==='codTransfer'?[[99.5,'Tier 1-99.5%'],[99,'Tier 2-99%']]:[];
-  const visibleDays=25;
-  const width=Math.max(100,Math.ceil(daily.length/visibleDays*100));
-  const options:ApexOptions={
-    chart:{type:'bar',height:330,background:'transparent',foreColor:'#64748b',toolbar:{show:false},zoom:{enabled:false},animations:{enabled:true,speed:300},parentHeightOffset:0},
-    plotOptions:{bar:{columnWidth:'62%',borderRadius:3,distributed:true,dataLabels:{position:'top'}}},
-    dataLabels:{enabled:true,offsetY:-9,style:{fontSize:'9px',fontWeight:600},background:{enabled:false},formatter:(v:number)=>isRate?v.toFixed(2)+'%':new Intl.NumberFormat('id-ID').format(v)},
-    grid:{show:true,borderColor:'rgba(148,163,184,.24)',strokeDashArray:3,xaxis:{lines:{show:false}},yaxis:{lines:{show:true}},padding:{top:26,right:20,left:14,bottom:8}},
-    xaxis:{categories:daily.map(d=>String(new Date(d.date+'T00:00:00').getDate())),title:{text:'TANGGAL',style:{fontSize:'9px',fontWeight:600,color:'#64748b'}},axisBorder:{show:true,color:'rgba(148,163,184,.38)'},axisTicks:{show:true,color:'rgba(148,163,184,.30)',height:4},labels:{show:true,hideOverlappingLabels:false,rotate:0,trim:false,style:{fontSize:'9px',colors:Array(daily.length).fill('#64748b')}}},
-    yaxis:{min:0,max:axisMax,tickAmount:4,forceNiceScale:false,axisBorder:{show:true,color:'rgba(148,163,184,.38)'},axisTicks:{show:true,color:'rgba(148,163,184,.30)'},labels:{show:true,minWidth:42,maxWidth:64,style:{fontSize:'9px',colors:['#64748b']},formatter:(v:number)=>isRate?v.toFixed(metric==='codTransfer'?0:1)+'%':new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(v)},title:{text:isRate?'RATE (%)':'VOLUME',style:{fontSize:'9px',fontWeight:600,color:'#64748b'}}},
-    tooltip:{theme:'dark',x:{formatter:(_:number,ctx:any)=>fmtDate(daily[ctx.dataPointIndex]?.date??null)},y:{formatter:(v:number)=>isRate?v.toFixed(2)+'%':new Intl.NumberFormat('id-ID').format(v)}},
-    legend:{show:false},
-    colors:values.map(tierColor),
-    annotations:thresholds.length?{yaxis:thresholds.map(([y,text],i)=>({y:Number(y),borderColor:i===0?'#f59e0b':'#b45309',strokeDashArray:4,label:{text:String(text),borderColor:'transparent',position:'right',style:{fontSize:'9px',fontWeight:700,color:'#fff',background:i===0?'#f59e0b':'#b45309'}}}))}:undefined
-  };
-  const series=[{name:label,data:values}];
-  return <><div className="driver-apex-scroll"><div className="driver-apex-inner" style={{width:`${width}%`}}><Chart options={options} series={series} type="bar" height={330}/></div></div>{isRate&&<div className="trend-legend drivers-tier-legend"><span><i className="legend-tier-1"/>Tier 1</span><span><i className="legend-tier-2"/>Tier 2</span><span><i className="legend-tier-3"/>Tier 3</span></div>}</>;
+  const maxValue=Math.max(...points.map(p=>p.value),0);
+  const max=metric==='codTransfer'?100:metric==='backlog'||metric==='failedDelivery'?Math.max(metric==='backlog'?2:1.5,Math.ceil((maxValue+2.5)*10)/10):niceAxisMax(maxValue);
+  const thresholds=metric==='backlog'?[[1.5,'Tier 1-1.5%','tier1'],[2,'Tier 2-2%','tier2']]:metric==='failedDelivery'?[[1,'Tier 1-1%','tier1'],[1.5,'Tier 2-1.5%','tier2']]:metric==='codTransfer'?[[99.5,'Tier 1-99.5%','tier1'],[99,'Tier 2-99%','tier2']]:[];
+  const axis=(v:number)=>isRate?`${v.toFixed(metric==='codTransfer'?0:1)}%`:new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(v);
+  const valueLabel=(v:number)=>isRate?`${v.toFixed(2)}%`:new Intl.NumberFormat('id-ID').format(v);
+  return points.length?<div className={`trend-chart-shell drivers-master-chart ${metric==='volume'?'drivers-volume-chart':''}`}><div className="trend-plot drivers-control-plot" aria-label={`${label} daily trend`}><div className="trend-y-label y100">{axis(max)}</div><div className="trend-y-label y75">{axis(max*.75)}</div><div className="trend-y-label y50">{axis(max*.5)}</div><div className="trend-y-label y25">{axis(max*.25)}</div><div className="trend-y-label y0">{axis(0)}</div><div className="trend-grid-line grid100"/><div className="trend-grid-line grid75"/><div className="trend-grid-line grid50"/><div className="trend-grid-line grid25"/><div className="trend-grid-line grid0"/>{thresholds.length>0&&<div className="trend-target-scale">{thresholds.map(([value,text,kind])=><div key={String(text)} className={kind==='tier1'?'trend-target-line':'trend-tier2-line'} style={{bottom:`${Math.min(100,(Number(value)/max)*100)}%`}}><span>{text}</span></div>)}</div>}<div className="trend-bars">{points.map(p=>{const height=Math.max(2,Math.min(100,(p.value/max)*100));const tone=tier(p.value);return <div className="trend-column" key={p.date} title={`${fmtDate(p.date)}: ${label} ${valueLabel(p.value)}`}><div className="trend-track"><div className={`trend-value ${tone}`} style={{bottom:`calc(${height}% + 4px)`}}>{valueLabel(p.value)}</div><div className={`trend-bar ${tone}`} style={{height:`${height}%`}}/></div><small>{new Date(`${p.date}T00:00:00`).getDate()}</small></div>})}</div></div>{isRate&&<div className="trend-legend drivers-tier-legend"><span><i className="legend-tier-1"/>Tier 1</span><span><i className="legend-tier-2"/>Tier 2</span><span><i className="legend-tier-3"/>Tier 3</span></div>}</div>:<div className="placeholder compact">Data trend {label.toLowerCase()} belum tersedia</div>;
 };
 
 const kpiCategory=(value:number|null|undefined)=>value==null?{label:'No Data',tone:'nodata'}:value>=95?{label:'Excellent',tone:'excellent'}:value>=85?{label:'Good',tone:'good'}:value>=60?{label:'Fair',tone:'fair'}:value>=40?{label:'Bad',tone:'bad'}:{label:'Unsatisfactory',tone:'unsatisfactory'};
