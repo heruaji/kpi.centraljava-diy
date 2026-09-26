@@ -2077,3 +2077,34 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   max-height:none!important;
   margin:0!important;
 }
+
+
+/* SLA Gerai detail table: 16-row viewport and proportional columns */
+.sla-branch-detail-page .sla-daily-table{
+  max-height:650px!important;
+  overflow-y:auto!important;
+  overflow-x:auto!important;
+}
+.sla-branch-detail-page .sla-daily-table table{
+  width:100%!important;
+  table-layout:fixed!important;
+}
+.sla-branch-detail-page .sla-daily-table thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:4!important;
+}
+.sla-branch-detail-page .sla-daily-table th:nth-child(1),
+.sla-branch-detail-page .sla-daily-table td:nth-child(1){width:13%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(2),
+.sla-branch-detail-page .sla-daily-table td:nth-child(2){width:9%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(3),
+.sla-branch-detail-page .sla-daily-table td:nth-child(3){width:11%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(4),
+.sla-branch-detail-page .sla-daily-table td:nth-child(4){width:18%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(5),
+.sla-branch-detail-page .sla-daily-table td:nth-child(5){width:18%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(6),
+.sla-branch-detail-page .sla-daily-table td:nth-child(6){width:13%!important}
+.sla-branch-detail-page .sla-daily-table th:nth-child(7),
+.sla-branch-detail-page .sla-daily-table td:nth-child(7){width:18%!important}
