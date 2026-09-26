@@ -1764,3 +1764,40 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   .page-subtitle{display:block!important;max-width:100%!important;margin-top:3px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;line-height:1.2!important}
   .breadcrumb{max-width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
 }
+
+
+/* ===== MOBILE TOPBAR — restore actions row + separate page identity ===== */
+@media(max-width:760px){
+  .topbar{
+    min-height:0!important;
+    height:auto!important;
+    align-items:stretch!important;
+    flex-wrap:wrap!important;
+    row-gap:10px!important;
+  }
+  .topbar-actions{
+    flex:1 1 auto!important;
+    min-width:0!important;
+  }
+  .title-row{
+    order:2!important;
+    flex:0 0 100%!important;
+    width:100%!important;
+    min-width:0!important;
+    margin-top:2px!important;
+    overflow:hidden!important;
+  }
+  .title-row>div{width:100%!important;max-width:100%!important}
+  .topbar h1{
+    max-width:100%!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+  .page-subtitle,.breadcrumb{
+    max-width:100%!important;
+    white-space:nowrap!important;
+    overflow:hidden!important;
+    text-overflow:ellipsis!important;
+  }
+}
