@@ -1411,3 +1411,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-penalty-matrix thead tr:nth-child(2) th{font-size:9px;font-weight:600;text-align:center!important}
 .kpi-penalty-matrix thead tr:first-child th:nth-child(2){text-align:left!important}
 .kpi-penalty-matrix thead tr:first-child th[colspan]{padding-left:0;padding-right:0}
+
+/* KPI tier language — text color only, shared across Region / Area / Gerai */
+.kpi-tier-value{font-weight:700;font-variant-numeric:tabular-nums;background:none!important;border:0!important;box-shadow:none!important;padding:0!important;border-radius:0!important}
+.kpi-tier-value.tier1{color:#10b981}
+.kpi-tier-value.tier2{color:#f59e0b}
+.kpi-tier-value.tier3{color:#ef4444}
+.kpi-tier-value.no-data{color:var(--ct-muted)}
+.theme-dark .kpi-tier-value.tier1{color:#34d399}
+.theme-dark .kpi-tier-value.tier2{color:#fbbf24}
+.theme-dark .kpi-tier-value.tier3{color:#fb7185}
