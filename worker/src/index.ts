@@ -89,7 +89,17 @@ async function saveSourceState(env:Env,freshness:SourceFreshness[]){
 async function latestRunningJob(env:Env,key:string):Promise<RefreshJob|null>{
   if(!env.DB) return null;
   await ensureDb(env);
-  return env.DB.prepare(`SELECT job_id,status,started_at,finished_at,changed,error FROM dashboard_refresh_jobs WHERE cache_key=? AND status='PROCESSING' ORDER BY started_at DESC LIMIT 1`).bind(key).first<RefreshJob>();
+  const job=await env.DB.prepare(`SELECT job_id,status,started_at,finished_at,changed,error FROM dashboard_refresh_jobs WHERE cache_key=? AND status='PROCESSING' ORDER BY started_at DESC LIMIT 1`).bind(key).first<RefreshJob>();
+  if(!job) return null;
+  // A background refresh that never reaches READY/ERROR must not block all future
+  // refresh attempts forever. Treat PROCESSING jobs older than 5 minutes as stale.
+  const started=Date.parse(job.started_at);
+  if(Number.isFinite(started)&&Date.now()-started>5*60*1000){
+    await env.DB.prepare(`UPDATE dashboard_refresh_jobs SET status='ERROR',finished_at=?,error=? WHERE job_id=? AND status='PROCESSING'`)
+      .bind(new Date().toISOString(),'Refresh job stale / interrupted; safe to retry.',job.job_id).run();
+    return null;
+  }
+  return job;
 }
 async function runRefreshJob(env:Env,jobId:string,key:string,period:string,start:string|null,end:string|null,previous:Snapshot|null,sourceFreshness:SourceFreshness[]){
   try{
