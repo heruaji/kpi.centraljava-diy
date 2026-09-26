@@ -2363,3 +2363,17 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   padding-top:6px!important;
   padding-bottom:6px!important;
 }
+
+
+/* SLA Region lower row: reserve enough vertical room for all 7 Area rows */
+@media(min-width:1051px){
+  .sla-region-lower-grid>.panel{
+    height:520px!important;
+  }
+  .sla-region-lower-grid .sla-area-table-compact{
+    flex:0 0 auto!important;
+    height:auto!important;
+    max-height:none!important;
+    overflow-y:visible!important;
+  }
+}
