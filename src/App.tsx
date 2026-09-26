@@ -10,7 +10,7 @@ const DriverApexChart=({daily,metric,label}:{daily:any[];metric:'volume'|'backlo
   const isRate=metric!=='volume';
   const values=daily.map(d=>Number(isRate?d[rateKey]:d.volume)).map(v=>Number.isFinite(v)?v:0);
   const tier=(v:number)=>metric==='backlog'?v<=1.5?'tier-1':v<=2?'tier-2':'tier-3':metric==='failedDelivery'?v<=1?'tier-1':v<=1.5?'tier-2':'tier-3':metric==='codTransfer'?v>=99.5?'tier-1':v>=99?'tier-2':'tier-3':'volume';
-  const tierColor=(v:number)=>tier(v)==='tier-1'?'#059669':tier(v)==='tier-2'?'#b45309':tier(v)==='tier-3'?'#e11d48':'#64748b';
+  const tierColor=(v:number)=>tier(v)==='tier-1'?'#059669':tier(v)==='tier-2'?'#b45309':tier(v)==='tier-3'?'#e11d48':'#2563eb';
   const maxValue=Math.max(...values,0);
   const axisMax=metric==='codTransfer'?100:metric==='backlog'||metric==='failedDelivery'?Math.max(metric==='backlog'?2:1.5,Math.ceil((maxValue+2.5)*10)/10):niceAxisMax(maxValue);
   const thresholds=metric==='backlog'?[[1.5,'Tier 1-1.5%'],[2,'Tier 2-2%']]:metric==='failedDelivery'?[[1,'Tier 1-1%'],[1.5,'Tier 2-1.5%']]:metric==='codTransfer'?[[99.5,'Tier 1-99.5%'],[99,'Tier 2-99%']]:[];
