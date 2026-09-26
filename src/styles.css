@@ -1590,3 +1590,6 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   .productivity-branch-panel .productivity-branch-tools{justify-content:flex-start!important;flex-wrap:wrap!important}
   .productivity-branch-panel .productivity-branch-tools .table-search{margin-right:0!important;width:100%!important}
 }
+
+/* Area Performance Comparison: center SLA column like the other metric columns. */
+.area-performance-table th:nth-child(3),.area-performance-table td:nth-child(3){text-align:center!important}
