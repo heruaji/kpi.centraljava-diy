@@ -1648,3 +1648,17 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   margin-left:auto!important;
   margin-right:auto!important;
 }
+
+
+/* SLA header: neutralize legacy header flex/alignment so label is geometrically centered. */
+.area-performance-table thead th:nth-child(3){
+  text-align:center!important;
+  padding-left:0!important;
+  padding-right:0!important;
+}
+.area-performance-table thead th:nth-child(3)>*{
+  margin-left:auto!important;
+  margin-right:auto!important;
+  text-align:center!important;
+  justify-content:center!important;
+}
