@@ -2387,3 +2387,19 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   height:32px!important;
   box-sizing:border-box!important;
 }
+
+
+/* Desktop shell header baseline: sidebar brand and main topbar share one height */
+@media(min-width:901px){
+  .app-shell{--shell-header-height:82px}
+  .sidebar .brand,.sidebar.collapsed .brand{
+    flex:0 0 var(--shell-header-height)!important;
+    height:var(--shell-header-height)!important;
+    min-height:var(--shell-header-height)!important;
+  }
+  .app-shell .topbar{
+    height:var(--shell-header-height)!important;
+    min-height:var(--shell-header-height)!important;
+    box-sizing:border-box!important;
+  }
+}
