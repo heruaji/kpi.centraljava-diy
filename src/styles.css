@@ -1753,3 +1753,14 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   text-align:center!important;
   justify-content:center!important;
 }
+
+
+/* ===== MOBILE TOPBAR — compact single-line page identity ===== */
+@media(max-width:760px){
+  .topbar{min-height:68px!important;height:auto!important;align-items:center!important}
+  .title-row{min-width:0!important;flex:1 1 auto!important;overflow:hidden!important}
+  .title-row>div{min-width:0!important;max-width:100%!important;overflow:hidden!important}
+  .topbar h1{margin:0!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;line-height:1.2!important}
+  .page-subtitle{display:block!important;max-width:100%!important;margin-top:3px!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important;line-height:1.2!important}
+  .breadcrumb{max-width:100%!important;white-space:nowrap!important;overflow:hidden!important;text-overflow:ellipsis!important}
+}
