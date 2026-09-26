@@ -1815,3 +1815,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
     text-overflow:ellipsis!important;
   }
 }
+
+
+/* ===== MOBILE HAMBURGER — restore exact icon centering after DOM split ===== */
+@media(max-width:760px){
+  .topbar>.mobile-menu{
+    display:grid!important;
+    place-items:center!important;
+    padding:0!important;
+    line-height:0!important;
+  }
+  .topbar>.mobile-menu svg{
+    display:block!important;
+    margin:0!important;
+  }
+}
