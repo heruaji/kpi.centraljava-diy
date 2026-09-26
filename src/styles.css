@@ -2413,3 +2413,21 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   }
   .kpi-analysis-grid>.panel{min-width:0!important}
 }
+
+
+/* KPI Region analysis: fixed web parity on desktop-site and mobile-browser viewports */
+.kpi-module>.kpi-analysis-grid{
+  display:grid!important;
+  grid-template-columns:minmax(190px,35%) minmax(0,65%)!important;
+  grid-auto-flow:column!important;
+  width:100%!important;
+  min-width:0!important;
+}
+.kpi-module>.kpi-analysis-grid>article:first-child{grid-column:1!important;grid-row:1!important}
+.kpi-module>.kpi-analysis-grid>article.kpi-control-trend{grid-column:2!important;grid-row:1!important}
+@media(max-width:760px){
+  .kpi-module>.kpi-analysis-grid{
+    grid-template-columns:minmax(165px,35%) minmax(360px,65%)!important;
+    overflow-x:auto!important;
+  }
+}
