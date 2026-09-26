@@ -2123,3 +2123,18 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .drivers-tier-legend .legend-tier-2{background:#b45309}
 .drivers-tier-legend .legend-tier-3{background:#e11d48}
 @media(max-width:700px){.drivers-trend-toolbar{align-items:flex-start;flex-direction:column}.drivers-trend-toolbar select{width:100%}}
+
+
+/* Performance Drivers chart polish */
+.drivers-unified-trend{overflow:hidden}
+.drivers-unified-trend .driver-apex-scroll{margin-top:2px}
+.drivers-unified-trend .apexcharts-canvas{margin:0 auto}
+.drivers-unified-trend .apexcharts-text,
+.drivers-unified-trend .apexcharts-xaxis-title,
+.drivers-unified-trend .apexcharts-yaxis-title{font-family:Inter,system-ui,sans-serif!important}
+.drivers-unified-trend .apexcharts-datalabel{font-weight:600!important}
+.drivers-trend-toolbar select{height:34px;appearance:auto}
+.theme-dark .drivers-unified-trend .apexcharts-xaxis text,
+.theme-dark .drivers-unified-trend .apexcharts-yaxis text,
+.theme-dark .drivers-unified-trend .apexcharts-xaxis-title-text,
+.theme-dark .drivers-unified-trend .apexcharts-yaxis-title-text{fill:#94a3b8!important}
