@@ -340,6 +340,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     return {
       date,
       sla:dayAggregate.sla,
+      volume:sum(slaDay,'VOLUME_SLA_ALL'),
       codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),
       codTransferVolume:sum(slaDay,'VOLUME_COD_TF'),
       failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),
@@ -461,7 +462,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       const lmDay=lmItems.filter(r=>r.__date===date);
       const fmDay=fmItems.filter(r=>r.__date===date);
       const mmDay=mmItems.filter(r=>r.__date===date);
-      return {date,sla:aggregate(slaDay).sla,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
+      return {date,sla:aggregate(slaDay).sla,volume:sum(slaDay,'VOLUME_SLA_ALL'),backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
     // Area penalty is recalculated from the area's raw numerator/denominator,
     // exactly like KPI aggregation. Never average branch penalty scores.
