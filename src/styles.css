@@ -2138,3 +2138,21 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .drivers-unified-trend .apexcharts-yaxis text,
 .theme-dark .drivers-unified-trend .apexcharts-xaxis-title-text,
 .theme-dark .drivers-unified-trend .apexcharts-yaxis-title-text{fill:#94a3b8!important}
+
+
+/* Performance Drivers final axis / selector contract */
+.drivers-unified-trend .driver-apex-scroll{overflow-x:auto!important;overflow-y:hidden!important;padding-bottom:2px}
+.drivers-unified-trend .apexcharts-xaxis,
+.drivers-unified-trend .apexcharts-yaxis{opacity:1!important;visibility:visible!important}
+.drivers-unified-trend .apexcharts-xaxis-texts-g text,
+.drivers-unified-trend .apexcharts-yaxis-texts-g text{opacity:1!important;visibility:visible!important}
+.drivers-unified-trend .apexcharts-xaxis-title-text,
+.drivers-unified-trend .apexcharts-yaxis-title-text{opacity:1!important;visibility:visible!important;font-weight:600!important}
+.drivers-trend-toolbar select{color-scheme:light;background-color:#fff!important;color:#334155!important;border-color:#cbd5e1!important}
+.drivers-trend-toolbar select option{background:#fff!important;color:#334155!important}
+.theme-dark .drivers-trend-toolbar select{color-scheme:dark;background-color:#122334!important;color:#e5edf5!important;border-color:#33485c!important}
+.theme-dark .drivers-trend-toolbar select option{background:#122334!important;color:#e5edf5!important}
+.theme-dark .drivers-unified-trend .apexcharts-xaxis-texts-g text,
+.theme-dark .drivers-unified-trend .apexcharts-yaxis-texts-g text,
+.theme-dark .drivers-unified-trend .apexcharts-xaxis-title-text,
+.theme-dark .drivers-unified-trend .apexcharts-yaxis-title-text{fill:#94a3b8!important}
