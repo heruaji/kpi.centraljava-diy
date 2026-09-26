@@ -1421,3 +1421,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .theme-dark .kpi-tier-value.tier1{color:#34d399}
 .theme-dark .kpi-tier-value.tier2{color:#fbbf24}
 .theme-dark .kpi-tier-value.tier3{color:#fb7185}
+
+/* Control Tower Area selector row */
+.control-area-nav-row{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:0 0 12px}
+.control-area-nav-row .control-area-switch{margin:0}
+.control-area-nav-actions{display:flex;align-items:center;justify-content:flex-end;gap:8px}
+.control-area-nav-actions .control-area-function-switch{margin:0}
+.control-area-nav-actions .back-nav{padding:7px 10px;border:1px solid var(--border);border-radius:8px;background:var(--panel);text-decoration:none;white-space:nowrap}
+.control-area-bridge-head + .module-intro{margin-top:4px}
+@media(max-width:760px){.control-area-nav-row{align-items:stretch;flex-direction:column}.control-area-nav-actions{justify-content:space-between;flex-wrap:wrap}}
