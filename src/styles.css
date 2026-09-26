@@ -2403,3 +2403,13 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
     box-sizing:border-box!important;
   }
 }
+
+
+/* KPI responsive parity: Health + Region Trend stay side-by-side like desktop */
+@media(max-width:900px){
+  .kpi-analysis-grid{
+    grid-template-columns:minmax(180px,.7fr) minmax(0,1.3fr)!important;
+    align-items:stretch!important;
+  }
+  .kpi-analysis-grid>.panel{min-width:0!important}
+}
