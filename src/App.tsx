@@ -12,18 +12,17 @@ const DriverApexChart=({daily,metric,label}:{daily:any[];metric:'volume'|'backlo
   const tier=(v:number)=>metric==='backlog'?v<=1.5?'tier-1':v<=2?'tier-2':'tier-3':metric==='failedDelivery'?v<=1?'tier-1':v<=1.5?'tier-2':'tier-3':metric==='codTransfer'?v>=99.5?'tier-1':v>=99?'tier-2':'tier-3':'volume';
   const tierColor=(v:number)=>tier(v)==='tier-1'?'#059669':tier(v)==='tier-2'?'#b45309':tier(v)==='tier-3'?'#e11d48':'#64748b';
   const maxValue=Math.max(...values,0);
-  const axisMax=metric==='codTransfer'?100:metric==='backlog'||metric==='failedDelivery'?Math.max(2.5,Math.ceil((maxValue+2.5)*2)/2):niceAxisMax(maxValue*1.12);
+  const axisMax=metric==='codTransfer'?100:metric==='backlog'||metric==='failedDelivery'?Math.max(metric==='backlog'?2:1.5,Math.ceil((maxValue+2.5)*10)/10):niceAxisMax(maxValue*1.12);
   const thresholds=metric==='backlog'?[[1.5,'Tier 1-1.5%'],[2,'Tier 2-2%']]:metric==='failedDelivery'?[[1,'Tier 1-1%'],[1.5,'Tier 2-1.5%']]:metric==='codTransfer'?[[99.5,'Tier 1-99.5%'],[99,'Tier 2-99%']]:[];
   const visibleDays=25;
   const width=Math.max(100,Math.ceil(daily.length/visibleDays*100));
   const options:ApexOptions={
     chart:{type:'bar',height:300,background:'transparent',toolbar:{show:false},zoom:{enabled:false},animations:{enabled:true,speed:300}},
-    theme:{mode:'dark'},
     plotOptions:{bar:{columnWidth:'62%',borderRadius:3,distributed:true,dataLabels:{position:'top'}}},
     dataLabels:{enabled:true,offsetY:-9,style:{fontSize:'9px',fontWeight:600},background:{enabled:false},formatter:(v:number)=>isRate?v.toFixed(2)+'%':new Intl.NumberFormat('id-ID').format(v)},
-    grid:{borderColor:'rgba(148,163,184,.14)',strokeDashArray:3,padding:{top:22,right:8,left:4,bottom:0}},
-    xaxis:{categories:daily.map(d=>String(new Date(d.date+'T00:00:00').getDate())),axisBorder:{show:true,color:'rgba(148,163,184,.25)'},axisTicks:{show:false},labels:{style:{fontSize:'9px',colors:'#94a3b8'}}},
-    yaxis:{min:0,max:axisMax,tickAmount:4,forceNiceScale:metric==='volume',labels:{style:{fontSize:'9px',colors:'#94a3b8'},formatter:(v:number)=>isRate?v.toFixed(metric==='codTransfer'?0:1)+'%':new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(v)},title:{text:isRate?'RATE %':'VOLUME',style:{fontSize:'9px',color:'#94a3b8'}}},
+    grid:{show:true,borderColor:'rgba(148,163,184,.22)',strokeDashArray:3,xaxis:{lines:{show:false}},yaxis:{lines:{show:true}},padding:{top:22,right:18,left:8,bottom:2}},
+    xaxis:{categories:daily.map(d=>String(new Date(d.date+'T00:00:00').getDate())),title:{text:'TANGGAL',style:{fontSize:'9px',fontWeight:600,color:'#64748b'}},axisBorder:{show:true,color:'rgba(148,163,184,.38)'},axisTicks:{show:true,color:'rgba(148,163,184,.30)',height:4},labels:{style:{fontSize:'9px',colors:'#64748b'}}},
+    yaxis:{min:0,max:axisMax,tickAmount:4,forceNiceScale:false,axisBorder:{show:true,color:'rgba(148,163,184,.38)'},axisTicks:{show:true,color:'rgba(148,163,184,.30)'},labels:{style:{fontSize:'9px',colors:'#64748b'},formatter:(v:number)=>isRate?v.toFixed(metric==='codTransfer'?0:1)+'%':new Intl.NumberFormat('id-ID',{maximumFractionDigits:0}).format(v)},title:{text:isRate?'RATE (%)':'VOLUME',style:{fontSize:'9px',fontWeight:600,color:'#64748b'}}},
     tooltip:{theme:'dark',x:{formatter:(_:number,ctx:any)=>fmtDate(daily[ctx.dataPointIndex]?.date??null)},y:{formatter:(v:number)=>isRate?v.toFixed(2)+'%':new Intl.NumberFormat('id-ID').format(v)}},
     legend:{show:false},
     colors:values.map(tierColor),
