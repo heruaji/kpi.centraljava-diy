@@ -16,7 +16,6 @@ const pct=(v:number|null)=>v===null?null:v*100;
 const MM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
   {num:'MIDDLE_MILE_SERVICE_VOLUME_SDOB04',den:'MIDDLE_MILE_SERVICE_VOLUME_INBOUND_04',rule:{direction:'HIGHER',tier1:.80,tier2:.50},weight:15},
   {num:'MIDDLE_MILE_SERVICE_VOLUME_SDOB06',den:'MIDDLE_MILE_SERVICE_VOLUME_INBOUND_06',rule:{direction:'HIGHER',tier1:.98,tier2:.90},weight:15},
-  // Result MM baseline uses Detail MM I/J for SDOB10.
   {num:'MIDDLE_MILE_SERVICE_VOLUME_SDOB10',den:'MIDDLE_MILE_SERVICE_VOLUME_INBOUND_00_06',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
   {num:'MIDDLE_MILE_QUALITY_VOLUME_LEADTIME_06HR',den:'MIDDLE_MILE_QUALITY_VOLUME_DO',rule:{direction:'HIGHER',tier1:.95,tier2:.90},weight:15},
   {num:'MIDDLE_MILE_QUALITY_VOLUME_SCAN_BY_APPS',den:'MIDDLE_MILE_QUALITY_VOLUME_SCAN_MM',rule:{direction:'HIGHER',tier1:.99,tier2:.90},weight:15},
@@ -109,8 +108,6 @@ function fmDailyDetails(items:Row[]):KpiDetailDaily[]{
 }
 function mmActual(items:Row[],kpi:(typeof MM_POSITIVE)[number],index:number){
   const denominator=sum(items,kpi.den);
-  // MM HD Completion: no complaint/ticket means there is nothing outstanding,
-  // therefore performance is treated as fully compliant (100%).
   if(index===7 && denominator===0) return 1;
   return ratio(sum(items,kpi.num),denominator);
 }
@@ -200,7 +197,6 @@ function mmPenalty(items:Row[]){
   if(!items.length) return null;
   const unloading=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_COST_AVERAGE_LOADING_TIME'),sum(items,'MIDDLE_MILE_COST_VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}),20);
   const so=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
-  // Result MM uses AVERAGE(Detail MM!AF:AF), equivalent to the raw stuck-rate column.
   const rates=items.map(r=>Number(r.KPI_MM_STUCK_RATE)).filter(Number.isFinite);
   const stuckActual=rates.length?rates.reduce((a,b)=>a+b,0)/rates.length:null;
   const stuck=penaltyScore(tier(stuckActual,{direction:'LOWER',tier1:0,tier2:.0005}),20);
@@ -238,9 +234,7 @@ export type DashboardSources={sla:Row[];sto:Row[];lm:Row[];fm:Row[];mm:Row[]};
 export async function buildRegionDashboardFromSources(env:EnvSource,sources:DashboardSources,preset?:PeriodPreset,customRange?:{start:string;end:string}){
   const {sla,sto,lm,fm,mm}=sources;
 
-  // Resolve the dashboard range before expanding source rows. The dashboard needs
-  // current, previous, and previous-previous periods, so rows outside that window
-  // never participate in KPI/trend aggregation.
+  // Resolve the dashboard range before expanding source rows.
   const sourceDateBounds=(preset?:PeriodPreset,customRange?:{start:string;end:string})=>{
     const firstDated=sla.map(r=>excelDate(r.PERIODE)).filter((v):v is string=>!!v).sort();
     const sourceMaxDate=firstDated.at(-1);
@@ -262,12 +256,24 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
   const bounds=sourceDateBounds(preset,customRange);
   const inWindow=(value:unknown)=>{const date=excelDate(value);return !!date&&date>=bounds.windowStart&&date<=bounds.windowEnd;};
   const dated=sla.filter(r=>inWindow(r.PERIODE)).map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
+
+  // LM: pakai District Area + Hub Name dari sheet langsung
   const lmDated=lm.filter(r=>inWindow(r.GRANULAR_DATE)).map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
+
+  // FM: pakai District Area + Hub Name dari sheet langsung
   const fmDated=fm.filter(r=>inWindow(r.GRANULAR_DATE)).map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
-  const mmWindow=mm.filter(r=>inWindow(r.GRANULAR_DATE));
-  const mmDated=mmWindow.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:''})).filter(r=>r.__date);
-  // KPI MM does not carry the same area key as SLA. Resolve its hub/sortation
-  // against STO, then use the STO District as the dashboard area.
+
+  // ← CHANGED: MM sekarang pakai District Area + Sortation Name dari sheet langsung
+  // (kolom baru yang kamu tambahkan). Fallback ke resolveStoArea hanya untuk row
+  // legacy yang benar-benar kosong District Area-nya.
+  const mmDated=mm.filter(r=>inWindow(r.GRANULAR_DATE)).map(r=>({
+    ...r,
+    __date:excelDate(r.GRANULAR_DATE),
+    __area:String(r['District Area']||'').trim(),
+    __branch:String(r['Sortation Name']||'').trim()
+  })).filter(r=>r.__date);
+
+  // Fallback resolver (hanya dipakai untuk row legacy dengan District Area kosong)
   const resolveStoArea=(row:Row)=>{
     const identities=[
       row['Hub Name'],row['Nama Hub'],row.HUB_NAME,row.HUB,
@@ -283,7 +289,13 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     }
     return '';
   };
-  mmDated.forEach(r=>{r.__area=resolveStoArea(r);});
+
+  // ← CHANGED: fallback hanya dijalankan untuk row yang District Area-nya kosong
+  const mmMissingArea=mmDated.filter(r=>!r.__area);
+  if(mmMissingArea.length>0){
+    mmMissingArea.forEach(r=>{r.__area=resolveStoArea(r);});
+  }
+
   const maxDate=bounds.sourceMaxDate;
   const maxSourceDate=(rows:Row[],key:string)=>{
     let max:string|null=null;
@@ -411,16 +423,24 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       const key=`${fn}|${normHub(clean)}`;
       if(!nativeBranches.has(key)) nativeBranches.set(key,{name:clean,function:fn,code:'',city:'—'});
     };
-    // SLA / KPI LM / KPI FM resolve Area and Gerai from their own native columns.
-    // STO must not determine membership for these three sources.
+    // SLA / LM / FM: native membership dari kolom sheet masing-masing
     items.forEach(r=>addNative(String(r.Nama_Hub||'').trim(),String(r.Mile||'').trim().toUpperCase()||'LM'));
     lmItems.forEach(r=>addNative(String(r.__branch||''),'LM'));
     fmItems.forEach(r=>addNative(String(r.__branch||''),'FM'));
-    // MM has no native Area column, so only MM keeps STO as its area/branch master.
-    sto.filter(r=>String(r.District||'')===name && String(r.Fungsi||'').toUpperCase()==='MM').forEach(r=>{
-      const branchName=String(r['Nama Cabang/Gerai']||r.Nama||'').trim(); if(!branchName) return;
-      nativeBranches.set(`MM|${normHub(branchName)}`,{name:branchName,function:'MM',code:String(r['Kode Analytic']||''),city:String(r['KAB/ KOTA']||'—')});
+
+    // ← CHANGED: MM membership sekarang dari kolom Sortation Name di sheet MM sendiri.
+    // STO dipakai HANYA untuk enrich code/city, bukan menentukan membership.
+    mmItems.forEach(r=>addNative(String(r.__branch||''),'MM'));
+    sto.filter(r=>String(r.Fungsi||'').toUpperCase()==='MM').forEach(r=>{
+      const stoBranchName=String(r['Nama Cabang/Gerai']||r.Nama||'').trim();
+      if(!stoBranchName) return;
+      const key=`MM|${normHub(stoBranchName)}`;
+      const entry=nativeBranches.get(key);
+      if(!entry) return;
+      if(!entry.code&&r['Kode Analytic']) entry.code=String(r['Kode Analytic']);
+      if(entry.city==='—'&&r['KAB/ KOTA']) entry.city=String(r['KAB/ KOTA']);
     });
+
     const branches=[...nativeBranches.values()].map((r,branchIndex)=>{
       const code=r.code;
       const branchName=r.name;
@@ -491,8 +511,6 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       const mmDay=mmItems.filter(r=>r.__date===date);
       return {date,sla:aggregate(slaDay).sla,volume:sum(slaDay,'VOLUME_SLA_ALL'),backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
-    // Area penalty is recalculated from the area's raw numerator/denominator,
-    // exactly like KPI aggregation. Never average branch penalty scores.
     const kpiDetailsLm=lmDetails(lmItems);
     const kpiDetailsFm=fmDetails(fmItems);
     const kpiDetailsMm=mmDetails(mmItems);
@@ -542,8 +560,6 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
 
 
 export async function readDashboardFreshness(env:EnvSource){
-  // Cheap refresh probe: date-column reads are enough to detect appended source
-  // rows without loading the full KPI payload.
   const [sla,lm,fm,mm]=await Promise.all([
     readSheet(env,'SLA','A:A'),
     readSheet(env,'KPI LM','A:A'),
@@ -564,12 +580,12 @@ export async function readDashboardFreshness(env:EnvSource){
 }
 
 export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
-  // Productivity courier/sorter fields extend beyond the old A:AC projection.
-  // Read the full working SLA field set so LM/FM courier and sorter numerators/denominators are available.
+  // Narrow projections — SLA reads only up to AC (29 cols, was AZ 52 cols).
   const sla=await readSheet(env,'SLA','A:AC');
   const sto=await readSheet(env,'STO','A:I');
   const lm=await readSheet(env,'KPI LM','A:AQ');
   const fm=await readSheet(env,'KPI FM','A:AO');
+  // MM now reads through AK to include the new 'District Area' column.
   const mm=await readSheet(env,'KPI MM','A:AK');
   return buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},preset,customRange);
 }
