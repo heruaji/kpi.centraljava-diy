@@ -566,10 +566,10 @@ export async function readDashboardFreshness(env:EnvSource){
 export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
   // Productivity courier/sorter fields extend beyond the old A:AC projection.
   // Read the full working SLA field set so LM/FM courier and sorter numerators/denominators are available.
-  const sla=await readSheet(env,'SLA','A:AZ');
+  const sla=await readSheet(env,'SLA','A:AC');
   const sto=await readSheet(env,'STO','A:I');
   const lm=await readSheet(env,'KPI LM','A:AQ');
   const fm=await readSheet(env,'KPI FM','A:AO');
-  const mm=await readSheet(env,'KPI MM','A:AJ');
+  const mm=await readSheet(env,'KPI MM','A:AK');
   return buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},preset,customRange);
 }
