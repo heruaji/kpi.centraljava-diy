@@ -229,3 +229,63 @@ export async function incrementalSync(
 
   return results;
 }
+/**
+ * Chunked sync: baca hanya sebagian rows dari sheet.
+ * Aman untuk full sync pertama kali (hindari OOM/CPU limit).
+ *
+ * @param sheetName  - 'SLA' | 'KPI LM' | 'KPI FM' | 'KPI MM'
+ * @param startRow   - baris mulai (2 = pertama setelah header)
+ * @param maxRows    - maksimal baris yang dibaca (default 1000)
+ */
+export async function syncChunk(
+  env: SyncEnv,
+  sheetName: string,
+  startRow: number,
+  maxRows: number = 1000,
+): Promise<{
+  sheet: string;
+  synced: number;
+  hasMore: boolean;
+  nextRow: number;
+}> {
+  const def = SHEETS.find((s) => s.sheet === sheetName);
+  if (!def) throw new Error(`Sheet tidak dikenal: ${sheetName}`);
+
+  const endRow = startRow + maxRows - 1;
+  const range = `A${startRow}:${def.maxColumn}${endRow}`;
+
+  const rows = await readSheet(env, def.sheet, range);
+  const upserted = await upsertBatch(env, def, rows);
+
+  // Update state: total_rows = max(sebelumnya, endRow-1)
+  const existing = await env.DB.prepare(
+    `SELECT total_rows FROM sheet_sync_state WHERE sheet = ?`,
+  )
+    .bind(def.sheet)
+    .first<{ total_rows: number }>();
+
+  const newTotal = Math.max(existing?.total_rows ?? 0, endRow - 1);
+
+  await env.DB.prepare(
+    `INSERT INTO sheet_sync_state (sheet, last_row, total_rows, last_synced_at, last_status, last_error)
+     VALUES (?, ?, ?, ?, 'OK', NULL)
+     ON CONFLICT(sheet) DO UPDATE SET
+       last_row = excluded.last_row,
+       total_rows = excluded.total_rows,
+       last_synced_at = excluded.last_synced_at,
+       last_status = 'OK',
+       last_error = NULL`,
+  )
+    .bind(def.sheet, endRow, newTotal, new Date().toISOString())
+    .run();
+
+  // hasMore = true kalau row yang barusan dibaca = maxRows (kemungkinan masih ada lagi)
+  const hasMore = rows.length === maxRows;
+
+  return {
+    sheet: def.sheet,
+    synced: upserted,
+    hasMore,
+    nextRow: endRow + 1,
+  };
+}
