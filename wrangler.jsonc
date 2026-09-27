@@ -26,5 +26,8 @@
   ],
   "vars": {
     "SHEET_ID": "1knhNraKDgmu7JfiPDZIjEU1sstiQNY0i9mYABaY-oJQ"
+  },
+  "triggers": {
+    "crons": ["0 19 * * *"]
   }
 }
