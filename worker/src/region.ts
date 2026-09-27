@@ -589,6 +589,7 @@ export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,cu
   // MM now reads through AK to include the new 'District Area' column.
   const mm=await readSheet(env,'KPI MM','A:AK');
   return buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},preset,customRange);
+}
   /**
  * Build dashboard dari D1 (bukan Google Sheets).
  * Asumsi: D1 sudah terisi via sync.ts.
