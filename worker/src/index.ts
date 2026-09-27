@@ -1,7 +1,7 @@
 // worker/src/index.ts
 import { buildRegionDashboard, buildRegionDashboardFromD1, readDashboardFreshness } from './region';
 import type { PeriodPreset } from './period';
-import { fullSync, incrementalSync, type SyncEnv } from './sync';
+import { fullSync, incrementalSync, syncChunk, type SyncEnv } from './sync';
 import { hasD1Data, type QueryEnv } from './query';
 
 export interface Env {
@@ -121,7 +121,6 @@ async function rebuildAndPersist(
   end: string | null,
   previous: Snapshot | null = null,
 ) {
-  // Prioritaskan D1 kalau sudah terisi. Fallback ke Sheets kalau kosong.
   const d1Ready = env.DB
     ? await hasD1Data(env as QueryEnv).catch(() => false)
     : false;
@@ -273,7 +272,46 @@ export default {
         origin,
       );
 
-    // Manual sync trigger
+    // ============================================================
+    // CHUNKED SYNC — untuk full sync pertama kali (hindari 1102)
+    // ============================================================
+    if (url.pathname === '/api/sync/sheet') {
+      if (!env.DB)
+        return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
+      const sheetName = url.searchParams.get('sheet');
+      const startRow = parseInt(url.searchParams.get('startRow') || '2', 10);
+      const maxRows = parseInt(url.searchParams.get('maxRows') || '1000', 10);
+      if (!sheetName)
+        return json({ ok: false, error: 'sheet wajib diisi' }, 400, origin);
+      if (startRow < 2 || maxRows < 1 || maxRows > 5000)
+        return json(
+          { ok: false, error: 'startRow >= 2 dan maxRows 1-5000' },
+          400,
+          origin,
+        );
+      try {
+        const result = await syncChunk(
+          env as SyncEnv,
+          sheetName,
+          startRow,
+          maxRows,
+        );
+        return json({ ok: true, ...result }, 200, origin);
+      } catch (err) {
+        return json(
+          {
+            ok: false,
+            error: err instanceof Error ? err.message : 'Sync gagal',
+          },
+          500,
+          origin,
+        );
+      }
+    }
+
+    // ============================================================
+    // FULL / INCREMENTAL SYNC — legacy (bisa kena 1102 di free plan)
+    // ============================================================
     if (url.pathname === '/api/sync') {
       if (!env.DB)
         return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
@@ -289,6 +327,29 @@ export default {
           {
             ok: false,
             error: err instanceof Error ? err.message : 'Sync gagal',
+          },
+          500,
+          origin,
+        );
+      }
+    }
+
+    // ============================================================
+    // SYNC STATE — cek progress sync
+    // ============================================================
+    if (url.pathname === '/api/sync/state') {
+      if (!env.DB)
+        return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
+      try {
+        const rows = await env.DB.prepare(
+          `SELECT sheet, last_row, total_rows, last_synced_at, last_status, last_error FROM sheet_sync_state ORDER BY sheet`,
+        ).all();
+        return json({ ok: true, state: rows.results }, 200, origin);
+      } catch (err) {
+        return json(
+          {
+            ok: false,
+            error: err instanceof Error ? err.message : 'Gagal baca state',
           },
           500,
           origin,
