@@ -138,12 +138,12 @@ export default function App() {
     if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
     noticeTimer.current = window.setTimeout(() => setRefreshNotice(null), 3500);
   };
-  const refreshDashboard = async (showLoading = false, manual = false) => {
+  const refreshDashboard = async (showLoading = false, manual = false, ensurePeriodSnapshot = false) => {
     const seq = ++refreshSeq.current;
     if (showLoading) setLoading(true);
     if (manual) setRefreshing(true);
     try {
-      const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual);
+      const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual || ensurePeriodSnapshot);
       if (seq === refreshSeq.current) {
         setDashboard(result.data);
         setDashboardUpdatedAt(result.updatedAt);
@@ -166,8 +166,9 @@ export default function App() {
   };
 
   useEffect(() => {
-    // Initial/period loads only read the last snapshot. Sheets are checked exclusively by Refresh Data.
-    void refreshDashboard(true);
+    // A selected period/custom range must have its own snapshot. Build it when missing
+    // instead of silently keeping the previous period's dashboard visible.
+    void refreshDashboard(true, false, true);
   }, [periodPreset, customRange]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
