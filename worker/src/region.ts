@@ -285,9 +285,17 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
   };
   mmDated.forEach(r=>{r.__area=resolveStoArea(r);});
   const maxDate=bounds.sourceMaxDate;
-  const lmMaxDate=lmDated.map(r=>r.__date as string).sort().at(-1) || null;
-  const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
-  const mmMaxDate=mmDated.map(r=>r.__date as string).sort().at(-1) || null;
+  const maxSourceDate=(rows:Row[],key:string)=>{
+    let max:string|null=null;
+    for(const row of rows){
+      const date=excelDate(row[key]);
+      if(date&&(max===null||date>max)) max=date;
+    }
+    return max;
+  };
+  const lmMaxDate=maxSourceDate(lm,'GRANULAR_DATE');
+  const fmMaxDate=maxSourceDate(fm,'GRANULAR_DATE');
+  const mmMaxDate=maxSourceDate(mm,'GRANULAR_DATE');
   const {range,previousRange}=bounds;
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
