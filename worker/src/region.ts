@@ -237,9 +237,35 @@ export type DashboardSources={sla:Row[];sto:Row[];lm:Row[];fm:Row[];mm:Row[]};
 
 export async function buildRegionDashboardFromSources(env:EnvSource,sources:DashboardSources,preset?:PeriodPreset,customRange?:{start:string;end:string}){
   const {sla,sto,lm,fm,mm}=sources;
-  const dated=sla.map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
-  const lmDated=lm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
-  const fmDated=fm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
+
+  // Resolve the dashboard range before expanding source rows. The dashboard needs
+  // current, previous, and previous-previous periods, so rows outside that window
+  // never participate in KPI/trend aggregation.
+  const sourceDateBounds=(preset?:PeriodPreset,customRange?:{start:string;end:string})=>{
+    const firstDated=sla.map(r=>excelDate(r.PERIODE)).filter((v):v is string=>!!v).sort();
+    const sourceMaxDate=firstDated.at(-1);
+    if(!sourceMaxDate) throw new Error('No valid SLA date');
+    const range=customRange?{start:customRange.start,end:customRange.end,label:'Custom',preset:'CUSTOM' as const}:preset?resolvePreset(preset,sourceMaxDate):defaultPeriod(sourceMaxDate);
+    const shiftMonth=(isoDate:string,months:number)=>{
+      const [year,month,day]=isoDate.split('-').map(Number);
+      const target=new Date(Date.UTC(year,month-1+months,1));
+      const lastDay=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();
+      return `${target.getUTCFullYear()}-${String(target.getUTCMonth()+1).padStart(2,'0')}-${String(Math.min(day,lastDay)).padStart(2,'0')}`;
+    };
+    const previousRange={start:shiftMonth(range.start,-1),end:shiftMonth(range.end,-1)};
+    const periodDays=Math.max(1,Math.round((new Date(range.end+'T00:00:00').getTime()-new Date(range.start+'T00:00:00').getTime())/86400000)+1);
+    const prevPrevEndDate=new Date(new Date(previousRange.start+'T00:00:00').getTime()-86400000);
+    const prevPrevStartDate=new Date(prevPrevEndDate.getTime()-(periodDays-1)*86400000);
+    const iso=(d:Date)=>d.toISOString().slice(0,10);
+    return {sourceMaxDate,range,previousRange,windowStart:iso(prevPrevStartDate),windowEnd:range.end};
+  };
+  const bounds=sourceDateBounds(preset,customRange);
+  const inWindow=(value:unknown)=>{const date=excelDate(value);return !!date&&date>=bounds.windowStart&&date<=bounds.windowEnd;};
+  const dated=sla.filter(r=>inWindow(r.PERIODE)).map(r=>({...r,__date:excelDate(r.PERIODE)})).filter(r=>r.__date);
+  const lmDated=lm.filter(r=>inWindow(r.GRANULAR_DATE)).map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
+  const fmDated=fm.filter(r=>inWindow(r.GRANULAR_DATE)).map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:String(r['District Area']||'').trim(),__branch:String(r['Hub Name']||r['Nama Hub']||'').trim()})).filter(r=>r.__date);
+  const mmWindow=mm.filter(r=>inWindow(r.GRANULAR_DATE));
+  const mmDated=mmWindow.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:''})).filter(r=>r.__date);
   // KPI MM does not carry the same area key as SLA. Resolve its hub/sortation
   // against STO, then use the STO District as the dashboard area.
   const resolveStoArea=(row:Row)=>{
@@ -257,16 +283,13 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     }
     return '';
   };
-  const mmDated=mm.map(r=>({...r,__date:excelDate(r.GRANULAR_DATE),__area:resolveStoArea(r)})).filter(r=>r.__date);
-  const maxDate=dated.map(r=>r.__date as string).sort().at(-1) || null;
+  mmDated.forEach(r=>{r.__area=resolveStoArea(r);});
+  const maxDate=bounds.sourceMaxDate;
   const lmMaxDate=lmDated.map(r=>r.__date as string).sort().at(-1) || null;
   const fmMaxDate=fmDated.map(r=>r.__date as string).sort().at(-1) || null;
   const mmMaxDate=mmDated.map(r=>r.__date as string).sort().at(-1) || null;
-  if(!maxDate) throw new Error('No valid SLA date');
-  const range=customRange?{start:customRange.start,end:customRange.end,label:'Custom',preset:'CUSTOM' as const}:preset?resolvePreset(preset,maxDate):defaultPeriod(maxDate);
+  const {range,previousRange}=bounds;
   const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
-  const shiftMonth=(isoDate:string,months:number)=>{const [year,month,day]=isoDate.split('-').map(Number);const target=new Date(Date.UTC(year,month-1+months,1));const lastDay=new Date(Date.UTC(target.getUTCFullYear(),target.getUTCMonth()+1,0)).getUTCDate();return `${target.getUTCFullYear()}-${String(target.getUTCMonth()+1).padStart(2,'0')}-${String(Math.min(day,lastDay)).padStart(2,'0')}`};
-  const previousRange={start:shiftMonth(range.start,-1),end:shiftMonth(range.end,-1)};
   const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
   const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
   const lmPreviousSelected=lmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
@@ -321,11 +344,7 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     ];
     return {score:details.reduce((total,item)=>total+item.score,0),details};
   };
-  const periodDays=Math.max(1,Math.round((new Date(range.end+'T00:00:00').getTime()-new Date(range.start+'T00:00:00').getTime())/86400000)+1);
-  const prevPrevEndDate=new Date(new Date(previousRange.start+'T00:00:00').getTime()-86400000);
-  const prevPrevStartDate=new Date(prevPrevEndDate.getTime()-(periodDays-1)*86400000);
-  const iso=(d:Date)=>d.toISOString().slice(0,10);
-  const previousPreviousSelected=dated.filter(r=>(r.__date as string)>=iso(prevPrevStartDate)&&(r.__date as string)<=iso(prevPrevEndDate));
+  const previousPreviousSelected=dated.filter(r=>(r.__date as string)>=bounds.windowStart&&(r.__date as string)<previousRange.start);
   const overall=aggregate(selected);
   const overallLm=lmScore(lmSelected);
   const overallFm=fmScore(fmSelected);
