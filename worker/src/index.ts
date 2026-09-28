@@ -215,6 +215,26 @@ async function runRefreshJob(
   sourceFreshness: SourceFreshness[],
 ) {
   try {
+    // ============================================================
+    // STEP 1: SYNC dari Google Sheets → D1 (hanya new rows)
+    // ------------------------------------------------------------
+    // Tanpa step ini, refresh hanya rebuild snapshot dari D1 yang
+    // datanya belum update sejak cron terakhir. Sekarang setiap klik
+    // Refresh Data akan trigger sync dulu.
+    //
+    // Kalau sync gagal (misal Google API error), kita lanjut ke
+    // rebuild dari D1 existing — jangan fail total.
+    // ============================================================
+    try {
+      const syncResults = await incrementalSync(env as SyncEnv);
+      console.log('[refresh-job] incremental sync:', JSON.stringify(syncResults));
+    } catch (syncErr) {
+      console.error('[refresh-job] incremental sync failed:', syncErr);
+    }
+
+    // ============================================================
+    // STEP 2: Rebuild snapshot dari D1 (yang sudah ter-update)
+    // ============================================================
     const result = await rebuildAndPersist(
       env,
       key,
