@@ -2483,3 +2483,12 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   align-items: center;
   gap: 8px;
 }
+/* KPI Penalty Detail Table (gerai detail) — alignment */
+.kpi-penalty-section .penalty-detail-table th,
+.kpi-penalty-section .penalty-detail-table td {
+  text-align: center !important;
+}
+.kpi-penalty-section .penalty-detail-table th:nth-child(2),
+.kpi-penalty-section .penalty-detail-table td:nth-child(2) {
+  text-align: left !important;
+}
