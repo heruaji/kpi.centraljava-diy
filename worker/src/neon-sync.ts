@@ -81,8 +81,8 @@ const SHEETS: SheetDef[] = [
 ];
 
 /**
- * Batch upsert rows ke Neon pakai multi-row INSERT.
- * Max ~500 rows per call untuk hindari query terlalu panjang.
+ * Batch upsert rows ke Neon pakai tagged template + UNNEST.
+ * Kompatibel dengan @neondatabase/serverless v0.9+.
  */
 async function neonUpsertBatch(
   env: NeonSyncEnv,
@@ -96,7 +96,7 @@ async function neonUpsertBatch(
   const sql = getNeonClient(env);
   const syncedAt = new Date().toISOString();
 
-  // Filter valid rows + build values
+  // Prepare + filter valid rows
   const prepared = rows
     .map((r) => {
       const key = keyFn(r);
@@ -104,41 +104,87 @@ async function neonUpsertBatch(
       if (!key || !date) return null;
       return { key, date, payload: JSON.stringify(r) };
     })
-    .filter((x): x is { key: string; date: string; payload: string } => x !== null);
+    .filter(
+      (x): x is { key: string; date: string; payload: string } => x !== null,
+    );
 
   if (!prepared.length) return 0;
 
-  // Chunk into sub-batches of 200 (Neon: max 65535 parameter per query)
+  // Chunk per 200 rows (aman untuk UNNEST dengan 4 array)
   const CHUNK = 200;
   let total = 0;
 
   for (let i = 0; i < prepared.length; i += CHUNK) {
     const chunk = prepared.slice(i, i + CHUNK);
+    const keys = chunk.map((x) => x.key);
+    const dates = chunk.map((x) => x.date);
+    const payloads = chunk.map((x) => x.payload);
+    const syncedAts = chunk.map(() => syncedAt);
 
-    // Build multi-row VALUES: ($1, $2, $3::jsonb, $4::timestamptz), ($5, $6, $7, $8), ...
-    const valueClauses: string[] = [];
-    const params: unknown[] = [];
-
-    chunk.forEach((row, idx) => {
-      const base = idx * 4;
-      valueClauses.push(
-        `($${base + 1}, $${base + 2}::date, $${base + 3}::jsonb, $${base + 4}::timestamptz)`,
-      );
-      params.push(row.key, row.date, row.payload, syncedAt);
-    });
-
-    const query = `
-      INSERT INTO ${table} (row_key, date, payload, synced_at)
-      VALUES ${valueClauses.join(', ')}
-      ON CONFLICT (row_key) DO UPDATE SET
-        date = EXCLUDED.date,
-        payload = EXCLUDED.payload,
-        synced_at = EXCLUDED.synced_at
-      WHERE ${table}.payload IS DISTINCT FROM EXCLUDED.payload
-    `;
-
-    // Pakai sql.query untuk dynamic SQL
-    await (sql as any).query(query, params);
+    // Switch table name (tidak bisa parameterize identifier di tagged template)
+    if (table === 'sla_rows') {
+      await sql`
+        INSERT INTO sla_rows (row_key, date, payload, synced_at)
+        SELECT * FROM UNNEST(
+          ${keys}::text[],
+          ${dates}::date[],
+          ${payloads}::jsonb[],
+          ${syncedAts}::timestamptz[]
+        )
+        ON CONFLICT (row_key) DO UPDATE SET
+          date = EXCLUDED.date,
+          payload = EXCLUDED.payload,
+          synced_at = EXCLUDED.synced_at
+        WHERE sla_rows.payload IS DISTINCT FROM EXCLUDED.payload
+      `;
+    } else if (table === 'lm_rows') {
+      await sql`
+        INSERT INTO lm_rows (row_key, date, payload, synced_at)
+        SELECT * FROM UNNEST(
+          ${keys}::text[],
+          ${dates}::date[],
+          ${payloads}::jsonb[],
+          ${syncedAts}::timestamptz[]
+        )
+        ON CONFLICT (row_key) DO UPDATE SET
+          date = EXCLUDED.date,
+          payload = EXCLUDED.payload,
+          synced_at = EXCLUDED.synced_at
+        WHERE lm_rows.payload IS DISTINCT FROM EXCLUDED.payload
+      `;
+    } else if (table === 'fm_rows') {
+      await sql`
+        INSERT INTO fm_rows (row_key, date, payload, synced_at)
+        SELECT * FROM UNNEST(
+          ${keys}::text[],
+          ${dates}::date[],
+          ${payloads}::jsonb[],
+          ${syncedAts}::timestamptz[]
+        )
+        ON CONFLICT (row_key) DO UPDATE SET
+          date = EXCLUDED.date,
+          payload = EXCLUDED.payload,
+          synced_at = EXCLUDED.synced_at
+        WHERE fm_rows.payload IS DISTINCT FROM EXCLUDED.payload
+      `;
+    } else if (table === 'mm_rows') {
+      await sql`
+        INSERT INTO mm_rows (row_key, date, payload, synced_at)
+        SELECT * FROM UNNEST(
+          ${keys}::text[],
+          ${dates}::date[],
+          ${payloads}::jsonb[],
+          ${syncedAts}::timestamptz[]
+        )
+        ON CONFLICT (row_key) DO UPDATE SET
+          date = EXCLUDED.date,
+          payload = EXCLUDED.payload,
+          synced_at = EXCLUDED.synced_at
+        WHERE mm_rows.payload IS DISTINCT FROM EXCLUDED.payload
+      `;
+    } else {
+      throw new Error(`Unknown table: ${table}`);
+    }
     total += chunk.length;
   }
 
@@ -147,7 +193,6 @@ async function neonUpsertBatch(
 
 /**
  * Sync chunk dari 1 sheet → Neon.
- * Baca startRow..startRow+maxRows-1, write ke Neon, update sheet_sync_state.
  */
 export async function neonSyncChunk(
   env: NeonSyncEnv,
@@ -177,35 +222,38 @@ export async function neonSyncChunk(
     .map((r) => Object.fromEntries(header.map((h, i) => [h, r[i] ?? null])));
 
   // Upsert ke Neon
-  const synced = await neonUpsertBatch(env, def.table, rows, def.extractKey, def.extractDate);
+  const synced = await neonUpsertBatch(
+    env,
+    def.table,
+    rows,
+    def.extractKey,
+    def.extractDate,
+  );
 
-  // hasMore = dataValues.length === maxRows (kemungkinan masih ada lagi)
   const hasMore = dataValues.length === maxRows;
   const nextRow = endRow + 1;
 
-  // Update sheet_sync_state di Neon
+  // Update sheet_sync_state di Neon (tagged template)
   const sql = getNeonClient(env);
-  await (sql as any).query(
-    `INSERT INTO sheet_sync_state (sheet, last_row, total_rows, last_synced_at, last_status, last_error)
-     VALUES ($1, $2, $3, NOW(), 'OK', NULL)
-     ON CONFLICT (sheet) DO UPDATE SET
-       last_row = EXCLUDED.last_row,
-       total_rows = EXCLUDED.total_rows,
-       last_synced_at = EXCLUDED.last_synced_at,
-       last_status = 'OK',
-       last_error = NULL`,
-    [def.sheet, endRow, endRow - 1],
-  );
+  await sql`
+    INSERT INTO sheet_sync_state (sheet, last_row, total_rows, last_synced_at, last_status, last_error)
+    VALUES (${def.sheet}, ${endRow}, ${endRow - 1}, NOW(), 'OK', NULL)
+    ON CONFLICT (sheet) DO UPDATE SET
+      last_row = EXCLUDED.last_row,
+      total_rows = EXCLUDED.total_rows,
+      last_synced_at = EXCLUDED.last_synced_at,
+      last_status = 'OK',
+      last_error = NULL
+  `;
 
   return { sheet: def.sheet, synced, hasMore, nextRow };
 }
 
 export async function neonGetSyncState(env: NeonSyncEnv) {
   const sql = getNeonClient(env);
-  const result = await (sql as any).query(
-    `SELECT sheet, last_row, total_rows, last_synced_at, last_status, last_error 
-     FROM sheet_sync_state 
-     ORDER BY sheet`,
-  );
-  return result;
+  return await sql`
+    SELECT sheet, last_row, total_rows, last_synced_at, last_status, last_error
+    FROM sheet_sync_state
+    ORDER BY sheet
+  `;
 }
