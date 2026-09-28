@@ -398,11 +398,18 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
     };
   });
   const penalties={lm:lmPenalty(lmSelected),fm:fmPenalty(fmSelected),mm:mmPenalty(mmSelected)};
-  const districts=[...new Set([
-    ...dated.map(r=>String(r.District||'').trim()),
-    ...lmDated.map(r=>String(r.__area||'').trim()),
-    ...fmDated.map(r=>String(r.__area||'').trim()),
-    ...mmDated.map(r=>String(r.__area||'').trim())
+const INVALID_DISTRICTS = new Set(['', 'tidak ditemukan', 'n/a', '-', 'null', 'undefined']);
+const isValidDistrict = (v: string) => {
+  const clean = v.trim().toLowerCase();
+  return clean.length > 0 && !INVALID_DISTRICTS.has(clean);
+};
+
+const districts=[...new Set([
+  ...dated.map(r=>String(r.District||'').trim()),
+  ...lmDated.map(r=>String(r.__area||'').trim()),
+  ...fmDated.map(r=>String(r.__area||'').trim()),
+  ...mmDated.map(r=>String(r.__area||'').trim())
+].filter(isValidDistrict))].sort();
   ].filter(Boolean))].sort();
   const areas=districts.map((name,index)=>{
     const items=selected.filter(r=>String(r.District||'')===name);
