@@ -287,4 +287,388 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       }
     }
     return '';
- 
+  };
+
+  // Fallback hanya dijalankan untuk row yang District Area-nya kosong
+  const mmMissingArea=mmDated.filter(r=>!r.__area);
+  if(mmMissingArea.length>0){
+    mmMissingArea.forEach(r=>{r.__area=resolveStoArea(r);});
+  }
+
+  const maxDate=bounds.sourceMaxDate;
+  const maxSourceDate=(rows:Row[],key:string)=>{
+    let max:string|null=null;
+    for(const row of rows){
+      const date=excelDate(row[key]);
+      if(date&&(max===null||date>max)) max=date;
+    }
+    return max;
+  };
+  const lmMaxDate=maxSourceDate(lm,'GRANULAR_DATE');
+  const fmMaxDate=maxSourceDate(fm,'GRANULAR_DATE');
+  const mmMaxDate=maxSourceDate(mm,'GRANULAR_DATE');
+  const {range,previousRange}=bounds;
+  const selected=dated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const previousSelected=dated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
+  const lmSelected=lmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const lmPreviousSelected=lmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
+  const fmSelected=fmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const fmPreviousSelected=fmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
+  const mmSelected=mmDated.filter(r=>(r.__date as string)>=range.start && (r.__date as string)<=range.end);
+  const mmPreviousSelected=mmDated.filter(r=>(r.__date as string)>=previousRange.start && (r.__date as string)<=previousRange.end);
+
+  const aggregate=(items:Row[])=>{
+    const s=(key:string)=>sum(items,key);
+    return {
+      sla:pct(ratio(s('VOLUME_SLA_MEET'),s('VOLUME_SLA_ALL'))),
+      productivityLm:ratio(s('TOTAL_PAKET_LM_SIGESIT'),s('TOTAL_MP_LM_SIGESIT')),
+      productivityFm:ratio(s('TOTAL_PAKET_FM_SIGESIT'),s('TOTAL_MP_FM_SIGESIT')),
+      productivitySorterLm:ratio(s('TOTAL_PAKET_LM_SORTER'),s('TOTAL_MP_LM_SORTER')),
+      productivitySorterFm:ratio(s('TOTAL_PAKET_FM_SORTER'),s('TOTAL_MP_FM_SORTER')),
+    };
+  };
+  const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row[],role:'courier'|'sorter',mile:'lm'|'fm')=>{
+    const suffix=role==='courier'?'SIGESIT':'SORTER';
+    const m=mile.toUpperCase();
+    const volumeKey=`TOTAL_PAKET_${m}_${suffix}`;
+    const manpowerKey=`TOTAL_MP_${m}_${suffix}`;
+    const calc=(rows:Row[])=>ratio(sum(rows,volumeKey),sum(rows,manpowerKey));
+    const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
+    return {value:calc(items),previous:calc(previousItems),previousPrevious:calc(previousPreviousItems),volume:sum(items,volumeKey),manpower:sum(items,manpowerKey),trend:dates.map(date=>{const day=items.filter(r=>r.__date===date);return {date,value:calc(day),volume:sum(day,volumeKey),manpower:sum(day,manpowerKey)}})};
+  };
+  const productivityBundle=(items:Row[],previousItems:Row[],previousPreviousItems:Row[])=>({
+    courier:{lm:productivitySet(items,previousItems,previousPreviousItems,'courier','lm'),fm:productivitySet(items,previousItems,previousPreviousItems,'courier','fm')},
+    sorter:{lm:productivitySet(items,previousItems,previousPreviousItems,'sorter','lm'),fm:productivitySet(items,previousItems,previousPreviousItems,'sorter','fm')}
+  });
+  const rankingMetric=(key:string,label:string,actual:number|null,tier1:number,tier2:number,maxScore:number,direction:'HIGHER'|'LOWER')=>{
+    if(actual==null) return {key,label,actual,tier:'No Data' as const,score:0,maxScore};
+    const isTier1=direction==='HIGHER'?actual>=tier1:actual<=tier1;
+    const isTier2=direction==='HIGHER'?actual>=tier2:actual<=tier2;
+    return {key,label,actual,tier:isTier1?'Tier 1' as const:isTier2?'Tier 2' as const:'Tier 3' as const,score:isTier1?maxScore:isTier2?maxScore/2:0,maxScore};
+  };
+  const areaRanking=(items:Row[])=>{
+    const a=aggregate(items);
+    const cod=pct(ratio(sum(items,'VOLUME_COD_TF'),sum(items,'VOLUME_COD_ALL')));
+    const failed=pct(ratio(sum(items,'VOLUME_FD'),sum(items,'VOLUME_FD_ALL')));
+    const backlog=pct(ratio(sum(items,'VOLUME_BACKLOG'),sum(items,'VOLUME_BACKLOG_ALL')));
+    const details=[
+      rankingMetric('sla','SLA Performance',a.sla,96,95,30,'HIGHER'),
+      rankingMetric('cod','COD Transferred',cod,99.5,99,5,'HIGHER'),
+      rankingMetric('failed','Failed Delivery',failed,1,1.5,20,'LOWER'),
+      rankingMetric('backlog','Backlog Rate',backlog,1.5,2,10,'LOWER'),
+      rankingMetric('sorterFm','Productivity Sorter FM',a.productivitySorterFm,980,750,5,'HIGHER'),
+      rankingMetric('sorterLm','Productivity Sorter LM',a.productivitySorterLm,780,550,5,'HIGHER'),
+      rankingMetric('courierFm','Productivity Kurir FM',a.productivityFm,115,88,10,'HIGHER'),
+      rankingMetric('courierLm','Productivity Kurir LM',a.productivityLm,51,40,15,'HIGHER'),
+    ];
+    return {score:details.reduce((total,item)=>total+item.score,0),details};
+  };
+  const previousPreviousSelected=dated.filter(r=>(r.__date as string)>=bounds.windowStart&&(r.__date as string)<previousRange.start);
+  const overall=aggregate(selected);
+  const overallLm=lmScore(lmSelected);
+  const overallFm=fmScore(fmSelected);
+  const overallMm=mmScore(mmSelected);
+  const dayKeys=[...new Set(selected.map(r=>r.__date as string))].sort();
+  const trend=dayKeys.map(date=>{
+    const slaDay=selected.filter(r=>r.__date===date);
+    const lmDay=lmSelected.filter(r=>r.__date===date);
+    const fmDay=fmSelected.filter(r=>r.__date===date);
+    const mmDay=mmSelected.filter(r=>r.__date===date);
+    const dayAggregate=aggregate(slaDay);
+    return {
+      date,
+      sla:dayAggregate.sla,
+      volume:sum(slaDay,'VOLUME_SLA_ALL'),
+      codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),
+      codTransferVolume:sum(slaDay,'VOLUME_COD_TF'),
+      failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),
+      backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),
+      productivitySorterFm:dayAggregate.productivitySorterFm,
+      productivitySorterLm:dayAggregate.productivitySorterLm,
+      productivityCourierFm:dayAggregate.productivityFm,
+      productivityCourierLm:dayAggregate.productivityLm,
+      productivity:dayAggregate.productivityLm,
+      productivityVolume:sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'),
+      productivityManpower:sum(slaDay,'TOTAL_MP_LM_SIGESIT'),
+      kpiLm:lmScore(lmDay),
+      kpiFm:fmScore(fmDay),
+      kpiMm:mmScore(mmDay),
+    };
+  });
+  const penalties={lm:lmPenalty(lmSelected),fm:fmPenalty(fmSelected),mm:mmPenalty(mmSelected)};
+
+  // Filter district yang valid — buang kosong dan placeholder umum
+  const INVALID_DISTRICTS = new Set([
+    '', 'tidak ditemukan', 'tidak ditemukan.', 'n/a', 'na', '-', '--',
+    'null', 'undefined', '#n/a', '#value!', '#ref!',
+  ]);
+  const isValidDistrict = (v: string) => {
+    const clean = v.trim().toLowerCase();
+    return clean.length > 0 && !INVALID_DISTRICTS.has(clean);
+  };
+
+  const districts = [...new Set([
+    ...dated.map(r => String(r.District || '').trim()),
+    ...lmDated.map(r => String(r.__area || '').trim()),
+    ...fmDated.map(r => String(r.__area || '').trim()),
+    ...mmDated.map(r => String(r.__area || '').trim()),
+  ].filter(isValidDistrict))].sort();
+
+  const areas=districts.map((name,index)=>{
+    const items=selected.filter(r=>String(r.District||'')===name);
+    const previousItems=previousSelected.filter(r=>String(r.District||'')===name);
+    const lmItems=lmSelected.filter(r=>String(r.__area||'')===name);
+    const fmItems=fmSelected.filter(r=>String(r.__area||'')===name);
+    const lmPreviousItems=lmPreviousSelected.filter(r=>String(r.__area||'')===name);
+    const fmPreviousItems=fmPreviousSelected.filter(r=>String(r.__area||'')===name);
+    const mmItems=mmSelected.filter(r=>String(r.__area||'')===name);
+    const mmPreviousItems=mmPreviousSelected.filter(r=>String(r.__area||'')===name);
+    const a=aggregate(items);
+    const kpiLm=lmScore(lmItems);
+    const kpiFm=fmScore(fmItems);
+    const kpiMm=mmScore(mmItems);
+    const health=kpiLm??kpiFm??kpiMm;
+    const nativeBranches=new Map<string,{name:string;function:string;code:string;city:string}>();
+    const addNative=(branchName:string,fn:string)=>{
+      const clean=branchName.trim(); if(!clean) return;
+      const key=`${fn}|${normHub(clean)}`;
+      if(!nativeBranches.has(key)) nativeBranches.set(key,{name:clean,function:fn,code:'',city:'—'});
+    };
+    // SLA / LM / FM: native membership dari kolom sheet masing-masing
+    items.forEach(r=>addNative(String(r.Nama_Hub||'').trim(),String(r.Mile||'').trim().toUpperCase()||'LM'));
+    lmItems.forEach(r=>addNative(String(r.__branch||''),'LM'));
+    fmItems.forEach(r=>addNative(String(r.__branch||''),'FM'));
+
+    // MM membership sekarang dari kolom Sortation Name di sheet MM sendiri.
+    mmItems.forEach(r=>addNative(String(r.__branch||''),'MM'));
+    sto.filter(r=>String(r.Fungsi||'').toUpperCase()==='MM').forEach(r=>{
+      const stoBranchName=String(r['Nama Cabang/Gerai']||r.Nama||'').trim();
+      if(!stoBranchName) return;
+      const key=`MM|${normHub(stoBranchName)}`;
+      const entry=nativeBranches.get(key);
+      if(!entry) return;
+      if(!entry.code&&r['Kode Analytic']) entry.code=String(r['Kode Analytic']);
+      if(entry.city==='—'&&r['KAB/ KOTA']) entry.city=String(r['KAB/ KOTA']);
+    });
+
+    const branches=[...nativeBranches.values()].map((r,branchIndex)=>{
+      const code=r.code;
+      const branchName=r.name;
+      const fn=r.function;
+      const slaItems=items.filter(x=>matchesBranch(x,branchName,code));
+      const previousSlaItems=previousSelected.filter(x=>String(x.District||'')===name && matchesBranch(x,branchName,code));
+      const lmBranch=lmItems.filter(x=>matchesBranch(x,branchName,code));
+      const fmBranch=fmItems.filter(x=>matchesBranch(x,branchName,code));
+      const mmBranch=mmItems.filter(x=>matchesBranch(x,branchName,code));
+      const lmPreviousBranch=lmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const fmPreviousBranch=fmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const mmPreviousBranch=mmPreviousItems.filter(x=>matchesBranch(x,branchName,code));
+      const previousSourceItems=fn==='LM'?lmPreviousBranch:fn==='FM'?fmPreviousBranch:mmPreviousBranch;
+      const sourceItems=fn==='LM'?lmBranch:fn==='FM'?fmBranch:mmBranch;
+      const score=fn==='LM'?lmScore(lmBranch):fn==='FM'?fmScore(fmBranch):fn==='MM'?mmScore(mmBranch):null;
+      const penalty=fn==='LM'?lmPenalty(lmBranch):fn==='FM'?fmPenalty(fmBranch):fn==='MM'?mmPenalty(mmBranch):null;
+      const kpiScorePrevious=fn==='LM'?lmScore(lmPreviousBranch):fn==='FM'?fmScore(fmPreviousBranch):fn==='MM'?mmScore(mmPreviousBranch):null;
+      const penaltyPrevious=fn==='LM'?lmPenalty(lmPreviousBranch):fn==='FM'?fmPenalty(fmPreviousBranch):fn==='MM'?mmPenalty(mmPreviousBranch):null;
+      const branchDayKeys=[...new Set([...sourceItems.map(x=>x.__date as string),...slaItems.map(x=>x.__date as string)].filter(Boolean))].sort();
+      const branchTrend=branchDayKeys.map(date=>{
+        const day=sourceItems.filter(x=>x.__date===date);
+        const slaDay=slaItems.filter(x=>x.__date===date);
+        const dailyAgg=aggregate(slaDay);
+        return {date,sla:dailyAgg.sla,slaMeet:sum(slaDay,'VOLUME_SLA_MEET'),slaAll:sum(slaDay,'VOLUME_SLA_ALL'),productivity:fn==='LM'?dailyAgg.productivityLm:null,productivityVolume:fn==='LM'?sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'):null,productivityManpower:fn==='LM'?sum(slaDay,'TOTAL_MP_LM_SIGESIT'):null,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
+      });
+      const operationalTrend=branchDayKeys.map(date=>{
+        const day=slaItems.filter(x=>x.__date===date);
+        return {
+          date,
+          volume:sum(day,'VOLUME_SLA_ALL'),
+          backlog:sum(day,'VOLUME_BACKLOG'),
+          backlogRate:pct(ratio(sum(day,'VOLUME_BACKLOG'),sum(day,'VOLUME_BACKLOG_ALL'))),
+          failedDelivery:sum(day,'VOLUME_FD'),
+          failedDeliveryRate:pct(ratio(sum(day,'VOLUME_FD'),sum(day,'VOLUME_FD_ALL'))),
+          codTransfer:sum(day,'VOLUME_COD_TF'),
+          codTransferRate:pct(ratio(sum(day,'VOLUME_COD_TF'),sum(day,'VOLUME_COD_ALL')))
+        };
+      });
+      return {
+        id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:r.city,
+        sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,productivityByRole:productivityBundle(slaItems,previousSlaItems,previousPreviousSelected.filter(x=>String(x.District||'')===name&&matchesBranch(x,branchName,code))),
+        operations:{
+          volume:sum(slaItems,'VOLUME_SLA_ALL'),
+          backlog:sum(slaItems,'VOLUME_BACKLOG'),
+          backlogRate:pct(ratio(sum(slaItems,'VOLUME_BACKLOG'),sum(slaItems,'VOLUME_BACKLOG_ALL'))),
+          failedDelivery:sum(slaItems,'VOLUME_FD'),
+          failedDeliveryRate:pct(ratio(sum(slaItems,'VOLUME_FD'),sum(slaItems,'VOLUME_FD_ALL'))),
+          codTransfer:sum(slaItems,'VOLUME_COD_TF'),
+          codTransferRate:pct(ratio(sum(slaItems,'VOLUME_COD_TF'),sum(slaItems,'VOLUME_COD_ALL'))),
+          comparison:{
+            label:previousRange.start.slice(0,7),
+            volume:sum(previousSlaItems,'VOLUME_SLA_ALL'),
+            backlogRate:pct(ratio(sum(previousSlaItems,'VOLUME_BACKLOG'),sum(previousSlaItems,'VOLUME_BACKLOG_ALL'))),
+            failedDeliveryRate:pct(ratio(sum(previousSlaItems,'VOLUME_FD'),sum(previousSlaItems,'VOLUME_FD_ALL'))),
+            codTransferRate:pct(ratio(sum(previousSlaItems,'VOLUME_COD_TF'),sum(previousSlaItems,'VOLUME_COD_ALL'))),
+          },
+        },
+        kpiDetails:fn==='LM'?lmDetails(lmBranch):fn==='FM'?fmDetails(fmBranch):fn==='MM'?mmDetails(mmBranch):[],
+        penaltyDetails:fn==='LM'?lmPenaltyDetails(lmBranch):fn==='FM'?fmPenaltyDetails(fmBranch):fn==='MM'?mmPenaltyDetails(mmBranch):[],
+        kpiDailyDetails:fn==='LM'?lmDailyDetails(lmBranch):fn==='FM'?fmDailyDetails(fmBranch):fn==='MM'?mmDailyDetails(mmBranch):[],operationalTrend,trend:branchTrend
+      };
+    });
+    const areaDayKeys=[...new Set(items.map(r=>r.__date as string))].sort();
+    const areaTrend=areaDayKeys.map(date=>{
+      const slaDay=items.filter(r=>r.__date===date);
+      const lmDay=lmItems.filter(r=>r.__date===date);
+      const fmDay=fmItems.filter(r=>r.__date===date);
+      const mmDay=mmItems.filter(r=>r.__date===date);
+      return {date,sla:aggregate(slaDay).sla,volume:sum(slaDay,'VOLUME_SLA_ALL'),backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
+    });
+    const kpiDetailsLm=lmDetails(lmItems);
+    const kpiDetailsFm=fmDetails(fmItems);
+    const kpiDetailsMm=mmDetails(mmItems);
+    const penaltyDetailsLm=lmPenaltyDetails(lmItems);
+    const penaltyDetailsFm=fmPenaltyDetails(fmItems);
+    const penaltyDetailsMm=mmPenaltyDetails(mmItems);
+    const penaltyLm=lmPenalty(lmItems);
+    const penaltyFm=fmPenalty(fmItems);
+    const penaltyMm=mmPenalty(mmItems);
+    return {id:`area-${index+1}`,name,operations:{volume:sum(items,'VOLUME_SLA_ALL'),backlog:sum(items,'VOLUME_BACKLOG'),backlogRate:pct(ratio(sum(items,'VOLUME_BACKLOG'),sum(items,'VOLUME_BACKLOG_ALL'))),failedDelivery:sum(items,'VOLUME_FD'),failedDeliveryRate:pct(ratio(sum(items,'VOLUME_FD'),sum(items,'VOLUME_FD_ALL'))),codTransfer:sum(items,'VOLUME_COD_TF'),codTransferRate:pct(ratio(sum(items,'VOLUME_COD_TF'),sum(items,'VOLUME_COD_ALL'))),comparison:{label:previousRange.start.slice(0,7),volume:sum(previousItems,'VOLUME_SLA_ALL'),backlogRate:pct(ratio(sum(previousItems,'VOLUME_BACKLOG'),sum(previousItems,'VOLUME_BACKLOG_ALL'))),failedDeliveryRate:pct(ratio(sum(previousItems,'VOLUME_FD'),sum(previousItems,'VOLUME_FD_ALL'))),codTransferRate:pct(ratio(sum(previousItems,'VOLUME_COD_TF'),sum(previousItems,'VOLUME_COD_ALL')))}},ranking:areaRanking(items),sla:a.sla,slaPrevious:aggregate(previousItems).sla,kpiLm,kpiFm,kpiMm,productivity:a.productivityLm,productivityPrevious:aggregate(previousItems).productivityLm,productivityByRole:productivityBundle(items,previousItems,previousPreviousSelected.filter(r=>String(r.District||'')===name)),status:health===null?'—':health>=95?'Excellent':health>=85?'Good':health>=60?'Fair':health>=40?'Bad':'Unsatisfactory',trend:areaTrend,branches,kpiDetailsLm,kpiDetailsFm,kpiDetailsMm,penaltyLm,penaltyFm,penaltyMm,penaltyDetailsLm,penaltyDetailsFm,penaltyDetailsMm};
+  });
+
+  return {
+    connected:true,range,
+    freshness:[{source:'SLA',maxDate},{source:'LM',maxDate:lmMaxDate},{source:'FM',maxDate:fmMaxDate},{source:'MM',maxDate:mmMaxDate}],
+    metrics:[
+      {key:'sla',label:'SLA Performance',value:overall.sla,unit:'percent'},
+      {key:'lm',label:'KPI LM',value:overallLm,unit:'percent'},
+      {key:'fm',label:'KPI FM',value:overallFm,unit:'percent'},
+      {key:'mm',label:'KPI MM',value:overallMm,unit:'percent'}
+    ],
+    penalties,
+    trend,
+    operations:{
+      volume:sum(selected,'VOLUME_SLA_ALL'),
+      backlog:sum(selected,'VOLUME_BACKLOG'),
+      backlogRate:pct(ratio(sum(selected,'VOLUME_BACKLOG'),sum(selected,'VOLUME_BACKLOG_ALL'))),
+      failedDelivery:sum(selected,'VOLUME_FD'),
+      failedDeliveryRate:pct(ratio(sum(selected,'VOLUME_FD'),sum(selected,'VOLUME_FD_ALL'))),
+      codTransfer:sum(selected,'VOLUME_COD_TF'),
+      codTransferRate:pct(ratio(sum(selected,'VOLUME_COD_TF'),sum(selected,'VOLUME_COD_ALL'))),
+      comparison:{
+        label:previousRange.end,
+        volume:sum(previousSelected,'VOLUME_SLA_ALL'),
+        backlog:sum(previousSelected,'VOLUME_BACKLOG'),
+        backlogRate:pct(ratio(sum(previousSelected,'VOLUME_BACKLOG'),sum(previousSelected,'VOLUME_BACKLOG_ALL'))),
+        failedDelivery:sum(previousSelected,'VOLUME_FD'),
+        failedDeliveryRate:pct(ratio(sum(previousSelected,'VOLUME_FD'),sum(previousSelected,'VOLUME_FD_ALL'))),
+        codTransfer:sum(previousSelected,'VOLUME_COD_TF'),
+        codTransferRate:pct(ratio(sum(previousSelected,'VOLUME_COD_TF'),sum(previousSelected,'VOLUME_COD_ALL')))
+      }
+    },
+    productivityByRole:productivityBundle(selected,previousSelected,previousPreviousSelected),
+    areas
+  };
+}
+
+
+export async function readDashboardFreshness(env:EnvSource){
+  const [sla,lm,fm,mm]=await Promise.all([
+    readSheet(env,'SLA','A:A'),
+    readSheet(env,'KPI LM','A:A'),
+    readSheet(env,'KPI FM','A:A'),
+    readSheet(env,'KPI MM','A:A')
+  ]);
+  const info=(source:string,items:Row[],key:string)=>({
+    source,
+    rowCount:items.length,
+    maxDate:items.map(r=>excelDate(r[key])).filter((v):v is string=>!!v).sort().at(-1)||null
+  });
+  return [
+    info('SLA',sla,'PERIODE'),
+    info('LM',lm,'GRANULAR_DATE'),
+    info('FM',fm,'GRANULAR_DATE'),
+    info('MM',mm,'GRANULAR_DATE')
+  ];
+}
+
+export async function buildRegionDashboard(env:EnvSource,preset?:PeriodPreset,customRange?:{start:string;end:string}){
+  const sla=await readSheet(env,'SLA','A:AC');
+  const sto=await readSheet(env,'STO','A:I');
+  const lm=await readSheet(env,'KPI LM','A:AQ');
+  const fm=await readSheet(env,'KPI FM','A:AO');
+  const mm=await readSheet(env,'KPI MM','A:AK');
+  return buildRegionDashboardFromSources(env,{sla,sto,lm,fm,mm},preset,customRange);
+}
+
+/**
+ * Build dashboard dari D1 (bukan Google Sheets).
+ * Asumsi: D1 sudah terisi via sync.ts.
+ */
+export async function buildRegionDashboardFromD1(
+  env: EnvSource & QueryEnv,
+  preset?: PeriodPreset,
+  customRange?: { start: string; end: string },
+) {
+  const sourceMaxDate = await getMaxDate(env);
+  if (!sourceMaxDate) throw new Error('D1 belum memiliki data. Jalankan sync dulu.');
+
+  const range = customRange
+    ? {
+        start: customRange.start,
+        end: customRange.end,
+        label: 'Custom',
+        preset: 'CUSTOM' as const,
+      }
+    : preset
+      ? resolvePreset(preset, sourceMaxDate)
+      : defaultPeriod(sourceMaxDate);
+
+  const shiftMonth = (isoDate: string, months: number) => {
+    const [year, month, day] = isoDate.split('-').map(Number);
+    const target = new Date(Date.UTC(year, month - 1 + months, 1));
+    const lastDay = new Date(
+      Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0),
+    ).getUTCDate();
+    return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, '0')}-${String(Math.min(day, lastDay)).padStart(2, '0')}`;
+  };
+
+  const previousRange = {
+    start: shiftMonth(range.start, -1),
+    end: shiftMonth(range.end, -1),
+  };
+
+  const periodDays = Math.max(
+    1,
+    Math.round(
+      (new Date(range.end + 'T00:00:00').getTime() -
+        new Date(range.start + 'T00:00:00').getTime()) /
+        86400000,
+    ) + 1,
+  );
+
+  const prevPrevEndDate = new Date(
+    new Date(previousRange.start + 'T00:00:00').getTime() - 86400000,
+  );
+  const prevPrevStartDate = new Date(
+    prevPrevEndDate.getTime() - (periodDays - 1) * 86400000,
+  );
+
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+  const windowStart = iso(prevPrevStartDate);
+  const windowEnd = range.end;
+
+  const [sla, lm, fm, mm] = await Promise.all([
+    querySla(env, windowStart, windowEnd),
+    queryLm(env, windowStart, windowEnd),
+    queryFm(env, windowStart, windowEnd),
+    queryMm(env, windowStart, windowEnd),
+  ]);
+
+  const sto = await readSheet(env, 'STO', 'A:I');
+
+  return buildRegionDashboardFromSources(
+    env,
+    { sla, sto, lm, fm, mm },
+    preset,
+    customRange,
+  );
+}
