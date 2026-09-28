@@ -338,7 +338,7 @@
           startRow = result.nextRow;
 
           // Delay antar chunk untuk hindari rate limit
-          await new Promise((r) => setTimeout(r, 300));
+          await new Promise((r) => setTimeout(r, 1500));
         } catch (err) {
           log(`  ✗ ${sheetName} chunk ${chunkCount} ERROR: ${err.message}`, 'error');
           setSheetState(sheetKey, 'error', sheetTotal);
