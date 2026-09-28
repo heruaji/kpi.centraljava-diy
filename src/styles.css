@@ -2523,3 +2523,29 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   margin-left: auto !important;
   flex-shrink: 0 !important;
 }
+/* SLA Branch Daily Toolbar */
+.sla-daily-table-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin: 12px 0 8px;
+  font-size: 10px;
+  color: var(--ct-muted);
+}
+.sla-daily-table-toolbar > span {
+  font-size: 10px;
+  color: var(--ct-muted);
+}
+.sla-daily-table-toolbar > span > strong {
+  color: var(--ct-text);
+  font-weight: 700;
+}
+
+/* KPI Daily Detail Actions */
+.kpi-daily-detail-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
