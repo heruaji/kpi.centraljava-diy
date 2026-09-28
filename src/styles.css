@@ -2478,3 +2478,8 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   background: rgba(255, 255, 255, .08);
   border-color: var(--ct-soft);
 }
+.drivers-panel-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
