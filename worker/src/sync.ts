@@ -215,40 +215,69 @@ export async function incrementalSync(
           Object.fromEntries(header.map((h, i) => [h, r[i] ?? null])),
         );
 
-      const upserted = await upsertBatch(env, def, rows);
-      
-      // Dual-write ke Neon (opsional — kalau NEON_DATABASE_URL ada)
-      // Kalau Neon gagal, tetap lanjut — D1 sebagai fallback
+      // ============================================================
+      // 1. Write ke NEON (PRIMARY)
+      // ============================================================
+      let neonWritten = 0;
       if (env.NEON_DATABASE_URL && rows.length > 0) {
-        try {
-          const neonWritten = await neonUpsertBatch(
-            env as NeonSyncEnv,
-            def.table,
-            rows,
-            def.extractKey,
-            def.extractDate,
-          );
-          console.log(`[dual-write] ${def.sheet}: D1=${upserted}, Neon=${neonWritten}`);
-        } catch (neonErr) {
-          console.error(`[dual-write] ${def.sheet} Neon failed:`, neonErr);
-        }
+        neonWritten = await neonUpsertBatch(
+          env as NeonSyncEnv,
+          def.table,
+          rows,
+          def.extractKey,
+          def.extractDate,
+        );
+        console.log(`[sync] ${def.sheet}: Neon=${neonWritten}`);
       }
-      
+
+      // ============================================================
+      // 2. Write ke D1 (OPTIONAL — kalau ada & belum limit)
+      // Kalau D1 gagal (limit, error), tetap lanjut
+      // ============================================================
+      let d1Written = 0;
+      try {
+        d1Written = await upsertBatch(env, def, rows);
+        console.log(`[sync] ${def.sheet}: D1=${d1Written}`);
+      } catch (d1Err) {
+        console.warn(`[sync] ${def.sheet} D1 skipped:`, d1Err instanceof Error ? d1Err.message : d1Err);
+        // Lanjut — Neon sudah punya data
+      }
+
       const currentCount = lastRow + newValues.length;
 
-      await env.DB.prepare(
-        `UPDATE sheet_sync_state
-         SET last_row = ?, total_rows = ?, last_synced_at = ?, last_status = 'OK', last_error = NULL
-         WHERE sheet = ?`,
-      )
-        .bind(
-          currentCount,
-          currentCount - 1,
-          new Date().toISOString(),
-          def.sheet,
-        )
-        .run();
+      // Update state di NEON
+      if (env.NEON_DATABASE_URL) {
+        const neonSql = (await import('./neon')).getNeonClient(env as any);
+        await neonSql`
+          INSERT INTO sheet_sync_state (sheet, last_row, total_rows, last_synced_at, last_status, last_error)
+          VALUES (${def.sheet}, ${currentCount}, ${currentCount - 1}, NOW(), 'OK', NULL)
+          ON CONFLICT (sheet) DO UPDATE SET
+            last_row = EXCLUDED.last_row,
+            total_rows = EXCLUDED.total_rows,
+            last_synced_at = EXCLUDED.last_synced_at,
+            last_status = 'OK',
+            last_error = NULL
+        `;
+      }
 
+      // Update state di D1 (optional)
+      try {
+        await env.DB.prepare(
+          `UPDATE sheet_sync_state
+           SET last_row = ?, total_rows = ?, last_synced_at = ?, last_status = 'OK', last_error = NULL
+           WHERE sheet = ?`,
+        )
+          .bind(
+            currentCount,
+            currentCount - 1,
+            new Date().toISOString(),
+            def.sheet,
+          )
+          .run();
+      } catch (d1Err) {
+        console.warn(`[sync] D1 state update skipped:`, d1Err);
+      }
+      
       results.push({ sheet: def.sheet, newRows: upserted });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
