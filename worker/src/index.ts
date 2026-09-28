@@ -3,7 +3,7 @@ import { buildRegionDashboard, buildRegionDashboardFromD1, readDashboardFreshnes
 import type { PeriodPreset } from './period';
 import { fullSync, incrementalSync, syncChunk, type SyncEnv } from './sync';
 import { hasD1Data, type QueryEnv } from './query';
-import { testNeonConnection, getNeonTableCounts, type NeonEnv } from './neon';
+import { testNeonConnection, getNeonTableCounts, type NeonEnv } from './neon'; import { neonSyncChunk, neonGetSyncState, type NeonSyncEnv } from './neon-sync';
 
 export interface Env {
   ALLOWED_ORIGIN?: string;
@@ -320,15 +320,41 @@ export default {
       }
     }
 
-    if (url.pathname === '/api/neon-counts') {
+    if (url.pathname === '/api/neon-sync/sheet') {
       try {
-        const counts = await getNeonTableCounts(env as NeonEnv);
-        return json({ ok: true, counts }, 200, origin);
+        const sheetName = url.searchParams.get('sheet');
+        const startRow = parseInt(url.searchParams.get('startRow') || '2', 10);
+        const maxRows = parseInt(url.searchParams.get('maxRows') || '1000', 10);
+        if (!sheetName)
+          return json({ ok: false, error: 'sheet wajib diisi' }, 400, origin);
+        const result = await neonSyncChunk(
+          env as NeonSyncEnv,
+          sheetName,
+          startRow,
+          maxRows,
+        );
+        return json({ ok: true, ...result }, 200, origin);
       } catch (err) {
         return json(
           {
             ok: false,
-            error: err instanceof Error ? err.message : 'Unknown error',
+            error: err instanceof Error ? err.message : 'Neon sync gagal',
+          },
+          500,
+          origin,
+        );
+      }
+    }
+
+    if (url.pathname === '/api/neon-sync/state') {
+      try {
+        const rows = await neonGetSyncState(env as NeonSyncEnv);
+        return json({ ok: true, state: rows }, 200, origin);
+      } catch (err) {
+        return json(
+          {
+            ok: false,
+            error: err instanceof Error ? err.message : 'Gagal baca state',
           },
           500,
           origin,
