@@ -28,7 +28,7 @@ const json = (
     },
   });
 
-const CACHE_VERSION = 'v10-resync';
+const CACHE_VERSION = 'v11-district-filter';
 const LEGACY_CACHE_VERSION = CACHE_VERSION;
 const cacheKey = (
   preset?: string,
