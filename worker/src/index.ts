@@ -273,7 +273,7 @@ export default {
       );
 
     // ============================================================
-    // CHUNKED SYNC — untuk full sync pertama kali (hindari 1102)
+    // CHUNKED SYNC
     // ============================================================
     if (url.pathname === '/api/sync/sheet') {
       if (!env.DB)
@@ -310,7 +310,7 @@ export default {
     }
 
     // ============================================================
-    // FULL / INCREMENTAL SYNC — legacy (bisa kena 1102 di free plan)
+    // FULL / INCREMENTAL SYNC
     // ============================================================
     if (url.pathname === '/api/sync') {
       if (!env.DB)
@@ -335,7 +335,7 @@ export default {
     }
 
     // ============================================================
-    // SYNC STATE — cek progress sync
+    // SYNC STATE
     // ============================================================
     if (url.pathname === '/api/sync/state') {
       if (!env.DB)
@@ -357,6 +357,9 @@ export default {
       }
     }
 
+    // ============================================================
+    // REFRESH STATUS
+    // ============================================================
     if (url.pathname === '/api/dashboard/refresh-status') {
       const jobId = url.searchParams.get('jobId');
       if (!jobId)
@@ -390,6 +393,9 @@ export default {
       );
     }
 
+    // ============================================================
+    // DASHBOARD REGION
+    // ============================================================
     if (url.pathname === '/api/dashboard/region') {
       const preset = url.searchParams.get('period') as PeriodPreset | null;
       const start = url.searchParams.get('start');
@@ -466,39 +472,46 @@ export default {
         );
       await ensureDb(env);
 
+      // ============================================================
+      // FIX 1: Freshness probe hanya jalan kalau snapshot SUDAH ADA.
+      // Kalau snapshot null → kita tahu akan rebuild, tidak perlu probe.
+      // Hemat 4 Google Sheets API call (~1-2 detik) per custom range baru.
+      // ============================================================
       let sourceFreshness: SourceFreshness[] = [];
-      try {
-        sourceFreshness = await readDashboardFreshness(env);
-        const stored = await readSourceState(env);
-        if (snapshot && stored.size > 0) {
-          const hasNewData = sourceFreshness.some((x) => {
-            const before = stored.get(x.source);
-            return (
-              !before ||
-              x.rowCount > before.rowCount ||
-              (x.maxDate ?? '') > (before.maxDate ?? '')
-            );
-          });
-          if (!hasNewData) {
-            return json(
-              {
-                ok: true,
-                status: 'LATEST',
-                changed: false,
-                updatedAt: snapshot.updatedAt,
-              },
-              200,
-              origin,
-              {
-                'x-dashboard-cache': 'UNCHANGED',
-                'x-dashboard-updated-at': snapshot.updatedAt,
-                'x-dashboard-checked-at': checkedAt,
-                'x-dashboard-changed': '0',
-              },
-            );
+      if (snapshot) {
+        try {
+          sourceFreshness = await readDashboardFreshness(env);
+          const stored = await readSourceState(env);
+          if (stored.size > 0) {
+            const hasNewData = sourceFreshness.some((x) => {
+              const before = stored.get(x.source);
+              return (
+                !before ||
+                x.rowCount > before.rowCount ||
+                (x.maxDate ?? '') > (before.maxDate ?? '')
+              );
+            });
+            if (!hasNewData) {
+              return json(
+                {
+                  ok: true,
+                  status: 'LATEST',
+                  changed: false,
+                  updatedAt: snapshot.updatedAt,
+                },
+                200,
+                origin,
+                {
+                  'x-dashboard-cache': 'UNCHANGED',
+                  'x-dashboard-updated-at': snapshot.updatedAt,
+                  'x-dashboard-checked-at': checkedAt,
+                  'x-dashboard-changed': '0',
+                },
+              );
+            }
           }
-        }
-      } catch {}
+        } catch {}
+      }
 
       const running = await latestRunningJob(env, key);
       if (running)
@@ -540,6 +553,7 @@ export default {
         { 'x-dashboard-checked-at': checkedAt },
       );
     }
+
     // ============================================================
     // DEBUG — temporary, hapus kalau sudah selesai
     // ============================================================
@@ -567,7 +581,6 @@ export default {
         const mmInRange = await countIn('mm_rows', start, end);
         const slaInRange = await countIn('sla_rows', start, end);
 
-        // Sample payload 1 baris LM di range
         const sample = await env.DB.prepare(
           `SELECT date, payload FROM lm_rows WHERE date BETWEEN ? AND ? LIMIT 1`,
         )
@@ -581,7 +594,6 @@ export default {
           try {
             sampleParsed = JSON.parse(sample.payload);
             sampleGranularDate = sampleParsed.GRANULAR_DATE;
-            // Simulasi excelDate()
             if (typeof sampleGranularDate === 'number') {
               const d = new Date(Date.UTC(1899, 11, 30) + sampleGranularDate * 86400000);
               sampleExcelDate = d.toISOString().slice(0, 10);
