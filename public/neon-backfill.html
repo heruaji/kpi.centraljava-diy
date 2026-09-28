@@ -301,7 +301,7 @@
       const sheetKey = sheetDef.key;
       const currentState = initialState[sheetName];
 
-      const alreadyFull = mode === 'resume' && currentState && currentState.totalRows >= sheetDef.expected * 0.95;
+      const alreadyFull = mode === 'resume' && currentState && currentState.totalRows >= sheetDef.expected * 0.995;
       if (alreadyFull) {
         log(`⏭ Skip ${sheetName} — sudah lengkap (${currentState.totalRows.toLocaleString('id-ID')} rows)`, 'info');
         setSheetState(sheetKey, 'done', currentState.totalRows);
@@ -340,7 +340,17 @@
           // Delay antar chunk untuk hindari rate limit
           await new Promise((r) => setTimeout(r, 3000));
         } catch (err) {
-          log(`  ✗ ${sheetName} chunk ${chunkCount} ERROR: ${err.message}`, 'error');
+          const errMsg = err.message || '';
+          const isRateLimit = errMsg.includes('429') || errMsg.includes('Quota exceeded');
+          
+          if (isRateLimit) {
+            log(`  ⏸ Rate limit — tunggu 65 detik lalu retry chunk ${chunkCount}...`, 'error');
+            await new Promise((r) => setTimeout(r, 65000));
+            log(`  ↻ Retry chunk ${chunkCount}...`, 'running');
+            continue; // retry chunk yang sama
+          }
+          
+          log(`  ✗ ${sheetName} chunk ${chunkCount} ERROR: ${errMsg}`, 'error');
           setSheetState(sheetKey, 'error', sheetTotal);
           stats.errors++;
           hasMore = false;
