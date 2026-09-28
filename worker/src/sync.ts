@@ -1,5 +1,5 @@
 // worker/src/sync.ts
-import { readSheet, readRangeRaw, type EnvSource, type Row } from './data-source';
+import { readSheet, readRangeRaw, type EnvSource, type Row } from './data-source'; import { neonUpsertBatch, type NeonSyncEnv } from './neon-sync';
 
 export interface SyncEnv extends EnvSource {
   DB: D1Database;
