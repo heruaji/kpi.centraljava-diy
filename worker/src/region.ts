@@ -403,14 +403,22 @@ const isValidDistrict = (v: string) => {
   const clean = v.trim().toLowerCase();
   return clean.length > 0 && !INVALID_DISTRICTS.has(clean);
 };
+const INVALID_DISTRICTS = new Set([
+  '', 'tidak ditemukan', 'tidak ditemukan.', 'n/a', 'na', '-', '--',
+  'null', 'undefined', '#n/a', '#value!', '#ref!',
+]);
+const isValidDistrict = (v: string) => {
+  const clean = v.trim().toLowerCase();
+  return clean.length > 0 && !INVALID_DISTRICTS.has(clean);
+};
 
-const districts=[...new Set([
-  ...dated.map(r=>String(r.District||'').trim()),
-  ...lmDated.map(r=>String(r.__area||'').trim()),
-  ...fmDated.map(r=>String(r.__area||'').trim()),
-  ...mmDated.map(r=>String(r.__area||'').trim())
+const districts = [...new Set([
+  ...dated.map(r => String(r.District || '').trim()),
+  ...lmDated.map(r => String(r.__area || '').trim()),
+  ...fmDated.map(r => String(r.__area || '').trim()),
+  ...mmDated.map(r => String(r.__area || '').trim()),
 ].filter(isValidDistrict))].sort();
-  ].filter(Boolean))].sort();
+  
   const areas=districts.map((name,index)=>{
     const items=selected.filter(r=>String(r.District||'')===name);
     const previousItems=previousSelected.filter(r=>String(r.District||'')===name);
