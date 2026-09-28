@@ -28,7 +28,7 @@ const json = (
     },
   });
 
-const CACHE_VERSION = 'v8-performance-driver-trends';
+const CACHE_VERSION = 'v9-d1-migration';
 const LEGACY_CACHE_VERSION = CACHE_VERSION;
 const cacheKey = (
   preset?: string,
