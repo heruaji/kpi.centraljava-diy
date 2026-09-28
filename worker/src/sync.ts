@@ -1,8 +1,9 @@
 // worker/src/sync.ts
-import { readSheet, type EnvSource, type Row } from './data-source';
+import { readSheet, readRangeRaw, type EnvSource, type Row } from './data-source';
 
 export interface SyncEnv extends EnvSource {
   DB: D1Database;
+  DASHBOARD_CACHE?: KVNamespace;
 }
 
 const excelDate = (v: unknown): string | null => {
@@ -100,7 +101,8 @@ async function upsertBatch(
            ON CONFLICT(row_key) DO UPDATE SET
              date = excluded.date,
              payload = excluded.payload,
-             synced_at = excluded.synced_at`,
+             synced_at = excluded.synced_at
+           WHERE payload != excluded.payload`,
         ).bind(key, date, JSON.stringify(row), syncedAt);
       })
       .filter((s): s is D1PreparedStatement => s !== null);
@@ -229,13 +231,58 @@ export async function incrementalSync(
 
   return results;
 }
+
+// ============================================================
+// CHUNKED SYNC
+// ============================================================
+
+const SHEET_TOTAL_KEY = (sheet: string) => `sync:total-rows:${sheet}`;
+const SHEET_TOTAL_TTL = 300; // 5 menit
+
 /**
- * Chunked sync: baca hanya sebagian rows dari sheet.
- * Aman untuk full sync pertama kali (hindari OOM/CPU limit).
+ * Ambil total baris di sheet (kolom A = tanggal / periode).
+ * Cache di KV 5 menit biar tidak boros Google Sheets API call.
+ */
+async function getSheetTotalRows(env: SyncEnv, sheet: string): Promise<number> {
+  if (env.DASHBOARD_CACHE) {
+    try {
+      const cached = await env.DASHBOARD_CACHE.get(SHEET_TOTAL_KEY(sheet));
+      if (cached) {
+        const parsed = parseInt(cached, 10);
+        if (Number.isFinite(parsed) && parsed > 0) return parsed;
+      }
+    } catch {}
+  }
+
+  const dateColumn = await readRangeRaw(env, sheet, 'A:A');
+  const count = dateColumn.length;
+
+  if (env.DASHBOARD_CACHE) {
+    try {
+      await env.DASHBOARD_CACHE.put(SHEET_TOTAL_KEY(sheet), String(count), {
+        expirationTtl: SHEET_TOTAL_TTL,
+      });
+    } catch {}
+  }
+
+  return count;
+}
+
+async function invalidateSheetTotal(env: SyncEnv, sheet: string) {
+  if (env.DASHBOARD_CACHE) {
+    try {
+      await env.DASHBOARD_CACHE.delete(SHEET_TOTAL_KEY(sheet));
+    } catch {}
+  }
+}
+
+/**
+ * Chunked sync — baca sebagian rows dari sheet.
  *
- * @param sheetName  - 'SLA' | 'KPI LM' | 'KPI FM' | 'KPI MM'
- * @param startRow   - baris mulai (2 = pertama setelah header)
- * @param maxRows    - maksimal baris yang dibaca (default 1000)
+ * Robust terhadap baris kosong pemisah antar tanggal:
+ * - Filter buang baris yang semua cell-nya kosong.
+ * - EOF detection pakai total baris dari kolom A (bukan dari length
+ *   hasil chunk, yang bisa false-EOF kalau ada trailing empty rows).
  */
 export async function syncChunk(
   env: SyncEnv,
@@ -247,17 +294,55 @@ export async function syncChunk(
   synced: number;
   hasMore: boolean;
   nextRow: number;
+  totalRows: number;
 }> {
   const def = SHEETS.find((s) => s.sheet === sheetName);
   if (!def) throw new Error(`Sheet tidak dikenal: ${sheetName}`);
 
-  const endRow = startRow + maxRows - 1;
-  const range = `A${startRow}:${def.maxColumn}${endRow}`;
+  // 1. Tahu total baris di sheet (kolom A = tanggal).
+  const totalSheetRows = await getSheetTotalRows(env, def.sheet);
 
-  const rows = await readSheet(env, def.sheet, range);
+  // 2. Kalau startRow > totalSheetRows, artinya sudah EOF.
+  if (startRow > totalSheetRows) {
+    await env.DB.prepare(
+      `UPDATE sheet_sync_state SET last_row = ?, last_synced_at = ?, last_status = 'OK', last_error = NULL WHERE sheet = ?`,
+    )
+      .bind(startRow, new Date().toISOString(), def.sheet)
+      .run();
+
+    await invalidateSheetTotal(env, def.sheet);
+
+    return {
+      sheet: def.sheet,
+      synced: 0,
+      hasMore: false,
+      nextRow: startRow,
+      totalRows: totalSheetRows,
+    };
+  }
+
+  // 3. Hitung range — jangan melebihi total baris sheet.
+  const endRow = Math.min(startRow + maxRows - 1, totalSheetRows);
+
+  // 4. Baca header (row 1) + data (startRow..endRow) paralel.
+  const [headerValues, dataValues] = await Promise.all([
+    readRangeRaw(env, def.sheet, `A1:${def.maxColumn}1`),
+    readRangeRaw(env, def.sheet, `A${startRow}:${def.maxColumn}${endRow}`),
+  ]);
+
+  const header = (headerValues[0] || []).map(String);
+
+  // 5. Buang baris kosong (pemisah antar tanggal) dan mapping ke object.
+  const rows: Row[] = dataValues
+    .filter((r) => r.some((v) => v !== '' && v != null))
+    .map((r) =>
+      Object.fromEntries(header.map((h, i) => [h, r[i] ?? null])),
+    );
+
+  // 6. Upsert ke D1.
   const upserted = await upsertBatch(env, def, rows);
 
-  // Update state: total_rows = max(sebelumnya, endRow-1)
+  // 7. Update state.
   const existing = await env.DB.prepare(
     `SELECT total_rows FROM sheet_sync_state WHERE sheet = ?`,
   )
@@ -279,13 +364,19 @@ export async function syncChunk(
     .bind(def.sheet, endRow, newTotal, new Date().toISOString())
     .run();
 
-  // hasMore = true kalau row yang barusan dibaca = maxRows (kemungkinan masih ada lagi)
-  const hasMore = rows.length === maxRows;
+  // 8. hasMore = masih ada baris di bawah endRow.
+  const hasMore = endRow < totalSheetRows;
+
+  // 9. Kalau ini chunk terakhir, invalidate cache total rows.
+  if (!hasMore) {
+    await invalidateSheetTotal(env, def.sheet);
+  }
 
   return {
     sheet: def.sheet,
     synced: upserted,
     hasMore,
     nextRow: endRow + 1,
+    totalRows: totalSheetRows,
   };
 }
