@@ -3,6 +3,7 @@ import { readSheet, readRangeRaw, type EnvSource, type Row } from './data-source
 
 export interface SyncEnv extends EnvSource {
   DB: D1Database;
+  NEON_DATABASE_URL?: string;
 }
 
 const excelDate = (v: unknown): string | null => {
@@ -214,7 +215,25 @@ export async function incrementalSync(
           Object.fromEntries(header.map((h, i) => [h, r[i] ?? null])),
         );
 
-      const upserted = await upsertBatch(env, def, rows); console.log(`[sync] ${def.sheet}: input=${rows.length}, written=${upserted}`);
+      const upserted = await upsertBatch(env, def, rows);
+      
+      // Dual-write ke Neon (opsional — kalau NEON_DATABASE_URL ada)
+      // Kalau Neon gagal, tetap lanjut — D1 sebagai fallback
+      if (env.NEON_DATABASE_URL && rows.length > 0) {
+        try {
+          const neonWritten = await neonUpsertBatch(
+            env as NeonSyncEnv,
+            def.table,
+            rows,
+            def.extractKey,
+            def.extractDate,
+          );
+          console.log(`[dual-write] ${def.sheet}: D1=${upserted}, Neon=${neonWritten}`);
+        } catch (neonErr) {
+          console.error(`[dual-write] ${def.sheet} Neon failed:`, neonErr);
+        }
+      }
+      
       const currentCount = lastRow + newValues.length;
 
       await env.DB.prepare(
