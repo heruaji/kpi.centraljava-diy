@@ -3,6 +3,7 @@ import { buildRegionDashboard, buildRegionDashboardFromD1, readDashboardFreshnes
 import type { PeriodPreset } from './period';
 import { fullSync, incrementalSync, syncChunk, type SyncEnv } from './sync';
 import { hasD1Data, type QueryEnv } from './query';
+import { testNeonConnection, getNeonTableCounts, type NeonEnv } from './neon';
 
 export interface Env {
   ALLOWED_ORIGIN?: string;
@@ -11,6 +12,7 @@ export interface Env {
   GOOGLE_PRIVATE_KEY?: string;
   DASHBOARD_CACHE?: KVNamespace;
   DB?: D1Database;
+  NEON_DATABASE_URL?: string;
 }
 
 const json = (
@@ -291,6 +293,48 @@ export default {
         200,
         origin,
       );
+        if (url.pathname === '/api/neon-health') {
+      try {
+        const info = await testNeonConnection(env as NeonEnv);
+        return json(
+          {
+            ok: true,
+            service: 'neon',
+            connected: true,
+            info,
+          },
+          200,
+          origin,
+        );
+      } catch (err) {
+        return json(
+          {
+            ok: false,
+            service: 'neon',
+            connected: false,
+            error: err instanceof Error ? err.message : 'Unknown error',
+          },
+          500,
+          origin,
+        );
+      }
+    }
+
+    if (url.pathname === '/api/neon-counts') {
+      try {
+        const counts = await getNeonTableCounts(env as NeonEnv);
+        return json({ ok: true, counts }, 200, origin);
+      } catch (err) {
+        return json(
+          {
+            ok: false,
+            error: err instanceof Error ? err.message : 'Unknown error',
+          },
+          500,
+          origin,
+        );
+      }
+    }
 
     // ============================================================
     // CHUNKED SYNC
