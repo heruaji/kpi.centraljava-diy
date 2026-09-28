@@ -28,7 +28,7 @@ const json = (
     },
   });
 
-const CACHE_VERSION = 'v9-d1-migration';
+const CACHE_VERSION = 'v10-resync';
 const LEGACY_CACHE_VERSION = CACHE_VERSION;
 const cacheKey = (
   preset?: string,
