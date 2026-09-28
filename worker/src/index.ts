@@ -473,45 +473,10 @@ export default {
       await ensureDb(env);
 
       // ============================================================
-      // FIX 1: Freshness probe hanya jalan kalau snapshot SUDAH ADA.
-      // Kalau snapshot null → kita tahu akan rebuild, tidak perlu probe.
-      // Hemat 4 Google Sheets API call (~1-2 detik) per custom range baru.
+      // MANUAL REFRESH: SELALU jalankan sync + rebuild.
+      // Freshness probe dihapus — user klik manual, hormati.
       // ============================================================
-      let sourceFreshness: SourceFreshness[] = [];
-      if (snapshot) {
-        try {
-          sourceFreshness = await readDashboardFreshness(env);
-          const stored = await readSourceState(env);
-          if (stored.size > 0) {
-            const hasNewData = sourceFreshness.some((x) => {
-              const before = stored.get(x.source);
-              return (
-                !before ||
-                x.rowCount > before.rowCount ||
-                (x.maxDate ?? '') > (before.maxDate ?? '')
-              );
-            });
-            if (!hasNewData) {
-              return json(
-                {
-                  ok: true,
-                  status: 'LATEST',
-                  changed: false,
-                  updatedAt: snapshot.updatedAt,
-                },
-                200,
-                origin,
-                {
-                  'x-dashboard-cache': 'UNCHANGED',
-                  'x-dashboard-updated-at': snapshot.updatedAt,
-                  'x-dashboard-checked-at': checkedAt,
-                  'x-dashboard-changed': '0',
-                },
-              );
-            }
-          }
-        } catch {}
-      }
+      const sourceFreshness: SourceFreshness[] = [];
 
       const running = await latestRunningJob(env, key);
       if (running)
