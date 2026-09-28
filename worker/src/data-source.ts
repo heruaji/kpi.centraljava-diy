@@ -1,3 +1,4 @@
+// worker/src/data-source.ts
 export interface EnvSource {
   SHEET_ID?: string;
   GOOGLE_SERVICE_ACCOUNT_EMAIL?: string;
@@ -135,4 +136,38 @@ export async function readSheet(
 
   const body = (await response.json()) as { values?: unknown[][] };
   return rows(body.values || []);
+}
+
+/**
+ * Baca raw values tanpa interpretasi header.
+ * Dipakai oleh syncChunk untuk baca header (row 1) dan data (row N..M) terpisah.
+ */
+export async function readRangeRaw(
+  env: EnvSource,
+  sheet: string,
+  range: string,
+): Promise<unknown[][]> {
+  if (!env.SHEET_ID) throw new Error('SHEET_ID is not configured');
+
+  const accessToken = await getAccessToken(env);
+  const a1 = encodeURIComponent(`${sheet}!${range}`);
+  const url =
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(env.SHEET_ID)}/values/${a1}` +
+    '?valueRenderOption=UNFORMATTED_VALUE';
+
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    let detail = '';
+    try {
+      const body = (await response.json()) as { error?: { message?: string } };
+      detail = body.error?.message ? `: ${body.error.message}` : '';
+    } catch {}
+    throw new Error(`Google Sheets ${response.status}${detail}`);
+  }
+
+  const body = (await response.json()) as { values?: unknown[][] };
+  return body.values || [];
 }
