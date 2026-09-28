@@ -132,7 +132,7 @@ export async function fullSync(
   for (const def of SHEETS) {
     try {
       const rows = await readSheet(env, def.sheet, `A:${def.maxColumn}`);
-      const upserted = await upsertBatch(env, def, rows);
+      const upserted = await upsertBatch(env, def, rows); console.log(`[sync] ${def.sheet}: input=${rows.length}, written=${upserted}`);
 
       await env.DB.prepare(
         `INSERT INTO sheet_sync_state (sheet, last_row, total_rows, last_synced_at, last_status, last_error)
@@ -214,7 +214,7 @@ export async function incrementalSync(
           Object.fromEntries(header.map((h, i) => [h, r[i] ?? null])),
         );
 
-      const upserted = await upsertBatch(env, def, rows);
+      const upserted = await upsertBatch(env, def, rows); console.log(`[sync] ${def.sheet}: input=${rows.length}, written=${upserted}`);
       const currentCount = lastRow + newValues.length;
 
       await env.DB.prepare(
@@ -332,7 +332,7 @@ export async function syncChunk(
       Object.fromEntries(header.map((h, i) => [h, r[i] ?? null])),
     );
 
-  const upserted = await upsertBatch(env, def, rows);
+  const upserted = await upsertBatch(env, def, rows); console.log(`[sync] ${def.sheet}: input=${rows.length}, written=${upserted}`);
 
   const existing = await env.DB.prepare(
     `SELECT total_rows FROM sheet_sync_state WHERE sheet = ?`,
