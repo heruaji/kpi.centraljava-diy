@@ -84,6 +84,13 @@ const SHEETS: SheetDef[] = [
  * Batch upsert rows ke Neon pakai tagged template + UNNEST.
  * Kompatibel dengan @neondatabase/serverless v0.9+.
  */
+/**
+ * Batch upsert rows ke Neon pakai JSON array + jsonb_array_elements.
+ * Lebih robust dari UNNEST multi-array karena:
+ * - Tidak ada mismatch panjang array
+ * - Handling payload JSON dengan karakter spesial
+ * - Hanya 1 parameter untuk N rows
+ */
 export async function neonUpsertBatch(
   env: NeonSyncEnv,
   table: string,
@@ -102,35 +109,43 @@ export async function neonUpsertBatch(
       const key = keyFn(r);
       const date = dateFn(r);
       if (!key || !date) return null;
-      return { key, date, payload: JSON.stringify(r) };
+      return {
+        key,
+        date,
+        payload: r as Record<string, unknown>,
+      };
     })
     .filter(
-      (x): x is { key: string; date: string; payload: string } => x !== null,
+      (x): x is { key: string; date: string; payload: Record<string, unknown> } =>
+        x !== null,
     );
 
   if (!prepared.length) return 0;
 
-  // Chunk per 200 rows (aman untuk UNNEST dengan 4 array)
-  const CHUNK = 200;
+  // Chunk per 100 rows (lebih kecil, lebih aman)
+  const CHUNK = 100;
   let total = 0;
 
   for (let i = 0; i < prepared.length; i += CHUNK) {
     const chunk = prepared.slice(i, i + CHUNK);
-    const keys = chunk.map((x) => x.key);
-    const dates = chunk.map((x) => x.date);
-    const payloads = chunk.map((x) => x.payload);
-    const syncedAts = chunk.map(() => syncedAt);
 
-    // Switch table name (tidak bisa parameterize identifier di tagged template)
+    // Bikin array JSON untuk parameter tunggal
+    const items = chunk.map((x) => ({
+      key: x.key,
+      date: x.date,
+      payload: x.payload,
+    }));
+
+    // Insert via jsonb_array_elements — 1 parameter saja
     if (table === 'sla_rows') {
       await sql`
         INSERT INTO sla_rows (row_key, date, payload, synced_at)
-        SELECT * FROM UNNEST(
-          ${keys}::text[],
-          ${dates}::date[],
-          ${payloads}::jsonb[],
-          ${syncedAts}::timestamptz[]
-        )
+        SELECT 
+          (item->>'key'),
+          (item->>'date')::date,
+          item->'payload',
+          ${syncedAt}::timestamptz
+        FROM jsonb_array_elements(${JSON.stringify(items)}::jsonb) AS item
         ON CONFLICT (row_key) DO UPDATE SET
           date = EXCLUDED.date,
           payload = EXCLUDED.payload,
@@ -140,12 +155,12 @@ export async function neonUpsertBatch(
     } else if (table === 'lm_rows') {
       await sql`
         INSERT INTO lm_rows (row_key, date, payload, synced_at)
-        SELECT * FROM UNNEST(
-          ${keys}::text[],
-          ${dates}::date[],
-          ${payloads}::jsonb[],
-          ${syncedAts}::timestamptz[]
-        )
+        SELECT 
+          (item->>'key'),
+          (item->>'date')::date,
+          item->'payload',
+          ${syncedAt}::timestamptz
+        FROM jsonb_array_elements(${JSON.stringify(items)}::jsonb) AS item
         ON CONFLICT (row_key) DO UPDATE SET
           date = EXCLUDED.date,
           payload = EXCLUDED.payload,
@@ -155,12 +170,12 @@ export async function neonUpsertBatch(
     } else if (table === 'fm_rows') {
       await sql`
         INSERT INTO fm_rows (row_key, date, payload, synced_at)
-        SELECT * FROM UNNEST(
-          ${keys}::text[],
-          ${dates}::date[],
-          ${payloads}::jsonb[],
-          ${syncedAts}::timestamptz[]
-        )
+        SELECT 
+          (item->>'key'),
+          (item->>'date')::date,
+          item->'payload',
+          ${syncedAt}::timestamptz
+        FROM jsonb_array_elements(${JSON.stringify(items)}::jsonb) AS item
         ON CONFLICT (row_key) DO UPDATE SET
           date = EXCLUDED.date,
           payload = EXCLUDED.payload,
@@ -170,12 +185,12 @@ export async function neonUpsertBatch(
     } else if (table === 'mm_rows') {
       await sql`
         INSERT INTO mm_rows (row_key, date, payload, synced_at)
-        SELECT * FROM UNNEST(
-          ${keys}::text[],
-          ${dates}::date[],
-          ${payloads}::jsonb[],
-          ${syncedAts}::timestamptz[]
-        )
+        SELECT 
+          (item->>'key'),
+          (item->>'date')::date,
+          item->'payload',
+          ${syncedAt}::timestamptz
+        FROM jsonb_array_elements(${JSON.stringify(items)}::jsonb) AS item
         ON CONFLICT (row_key) DO UPDATE SET
           date = EXCLUDED.date,
           payload = EXCLUDED.payload,
