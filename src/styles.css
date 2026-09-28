@@ -2492,3 +2492,34 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-penalty-section .penalty-detail-table td:nth-child(2) {
   text-align: left !important;
 }
+/* ===== EXPORT BUTTON — UNIFIED POSITION ===== */
+.kpi-daily-matrix-tools {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+.kpi-daily-matrix-tools > small {
+  color: var(--ct-muted);
+  font-size: 9px;
+  white-space: nowrap;
+}
+
+/* Standar: tombol selalu di kanan container */
+.panel-title > .export-btn,
+.kpi-gerai-chart-title > .export-btn,
+.kpi-penalty-section-head > .export-btn,
+.productivity-daily-head > .export-btn,
+.drivers-tools > .export-btn,
+.kpi-area-tools > .export-btn,
+.kpi-branch-tools > .export-btn,
+.sla-area-compact-tools > .export-btn,
+.sla-branch-tools > .export-btn,
+.productivity-panel-tools > .export-btn,
+.productivity-branch-tools > .export-btn,
+.drivers-panel-tools > .export-btn,
+.area-table-tools > .export-btn,
+.kpi-daily-matrix-tools > .export-btn {
+  margin-left: auto !important;
+  flex-shrink: 0 !important;
+}
