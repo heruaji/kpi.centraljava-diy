@@ -84,7 +84,7 @@ const SHEETS: SheetDef[] = [
  * Batch upsert rows ke Neon pakai tagged template + UNNEST.
  * Kompatibel dengan @neondatabase/serverless v0.9+.
  */
-async function neonUpsertBatch(
+export async function neonUpsertBatch(
   env: NeonSyncEnv,
   table: string,
   rows: Row[],
