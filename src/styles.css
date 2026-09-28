@@ -2431,3 +2431,50 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
     overflow-x:auto!important;
   }
 }
+/* ===== EXPORT BUTTON ===== */
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  height: 29px;
+  padding: 0 11px;
+  border: 1px solid var(--ct-border);
+  border-radius: 7px;
+  background: var(--ct-card);
+  color: var(--ct-text);
+  font: inherit;
+  font-size: 9px;
+  font-weight: 700;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background .15s ease, border-color .15s ease, transform .12s ease;
+}
+.export-btn:hover:not(:disabled) {
+  background: var(--ct-card2);
+  border-color: var(--ct-soft);
+  transform: translateY(-1px);
+}
+.export-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+.export-btn:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+.export-btn svg {
+  flex: 0 0 auto;
+}
+.export-btn-md {
+  height: 32px;
+  padding: 0 13px;
+  font-size: 10px;
+}
+.theme-dark .export-btn {
+  background: rgba(255, 255, 255, .04);
+  border-color: var(--ct-border);
+  color: var(--ct-text);
+}
+.theme-dark .export-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, .08);
+  border-color: var(--ct-soft);
+}
