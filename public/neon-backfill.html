@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Neon Backfill - Control Tower</title>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: 'Plus Jakarta Sans', Inter, system-ui, sans-serif;
+    background: #0d1b29;
+    color: #e2e8f0;
+    min-height: 100vh;
+    padding: 24px;
+  }
+  .container {
+    max-width: 900px;
+    margin: 0 auto;
+    background: #122231;
+    border: 1px solid #26394b;
+    border-radius: 12px;
+    padding: 24px;
+    box-shadow: 0 10px 30px rgba(0,0,0,.3);
+  }
+  h1 { margin: 0 0 6px; font-size: 20px; color: #fff; }
+  .subtitle { margin: 0 0 20px; font-size: 12px; color: #94a3b8; }
+  .form-group { margin-bottom: 14px; }
+  label {
+    display: block; font-size: 10px; font-weight: 600;
+    text-transform: uppercase; letter-spacing: .05em;
+    color: #94a3b8; margin-bottom: 6px;
+  }
+  input[type="text"], input[type="number"] {
+    width: 100%; padding: 10px 12px;
+    border: 1px solid #33485c; border-radius: 8px;
+    background: #0e1c29; color: #e2e8f0;
+    font: inherit; font-size: 13px; outline: none;
+  }
+  input:focus { border-color: #64748b; }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 16px 0 20px; }
+  button {
+    width: 100%; padding: 14px; border: 0; border-radius: 8px;
+    background: #6366f1; color: #fff;
+    font: inherit; font-size: 14px; font-weight: 700;
+    cursor: pointer; transition: background .15s ease;
+  }
+  button:hover:not(:disabled) { background: #4f46e5; }
+  button:disabled { background: #334155; cursor: not-allowed; opacity: .6; }
+  button.stop { background: #ef4444; }
+  button.stop:hover:not(:disabled) { background: #dc2626; }
+  .status-grid {
+    display: grid; grid-template-columns: repeat(4, 1fr);
+    gap: 10px; margin-bottom: 18px;
+  }
+  .sheet-card {
+    padding: 12px; border: 1px solid #26394b; border-radius: 8px;
+    background: #0e1c29; text-align: center;
+  }
+  .sheet-card .name {
+    font-size: 10px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: .05em; color: #94a3b8; margin-bottom: 6px;
+  }
+  .sheet-card .count { font-size: 18px; font-weight: 700; color: #fff; }
+  .sheet-card .state {
+    margin-top: 6px; font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 999px; display: inline-block;
+  }
+  .state.pending { background: rgba(148,163,184,.15); color: #94a3b8; }
+  .state.running { background: rgba(99,102,241,.2); color: #818cf8; }
+  .state.done { background: rgba(16,185,129,.15); color: #34d399; }
+  .state.error { background: rgba(239,68,68,.15); color: #fb7185; }
+  .progress-bar {
+    height: 6px; background: #1a2c3f; border-radius: 999px;
+    overflow: hidden; margin-bottom: 18px;
+  }
+  .progress-bar > i {
+    display: block; height: 100%;
+    background: linear-gradient(90deg, #6366f1, #10b981);
+    border-radius: inherit; transition: width .3s ease; width: 0%;
+  }
+  .log {
+    background: #0a1520; border: 1px solid #26394b; border-radius: 8px;
+    padding: 12px; max-height: 450px; overflow-y: auto;
+    font-family: ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+    font-size: 11px; line-height: 1.55;
+  }
+  .log-entry { display: flex; gap: 10px; padding: 3px 0; border-bottom: 1px solid rgba(148,163,184,.06); }
+  .log-entry:last-child { border-bottom: 0; }
+  .log-time { color: #64748b; flex: 0 0 60px; }
+  .log-msg { flex: 1; word-break: break-word; }
+  .log-info .log-msg { color: #94a3b8; }
+  .log-success .log-msg { color: #34d399; }
+  .log-error .log-msg { color: #fb7185; }
+  .log-running .log-msg { color: #818cf8; }
+  .summary {
+    margin-top: 16px; padding: 12px; border-radius: 8px;
+    font-size: 12px; display: none;
+  }
+  .summary.show { display: block; }
+  .summary.success { background: rgba(16,185,129,.1); border: 1px solid rgba(16,185,129,.3); color: #6ee7b7; }
+  .summary.error { background: rgba(239,68,68,.1); border: 1px solid rgba(239,68,68,.3); color: #fca5a5; }
+  .hint { margin-top: 12px; font-size: 10px; color: #64748b; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🚀 Neon Backfill</h1>
+  <p class="subtitle">Sync semua sheet dari Google Sheets ke Neon PostgreSQL dalam chunk. Aman untuk Cloudflare Worker.</p>
+
+  <div class="form-group">
+    <label for="workerUrl">Worker URL</label>
+    <input type="text" id="workerUrl" value="https://kpi-centraljava-diy.projectheru5.workers.dev" />
+  </div>
+
+  <div class="row">
+    <div class="form-group" style="margin:0">
+      <label for="chunkSize">Chunk Size</label>
+      <input type="number" id="chunkSize" value="1000" min="100" max="5000" />
+    </div>
+    <div class="form-group" style="margin:0">
+      <label for="startMode">Start Mode</label>
+      <select id="startMode" style="width:100%;padding:10px 12px;border:1px solid #33485c;border-radius:8px;background:#0e1c29;color:#e2e8f0;font:inherit;font-size:13px">
+        <option value="resume">Resume (dari last_row)</option>
+        <option value="restart">Restart dari awal (row 2)</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="actions">
+    <button id="startBtn">▶️ Start Backfill</button>
+    <button id="stopBtn" class="stop" disabled>⏹ Stop</button>
+  </div>
+
+  <div class="status-grid" id="statusGrid">
+    <div class="sheet-card" data-sheet="SLA">
+      <div class="name">SLA</div>
+      <div class="count" id="count-SLA">0</div>
+      <div class="state pending" id="state-SLA">Pending</div>
+    </div>
+    <div class="sheet-card" data-sheet="KPI LM">
+      <div class="name">KPI LM</div>
+      <div class="count" id="count-KPI-LM">0</div>
+      <div class="state pending" id="state-KPI-LM">Pending</div>
+    </div>
+    <div class="sheet-card" data-sheet="KPI FM">
+      <div class="name">KPI FM</div>
+      <div class="count" id="count-KPI-FM">0</div>
+      <div class="state pending" id="state-KPI-FM">Pending</div>
+    </div>
+    <div class="sheet-card" data-sheet="KPI MM">
+      <div class="name">KPI MM</div>
+      <div class="count" id="count-KPI-MM">0</div>
+      <div class="state pending" id="state-KPI-MM">Pending</div>
+    </div>
+  </div>
+
+  <div class="progress-bar"><i id="progressBar"></i></div>
+
+  <div class="log" id="log"></div>
+
+  <div class="summary" id="summary"></div>
+
+  <div class="hint">
+    💡 Tips: Backfill bisa resume. Kalau terhenti, klik Start lagi — akan lanjut dari posisi terakhir.
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const SHEETS = [
+    { name: 'SLA',    expected: 32422, key: 'SLA' },
+    { name: 'KPI LM', expected: 27032, key: 'KPI-LM' },
+    { name: 'KPI FM', expected: 9461,  key: 'KPI-FM' },
+    { name: 'KPI MM', expected: 1603,  key: 'KPI-MM' },
+  ];
+
+  const els = {
+    workerUrl: document.getElementById('workerUrl'),
+    chunkSize: document.getElementById('chunkSize'),
+    startMode: document.getElementById('startMode'),
+    startBtn: document.getElementById('startBtn'),
+    stopBtn: document.getElementById('stopBtn'),
+    log: document.getElementById('log'),
+    summary: document.getElementById('summary'),
+    progressBar: document.getElementById('progressBar'),
+  };
+
+  let stopRequested = false;
+  let running = false;
+  let stats = { totalSynced: 0, startTime: 0, errors: 0 };
+
+  function log(msg, kind = 'info') {
+    const time = new Date().toTimeString().slice(0, 8);
+    const entry = document.createElement('div');
+    entry.className = 'log-entry log-' + kind;
+    entry.innerHTML = `<span class="log-time">${time}</span><span class="log-msg">${escapeHtml(msg)}</span>`;
+    els.log.appendChild(entry);
+    els.log.scrollTop = els.log.scrollHeight;
+  }
+
+  function escapeHtml(s) {
+    return String(s).replace(/[&<>"']/g, (c) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;',
+    }[c]));
+  }
+
+  function setSheetState(sheetKey, state, count) {
+    const stateEl = document.getElementById('state-' + sheetKey);
+    const countEl = document.getElementById('count-' + sheetKey);
+    if (stateEl) {
+      stateEl.className = 'state ' + state;
+      stateEl.textContent = {
+        pending: 'Pending', running: 'Running…', done: '✓ Selesai', error: '✗ Error',
+      }[state] || state;
+    }
+    if (countEl && count != null) {
+      countEl.textContent = Number(count).toLocaleString('id-ID');
+    }
+  }
+
+  function updateProgress(done, total) {
+    const pct = total > 0 ? Math.min(100, (done / total) * 100) : 0;
+    els.progressBar.style.width = pct.toFixed(1) + '%';
+  }
+
+  function showSummary(kind, text) {
+    els.summary.className = 'summary show ' + kind;
+    els.summary.textContent = text;
+  }
+
+  async function fetchJson(url) {
+    const res = await fetch(url);
+    const text = await res.text();
+    let body;
+    try { body = JSON.parse(text); }
+    catch { throw new Error(`Non-JSON (${res.status}): ${text.slice(0, 200)}`); }
+    if (!res.ok) throw new Error(body.error || `HTTP ${res.status}`);
+    return body;
+  }
+
+  async function getSyncState() {
+    return fetchJson(els.workerUrl.value.replace(/\/$/, '') + '/api/neon-sync/state');
+  }
+
+  async function syncChunk(sheet, startRow, maxRows) {
+    const url = els.workerUrl.value.replace(/\/$/, '') +
+      `/api/neon-sync/sheet?sheet=${encodeURIComponent(sheet)}&startRow=${startRow}&maxRows=${maxRows}`;
+    return fetchJson(url);
+  }
+
+  async function runBackfill() {
+    running = true;
+    stopRequested = false;
+    stats = { totalSynced: 0, startTime: Date.now(), errors: 0 };
+
+    els.startBtn.disabled = true;
+    els.stopBtn.disabled = false;
+    els.log.innerHTML = '';
+    els.summary.className = 'summary';
+
+    const chunkSize = Math.max(100, Math.min(5000, parseInt(els.chunkSize.value, 10) || 1000));
+    const mode = els.startMode.value;
+
+    log(`🚀 Mulai Neon backfill (chunk size: ${chunkSize}, mode: ${mode})`, 'info');
+    log(`📡 Worker: ${els.workerUrl.value}`, 'info');
+
+    // Load state kalau mode resume
+    let initialState = {};
+    if (mode === 'resume') {
+      try {
+        const stateResp = await getSyncState();
+        for (const item of stateResp.state || []) {
+          initialState[item.sheet] = {
+            lastRow: Number(item.last_row) || 2,
+            totalRows: Number(item.total_rows) || 0,
+            status: item.last_status,
+          };
+        }
+        log(`✓ Baca state: ${Object.keys(initialState).join(', ') || 'kosong'}`, 'success');
+      } catch (err) {
+        log(`✗ Gagal baca state: ${err.message}`, 'error');
+      }
+    } else {
+      log(`ℹ️ Mode restart — mulai dari row 2`, 'info');
+    }
+
+    const totalExpected = SHEETS.reduce((sum, s) => sum + s.expected, 0);
+    let grandTotal = 0;
+
+    for (const sheetDef of SHEETS) {
+      if (stopRequested) {
+        log('⏹ Dihentikan oleh user', 'error');
+        break;
+      }
+
+      const sheetName = sheetDef.name;
+      const sheetKey = sheetDef.key;
+      const currentState = initialState[sheetName];
+
+      const alreadyFull = mode === 'resume' && currentState && currentState.totalRows >= sheetDef.expected * 0.95;
+      if (alreadyFull) {
+        log(`⏭ Skip ${sheetName} — sudah lengkap (${currentState.totalRows.toLocaleString('id-ID')} rows)`, 'info');
+        setSheetState(sheetKey, 'done', currentState.totalRows);
+        grandTotal += currentState.totalRows;
+        updateProgress(grandTotal, totalExpected);
+        continue;
+      }
+
+      log(`▶ Mulai backfill ${sheetName}`, 'running');
+      setSheetState(sheetKey, 'running', 0);
+
+      let startRow = mode === 'restart' ? 2 : Math.max(2, currentState?.lastRow || 2);
+      let sheetTotal = 0;
+      let hasMore = true;
+      let chunkCount = 0;
+
+      while (hasMore && !stopRequested) {
+        try {
+          const result = await syncChunk(sheetName, startRow, chunkSize);
+          chunkCount++;
+
+          if (result.synced > 0) {
+            sheetTotal = Math.max(sheetTotal, result.nextRow - 1);
+            log(`  ↳ ${sheetName} chunk ${chunkCount}: synced ${result.synced}, nextRow ${result.nextRow}, hasMore=${result.hasMore}`, 'success');
+          } else {
+            log(`  ↳ ${sheetName} chunk ${chunkCount}: 0 rows (kosong atau sudah ada)`, 'info');
+          }
+
+          setSheetState(sheetKey, 'running', sheetTotal);
+          grandTotal = stats.totalSynced + sheetTotal;
+          updateProgress(grandTotal, totalExpected);
+
+          hasMore = result.hasMore;
+          startRow = result.nextRow;
+
+          // Delay antar chunk untuk hindari rate limit
+          await new Promise((r) => setTimeout(r, 300));
+        } catch (err) {
+          log(`  ✗ ${sheetName} chunk ${chunkCount} ERROR: ${err.message}`, 'error');
+          setSheetState(sheetKey, 'error', sheetTotal);
+          stats.errors++;
+          hasMore = false;
+          break;
+        }
+      }
+
+      if (!stopRequested && !hasMore) {
+        log(`✓ ${sheetName} selesai (${sheetTotal.toLocaleString('id-ID')} rows)`, 'success');
+        setSheetState(sheetKey, 'done', sheetTotal);
+      }
+
+      stats.totalSynced += sheetTotal;
+    }
+
+    // Summary
+    const elapsed = ((Date.now() - stats.startTime) / 1000).toFixed(1);
+    if (stopRequested) {
+      showSummary('error', `⏹ Dihentikan. Total sync: ${stats.totalSynced.toLocaleString('id-ID')} rows dalam ${elapsed}s.`);
+      log(`⏹ Selesai (dihentikan). Total: ${stats.totalSynced.toLocaleString('id-ID')} rows, ${elapsed}s`, 'error');
+    } else if (stats.errors > 0) {
+      showSummary('error', `⚠ Selesai dengan ${stats.errors} error. Total sync: ${stats.totalSynced.toLocaleString('id-ID')} rows dalam ${elapsed}s.`);
+      log(`⚠ Selesai dengan error. Total: ${stats.totalSynced.toLocaleString('id-ID')} rows, ${elapsed}s`, 'error');
+    } else {
+      showSummary('success', `✓ Backfill selesai! Total: ${stats.totalSynced.toLocaleString('id-ID')} rows dalam ${elapsed}s.`);
+      log(`✓ Selesai! Total: ${stats.totalSynced.toLocaleString('id-ID')} rows dalam ${elapsed}s`, 'success');
+    }
+
+    running = false;
+    els.startBtn.disabled = false;
+    els.stopBtn.disabled = true;
+  }
+
+  els.startBtn.addEventListener('click', runBackfill);
+  els.stopBtn.addEventListener('click', () => {
+    stopRequested = true;
+    log('⏹ Stop requested… (menunggu chunk aktif selesai)', 'error');
+  });
+
+  log('💡 Klik "Start Backfill" untuk memulai. Script akan otomatis resume dari posisi terakhir.', 'info');
+})();
+</script>
+</body>
+</html>
