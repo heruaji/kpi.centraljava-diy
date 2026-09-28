@@ -540,6 +540,96 @@ export default {
         { 'x-dashboard-checked-at': checkedAt },
       );
     }
+    // ============================================================
+    // DEBUG — temporary, hapus kalau sudah selesai
+    // ============================================================
+    if (url.pathname === '/api/debug/lm') {
+      if (!env.DB)
+        return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
+      const start = url.searchParams.get('start') || '2026-09-01';
+      const end = url.searchParams.get('end') || '2026-09-15';
+      const windowStart = url.searchParams.get('windowStart') || start;
+      const windowEnd = url.searchParams.get('windowEnd') || end;
+
+      try {
+        const countIn = async (table: string, s: string, e: string) => {
+          const r = await env.DB.prepare(
+            `SELECT COUNT(*) as c FROM ${table} WHERE date BETWEEN ? AND ?`,
+          )
+            .bind(s, e)
+            .first<{ c: number }>();
+          return r?.c ?? 0;
+        };
+
+        const lmInRange = await countIn('lm_rows', start, end);
+        const lmInWindow = await countIn('lm_rows', windowStart, windowEnd);
+        const fmInRange = await countIn('fm_rows', start, end);
+        const mmInRange = await countIn('mm_rows', start, end);
+        const slaInRange = await countIn('sla_rows', start, end);
+
+        // Sample payload 1 baris LM di range
+        const sample = await env.DB.prepare(
+          `SELECT date, payload FROM lm_rows WHERE date BETWEEN ? AND ? LIMIT 1`,
+        )
+          .bind(start, end)
+          .first<{ date: string; payload: string }>();
+
+        let sampleParsed = null;
+        let sampleGranularDate = null;
+        let sampleExcelDate = null;
+        if (sample) {
+          try {
+            sampleParsed = JSON.parse(sample.payload);
+            sampleGranularDate = sampleParsed.GRANULAR_DATE;
+            // Simulasi excelDate()
+            if (typeof sampleGranularDate === 'number') {
+              const d = new Date(Date.UTC(1899, 11, 30) + sampleGranularDate * 86400000);
+              sampleExcelDate = d.toISOString().slice(0, 10);
+            } else if (typeof sampleGranularDate === 'string') {
+              const d = new Date(sampleGranularDate);
+              sampleExcelDate = isNaN(d.getTime()) ? null : d.toISOString().slice(0, 10);
+            }
+          } catch (e) {
+            sampleParsed = { error: String(e) };
+          }
+        }
+
+        return json(
+          {
+            ok: true,
+            range: { start, end },
+            window: { start: windowStart, end: windowEnd },
+            counts: {
+              lm_in_range: lmInRange,
+              lm_in_window: lmInWindow,
+              fm_in_range: fmInRange,
+              mm_in_range: mmInRange,
+              sla_in_range: slaInRange,
+            },
+            sample: sample
+              ? {
+                  date_in_db: sample.date,
+                  granular_date_raw: sampleGranularDate,
+                  granular_date_type: typeof sampleGranularDate,
+                  excel_date_converted: sampleExcelDate,
+                  payload_preview: JSON.stringify(sampleParsed).slice(0, 400),
+                }
+              : null,
+          },
+          200,
+          origin,
+        );
+      } catch (err) {
+        return json(
+          {
+            ok: false,
+            error: err instanceof Error ? err.message : 'Debug error',
+          },
+          500,
+          origin,
+        );
+      }
+    }
 
     return json({ ok: false, error: 'Not found' }, 404, origin);
   },
