@@ -334,16 +334,30 @@ const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row
     const m=mile.toUpperCase();
     const volumeKey=`TOTAL_PAKET_${m}_${suffix}`;
     const manpowerKey=`TOTAL_MP_${m}_${suffix}`;
-    // Rule: kalau manpower = 0 (tidak ada data), dianggap 1 orang.
-    // Productivity = Volume ÷ 1 = Volume.
     const calc=(rows:Row[])=>{
-      const volume=sum(rows,volumeKey);
-      const manpower=sum(rows,manpowerKey);
-      const effectiveManpower=manpower>0?manpower:1;
-      return ratio(volume,effectiveManpower);
+      if(!rows.length) return null;
+      const byDate=new Map<string,{v:number;m:number}>();
+      for(const r of rows){
+        const d=String(r.__date??'');
+        if(!d) continue;
+        const cur=byDate.get(d)??{v:0,m:0};
+        cur.v+=Number(r[volumeKey])||0;
+        cur.m+=Number(r[manpowerKey])||0;
+        byDate.set(d,cur);
+      }
+      if(!byDate.size) return null;
+      let totalV=0, totalM=0;
+      for(const x of byDate.values()){ totalV+=x.v; totalM+=x.m>0?x.m:1; }
+      return totalM>0?totalV/totalM:null;
+    };
+    const calcDay=(rows:Row[])=>{
+      if(!rows.length) return null;
+      const v=sum(rows,volumeKey);
+      const m=sum(rows,manpowerKey);
+      return ratio(v,m>0?m:1);
     };
     const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
-    return {value:calc(items),previous:calc(previousItems),previousPrevious:calc(previousPreviousItems),volume:sum(items,volumeKey),manpower:sum(items,manpowerKey),trend:dates.map(date=>{const day=items.filter(r=>r.__date===date);return {date,value:calc(day),volume:sum(day,volumeKey),manpower:sum(day,manpowerKey)}})};
+    return {value:calc(items),previous:calc(previousItems),previousPrevious:calc(previousPreviousItems),volume:sum(items,volumeKey),manpower:sum(items,manpowerKey),trend:dates.map(date=>{const day=items.filter(r=>r.__date===date);return {date,value:calcDay(day),volume:sum(day,volumeKey),manpower:sum(day,manpowerKey)}})};
   };
   const productivityBundle=(items:Row[],previousItems:Row[],previousPreviousItems:Row[])=>({
     courier:{lm:productivitySet(items,previousItems,previousPreviousItems,'courier','lm'),fm:productivitySet(items,previousItems,previousPreviousItems,'courier','fm')},
