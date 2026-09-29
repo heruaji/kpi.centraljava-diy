@@ -108,6 +108,44 @@ async function getAccessToken(env: EnvSource): Promise<string> {
   return tokenBody.access_token;
 }
 
+export async function getSheetGridRowCount(
+  env: EnvSource,
+  sheet: string,
+): Promise<number> {
+  if (!env.SHEET_ID) throw new Error('SHEET_ID is not configured');
+
+  const accessToken = await getAccessToken(env);
+  const url =
+    `https://sheets.googleapis.com/v4/spreadsheets/${encodeURIComponent(env.SHEET_ID)}` +
+    '?fields=sheets(properties(title,gridProperties(rowCount)))';
+
+  const response = await fetch(url, {
+    headers: { Authorization: `Bearer ${accessToken}` },
+  });
+
+  if (!response.ok) {
+    let detail = '';
+    try {
+      const body = (await response.json()) as { error?: { message?: string } };
+      detail = body.error?.message ? `: ${body.error.message}` : '';
+    } catch {}
+    throw new Error(`Google Sheets ${response.status}${detail}`);
+  }
+
+  const body = (await response.json()) as {
+    sheets?: Array<{
+      properties?: {
+        title?: string;
+        gridProperties?: { rowCount?: number };
+      };
+    }>;
+  };
+  const properties = body.sheets?.find((item) => item.properties?.title === sheet)?.properties;
+  const rowCount = properties?.gridProperties?.rowCount;
+  if (!rowCount) throw new Error(`Google Sheets sheet tidak ditemukan: ${sheet}`);
+  return rowCount;
+}
+
 export async function readSheet(
   env: EnvSource,
   sheet: string,
