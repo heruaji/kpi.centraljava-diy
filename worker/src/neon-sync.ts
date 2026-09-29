@@ -28,7 +28,7 @@ export type SheetDef = {
   extractDate: (row: Row) => string | null;
 };
 
-export export export const SHEETS: SheetDef[] = [
+export const SHEETS: SheetDef[] = [
   {
     sheet: 'SLA',
     table: 'sla_rows',
