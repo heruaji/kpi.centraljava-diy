@@ -319,14 +319,29 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
 
 const aggregate=(items:Row[])=>{
     const s=(key:string)=>sum(items,key);
-    // Rule: 0 manpower dianggap 1 orang (konsisten dengan productivitySet)
-    const prod=(vol:number,mp:number)=>ratio(vol,mp>0?mp:1);
+    // Productivity: sum volume ÷ sum effective manpower (0→1 per hari)
+    const prod=(volKey:string,mpKey:string)=>{
+      if(!items.length) return null;
+      const byDate=new Map<string,{v:number;m:number}>();
+      for(const r of items){
+        const d=String(r.__date??'');
+        if(!d) continue;
+        const cur=byDate.get(d)??{v:0,m:0};
+        cur.v+=Number(r[volKey])||0;
+        cur.m+=Number(r[mpKey])||0;
+        byDate.set(d,cur);
+      }
+      if(!byDate.size) return null;
+      let tv=0, tm=0;
+      for(const {v,m} of byDate.values()){ tv+=v; tm+=m>0?m:1; }
+      return tm>0?tv/tm:null;
+    };
     return {
       sla:pct(ratio(s('VOLUME_SLA_MEET'),s('VOLUME_SLA_ALL'))),
-      productivityLm:prod(s('TOTAL_PAKET_LM_SIGESIT'),s('TOTAL_MP_LM_SIGESIT')),
-      productivityFm:prod(s('TOTAL_PAKET_FM_SIGESIT'),s('TOTAL_MP_FM_SIGESIT')),
-      productivitySorterLm:prod(s('TOTAL_PAKET_LM_SORTER'),s('TOTAL_MP_LM_SORTER')),
-      productivitySorterFm:prod(s('TOTAL_PAKET_FM_SORTER'),s('TOTAL_MP_FM_SORTER')),
+      productivityLm:prod('TOTAL_PAKET_LM_SIGESIT','TOTAL_MP_LM_SIGESIT'),
+      productivityFm:prod('TOTAL_PAKET_FM_SIGESIT','TOTAL_MP_FM_SIGESIT'),
+      productivitySorterLm:prod('TOTAL_PAKET_LM_SORTER','TOTAL_MP_LM_SORTER'),
+      productivitySorterFm:prod('TOTAL_PAKET_FM_SORTER','TOTAL_MP_FM_SORTER'),
     };
   };
 const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row[],role:'courier'|'sorter',mile:'lm'|'fm')=>{
@@ -334,14 +349,33 @@ const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row
     const m=mile.toUpperCase();
     const volumeKey=`TOTAL_PAKET_${m}_${suffix}`;
     const manpowerKey=`TOTAL_MP_${m}_${suffix}`;
-    // Rule: kalau manpower = 0 (tidak ada data), dianggap 1 orang.
-    // Productivity = Volume ÷ 1 = Volume.
+    // Total productivity: sum volume ÷ sum effective manpower (0→1 per hari)
     const calc=(rows:Row[])=>{
-      const volume=sum(rows,volumeKey);
-      const manpower=sum(rows,manpowerKey);
-      const effectiveManpower=manpower>0?manpower:1;
-      return ratio(volume,effectiveManpower);
+      if(!rows.length) return null;
+      const byDate=new Map<string,{v:number;m:number}>();
+      for(const r of rows){
+        const d=String(r.__date??'');
+        if(!d) continue;
+        const cur=byDate.get(d)??{v:0,m:0};
+        cur.v+=Number(r[volumeKey])||0;
+        cur.m+=Number(r[manpowerKey])||0;
+        byDate.set(d,cur);
+      }
+      if(!byDate.size) return null;
+      let totalV=0, totalM=0;
+      for(const {v,m} of byDate.values()){ totalV+=v; totalM+=m>0?m:1; }
+      return totalM>0?totalV/totalM:null;
     };
+    // Daily productivity: volume hari itu ÷ effective manpower hari itu
+    const calcDay=(rows:Row[])=>{
+      if(!rows.length) return null;
+      const v=sum(rows,volumeKey);
+      const m=sum(rows,manpowerKey);
+      return ratio(v,m>0?m:1);
+    };
+    const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
+    return {value:calc(items),previous:calc(previousItems),previousPrevious:calc(previousPreviousItems),volume:sum(items,volumeKey),manpower:sum(items,manpowerKey),trend:dates.map(date=>{const day=items.filter(r=>r.__date===date);return {date,value:calcDay(day),volume:sum(day,volumeKey),manpower:sum(day,manpowerKey)}})};
+  };
     const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
     return {value:calc(items),previous:calc(previousItems),previousPrevious:calc(previousPreviousItems),volume:sum(items,volumeKey),manpower:sum(items,manpowerKey),trend:dates.map(date=>{const day=items.filter(r=>r.__date===date);return {date,value:calc(day),volume:sum(day,volumeKey),manpower:sum(day,manpowerKey)}})};
   };
