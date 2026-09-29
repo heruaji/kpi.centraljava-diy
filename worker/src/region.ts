@@ -327,12 +327,19 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
       productivitySorterFm:ratio(s('TOTAL_PAKET_FM_SORTER'),s('TOTAL_MP_FM_SORTER')),
     };
   };
-  const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row[],role:'courier'|'sorter',mile:'lm'|'fm')=>{
+const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row[],role:'courier'|'sorter',mile:'lm'|'fm')=>{
     const suffix=role==='courier'?'SIGESIT':'SORTER';
     const m=mile.toUpperCase();
     const volumeKey=`TOTAL_PAKET_${m}_${suffix}`;
     const manpowerKey=`TOTAL_MP_${m}_${suffix}`;
-    const calc=(rows:Row[])=>ratio(sum(rows,volumeKey),sum(rows,manpowerKey));
+    // Rule: kalau manpower = 0 (tidak ada data), dianggap 1 orang.
+    // Productivity = Volume ÷ 1 = Volume.
+    const calc=(rows:Row[])=>{
+      const volume=sum(rows,volumeKey);
+      const manpower=sum(rows,manpowerKey);
+      const effectiveManpower=manpower>0?manpower:1;
+      return ratio(volume,effectiveManpower);
+    };
     const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
     return {value:calc(items),previous:calc(previousItems),previousPrevious:calc(previousPreviousItems),volume:sum(items,volumeKey),manpower:sum(items,manpowerKey),trend:dates.map(date=>{const day=items.filter(r=>r.__date===date);return {date,value:calc(day),volume:sum(day,volumeKey),manpower:sum(day,manpowerKey)}})};
   };

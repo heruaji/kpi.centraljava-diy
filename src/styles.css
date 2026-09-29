@@ -2549,3 +2549,80 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   gap: 8px;
   flex-shrink: 0;
 }
+/* ===== UI REFACTOR BATCH — 2025-09-29 ===== */
+
+/* KPI: back button row — muncul di bawah tabs saat drill-down */
+.kpi-back-row {
+  display: flex;
+  justify-content: flex-end;
+  margin: -8px 0 12px;
+}
+
+/* KPI chart header: judul di kiri, aksi di kanan */
+.kpi-gerai-chart-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  width: 100%;
+}
+.kpi-gerai-chart-title > div {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1;
+}
+.kpi-gerai-chart-title > div > strong {
+  font-size: 15px;
+  font-weight: 600;
+  line-height: 1.3;
+}
+.kpi-gerai-chart-title > div > small {
+  font-size: 11px;
+  color: var(--ct-muted);
+  line-height: 1.4;
+}
+.kpi-gerai-chart-title .back-scope {
+  flex-shrink: 0;
+  align-self: flex-start;
+  white-space: nowrap;
+}
+
+/* KPI toolbar: filter/sort/count/export rata kanan */
+.kpi-branch-tools {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin: 0 0 9px !important;
+}
+.kpi-branch-tools .table-search {
+  width: 210px !important;
+  margin-right: auto !important;
+}
+.kpi-branch-tools .table-sort {
+  min-width: 132px !important;
+}
+.kpi-branch-tools .area-count {
+  margin-left: 0 !important;
+}
+.kpi-area-tools .table-search {
+  margin-right: auto !important;
+}
+
+@media (max-width: 760px) {
+  .kpi-gerai-chart-title {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .kpi-gerai-chart-title .back-scope {
+    align-self: flex-end;
+  }
+  .kpi-branch-tools {
+    flex-wrap: wrap;
+  }
+  .kpi-branch-tools .table-search {
+    width: 100%;
+    margin-right: 0;
+  }
+}
