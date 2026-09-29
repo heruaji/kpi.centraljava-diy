@@ -23,7 +23,7 @@ function toCellValue(raw: unknown): string | number {
   const s = raw.trim();
   if (!s || s === '—' || s === '-' || s === '–' || s === 'n/a' || s === 'N/A') return '';
 
-  // String dengan % → tetap string (persentase)
+  // String dengan % → tetap string
   if (s.endsWith('%')) return s;
 
   // Handle prefix + (mis. "+2.50")
@@ -33,29 +33,35 @@ function toCellValue(raw: unknown): string | number {
   if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(normalized)) {
     normalized = normalized.replace(/\./g, '').replace(',', '.');
   } else if (/^-?\d+,\d+$/.test(normalized)) {
-    // Format ID tanpa ribuan tapi pakai koma desimal: "1,5"
     normalized = normalized.replace(',', '.');
   }
 
-  // Parse sebagai number kalau memang numeric murni
+  // Parse sebagai number kalau numeric murni
   if (/^-?\d+(\.\d+)?$/.test(normalized)) {
     const n = Number(normalized);
     if (Number.isFinite(n)) return n;
   }
 
-  // Bukan numeric → kembalikan string asli
   return s;
 }
 
-/** Helper untuk format function di kolom persen. Output: "98.32%" */
-export function fmtPct(v: unknown): string | number {
+/** Kolom persen: 98.32 → "98.32%" */
+export function fmtPct(v: unknown): string {
   if (v === null || v === undefined || v === '—') return '';
   const n = typeof v === 'number' ? v : Number(v);
   if (!Number.isFinite(n)) return '';
   return `${n.toFixed(2)}%`;
 }
 
-/** Helper untuk format function di kolom angka murni. Output: number */
+/** Kolom persen bertanda (+/-): 2.5 → "+2.50%", -1.2 → "-1.20%" */
+export function fmtSignedPct(v: unknown): string {
+  if (v === null || v === undefined || v === '—') return '';
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!Number.isFinite(n)) return '';
+  return `${n >= 0 ? '+' : ''}${n.toFixed(2)}%`;
+}
+
+/** Kolom angka murni: 582.75 → 582.75 (number type) */
 export function fmtNum(v: unknown): string | number {
   if (v === null || v === undefined || v === '—') return '';
   const n = typeof v === 'number' ? v : Number(v);
@@ -85,9 +91,7 @@ export function exportToExcel<T = any>(
   const aoa: (string | number)[][] = [];
 
   if (options.meta && options.meta.length > 0) {
-    options.meta.forEach((m) => {
-      aoa.push([m.label, m.value]);
-    });
+    options.meta.forEach((m) => aoa.push([m.label, m.value]));
     aoa.push([]);
   }
 
