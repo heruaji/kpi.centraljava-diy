@@ -1,5 +1,5 @@
 // worker/src/neon-sync.ts
-import { readRangeRaw, type Row } from './data-source';
+import type { Row } from './data-source';
 import { getNeonClient, type NeonEnv } from './neon';
 
 export interface NeonSyncEnv extends NeonEnv {
@@ -20,7 +20,7 @@ const excelDate = (v: unknown): string | null => {
 const normHub = (v: unknown) =>
   String(v || '').trim().toLowerCase().replace(/^t?\d+\s*-\s*/, '');
 
-export type SheetDef = {
+export export type SheetDef = {
   sheet: string;
   table: string;
   maxColumn: string;
@@ -28,7 +28,7 @@ export type SheetDef = {
   extractDate: (row: Row) => string | null;
 };
 
-export const SHEETS: SheetDef[] = [
+export export const SHEETS: SheetDef[] = [
   {
     sheet: 'SLA',
     table: 'sla_rows',
