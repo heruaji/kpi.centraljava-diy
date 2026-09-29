@@ -2549,9 +2549,3 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   gap: 8px;
   flex-shrink: 0;
 }
-/* KPI: back button row — muncul di bawah tabs saat drill-down */
-.kpi-back-row {
-  display: flex;
-  justify-content: flex-end;
-  margin: -8px 0 12px;   /* rapat ke tabs di atasnya */
-}
