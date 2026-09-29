@@ -1,8 +1,8 @@
 // worker/src/index.ts
-import { buildRegionDashboard, buildRegionDashboardFromD1, readDashboardFreshness } from './region';
+import { buildRegionDashboard, buildRegionDashboardFromD1, buildRegionDashboardFromNeon, readDashboardFreshness } from './region';
 import type { PeriodPreset } from './period';
 import { fullSync, incrementalSync, syncChunk, type SyncEnv } from './sync';
-import { hasD1Data, type QueryEnv } from './query';
+import { hasD1Data, hasNeonData, type QueryEnv, type NeonQueryEnv } from './query';
 import { testNeonConnection, getNeonTableCounts, type NeonEnv } from './neon'; import { neonSyncChunk, neonGetSyncState, type NeonSyncEnv } from './neon-sync';
 
 export interface Env {
@@ -123,12 +123,22 @@ async function rebuildAndPersist(
   end: string | null,
   previous: Snapshot | null = null,
 ) {
-  const d1Ready = env.DB
+  const neonReady = env.NEON_DATABASE_URL
+    ? await hasNeonData(env as NeonQueryEnv).catch(() => false)
+    : false;
+
+  const d1Ready = !neonReady && env.DB
     ? await hasD1Data(env as QueryEnv).catch(() => false)
     : false;
 
   let data: unknown;
-  if (d1Ready) {
+  if (neonReady) {
+    data = await buildRegionDashboardFromNeon(
+      env as Env & NeonQueryEnv,
+      period as PeriodPreset,
+      start && end ? { start, end } : undefined,
+    );
+  } else if (d1Ready) {
     data = await buildRegionDashboardFromD1(
       env as Env & QueryEnv,
       period as PeriodPreset,
