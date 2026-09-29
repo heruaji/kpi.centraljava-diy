@@ -319,29 +319,14 @@ export async function buildRegionDashboardFromSources(env:EnvSource,sources:Dash
 
 const aggregate=(items:Row[])=>{
     const s=(key:string)=>sum(items,key);
-    // Productivity: sum volume ÷ sum effective manpower (0→1 per hari)
-    const prod=(volKey:string,mpKey:string)=>{
-      if(!items.length) return null;
-      const byDate=new Map<string,{v:number;m:number}>();
-      for(const r of items){
-        const d=String(r.__date??'');
-        if(!d) continue;
-        const cur=byDate.get(d)??{v:0,m:0};
-        cur.v+=Number(r[volKey])||0;
-        cur.m+=Number(r[mpKey])||0;
-        byDate.set(d,cur);
-      }
-      if(!byDate.size) return null;
-      let tv=0, tm=0;
-      for(const {v,m} of byDate.values()){ tv+=v; tm+=m>0?m:1; }
-      return tm>0?tv/tm:null;
-    };
+    // Rule: 0 manpower dianggap 1 orang (konsisten dengan productivitySet)
+    const prod=(vol:number,mp:number)=>ratio(vol,mp>0?mp:1);
     return {
       sla:pct(ratio(s('VOLUME_SLA_MEET'),s('VOLUME_SLA_ALL'))),
-      productivityLm:prod('TOTAL_PAKET_LM_SIGESIT','TOTAL_MP_LM_SIGESIT'),
-      productivityFm:prod('TOTAL_PAKET_FM_SIGESIT','TOTAL_MP_FM_SIGESIT'),
-      productivitySorterLm:prod('TOTAL_PAKET_LM_SORTER','TOTAL_MP_LM_SORTER'),
-      productivitySorterFm:prod('TOTAL_PAKET_FM_SORTER','TOTAL_MP_FM_SORTER'),
+      productivityLm:prod(s('TOTAL_PAKET_LM_SIGESIT'),s('TOTAL_MP_LM_SIGESIT')),
+      productivityFm:prod(s('TOTAL_PAKET_FM_SIGESIT'),s('TOTAL_MP_FM_SIGESIT')),
+      productivitySorterLm:prod(s('TOTAL_PAKET_LM_SORTER'),s('TOTAL_MP_LM_SORTER')),
+      productivitySorterFm:prod(s('TOTAL_PAKET_FM_SORTER'),s('TOTAL_MP_FM_SORTER')),
     };
   };
 const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row[],role:'courier'|'sorter',mile:'lm'|'fm')=>{
