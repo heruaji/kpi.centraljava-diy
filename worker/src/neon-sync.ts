@@ -20,7 +20,7 @@ const excelDate = (v: unknown): string | null => {
 const normHub = (v: unknown) =>
   String(v || '').trim().toLowerCase().replace(/^t?\d+\s*-\s*/, '');
 
-export export export type SheetDef = {
+export type SheetDef = {
   sheet: string;
   table: string;
   maxColumn: string;
