@@ -1,7 +1,7 @@
 import { readSheet, type EnvSource, type Row } from './data-source';
 import { defaultPeriod, resolvePreset, type PeriodPreset } from './period';
 import { penaltyScore, positiveScore, tier, type TierRule } from './calculation';
-import { querySla, queryLm, queryFm, queryMm, getMaxDate, type QueryEnv } from './query';
+import { querySla, queryLm, queryFm, queryMm, getMaxDate, type QueryEnv, querySlaNeon, queryLmNeon, queryFmNeon, queryMmNeon, getNeonMaxDate, type NeonQueryEnv } from './query';
 
 const n=(v:unknown)=>typeof v==='number'?v:Number(v)||0;
 const excelDate=(v:unknown)=>{
@@ -671,4 +671,59 @@ export async function buildRegionDashboardFromD1(
     preset,
     customRange,
   );
+}
+
+// ============================================================
+// NEON BUILD (Fase 5)
+// ============================================================
+
+export async function buildRegionDashboardFromNeon(
+  env: EnvSource & NeonQueryEnv,
+  preset?: PeriodPreset,
+  customRange?: { start: string; end: string },
+) {
+  const sourceMaxDate = await getNeonMaxDate(env);
+  if (!sourceMaxDate) throw new Error('Neon belum memiliki data. Jalankan sync dulu.');
+
+  const range = customRange
+    ? { start: customRange.start, end: customRange.end, label: 'Custom', preset: 'CUSTOM' as const }
+    : preset
+      ? resolvePreset(preset, sourceMaxDate)
+      : defaultPeriod(sourceMaxDate);
+
+  const shiftMonth = (isoDate: string, months: number) => {
+    const [year, month, day] = isoDate.split('-').map(Number);
+    const target = new Date(Date.UTC(year, month - 1 + months, 1));
+    const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+    return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, '0')}-${String(Math.min(day, lastDay)).padStart(2, '0')}`;
+  };
+
+  const previousRange = {
+    start: shiftMonth(range.start, -1),
+    end: shiftMonth(range.end, -1),
+  };
+
+  const periodDays = Math.max(
+    1,
+    Math.round(
+      (new Date(range.end + 'T00:00:00').getTime() - new Date(range.start + 'T00:00:00').getTime()) / 86400000,
+    ) + 1,
+  );
+
+  const prevPrevEndDate = new Date(new Date(previousRange.start + 'T00:00:00').getTime() - 86400000);
+  const prevPrevStartDate = new Date(prevPrevEndDate.getTime() - (periodDays - 1) * 86400000);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const windowStart = iso(prevPrevStartDate);
+  const windowEnd = range.end;
+
+  const [sla, lm, fm, mm] = await Promise.all([
+    querySlaNeon(env, windowStart, windowEnd),
+    queryLmNeon(env, windowStart, windowEnd),
+    queryFmNeon(env, windowStart, windowEnd),
+    queryMmNeon(env, windowStart, windowEnd),
+  ]);
+
+  const sto = await readSheet(env, 'STO', 'A:I');
+
+  return buildRegionDashboardFromSources(env, { sla, sto, lm, fm, mm }, preset, customRange);
 }
