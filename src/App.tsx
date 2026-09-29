@@ -144,7 +144,7 @@ export default function App() {
     if (showLoading) setLoading(true);
     if (manual) setRefreshing(true);
     try {
-      const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual || ensurePeriodSnapshot);
+      const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual);
       if (seq === refreshSeq.current) {
         setDashboard(result.data);
         setDashboardUpdatedAt(result.updatedAt);
