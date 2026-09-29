@@ -3,7 +3,7 @@ import { buildRegionDashboard, buildRegionDashboardFromD1, buildRegionDashboardF
 import type { PeriodPreset } from './period';
 import { fullSync, incrementalSync, syncChunk, type SyncEnv } from './sync';
 import { hasD1Data, hasNeonData, type QueryEnv, type NeonQueryEnv } from './query';
-import { testNeonConnection, getNeonTableCounts, type NeonEnv } from './neon'; import { neonSyncChunk, neonGetSyncState, type NeonSyncEnv } from './neon-sync';
+import { testNeonConnection, getNeonTableCounts, type NeonEnv } from './neon'; import { neonGetSyncState, type NeonSyncEnv } from './neon-sync';
 
 export interface Env {
   ALLOWED_ORIGIN?: string;
@@ -228,14 +228,11 @@ async function runRefreshJob(
 ) {
   try {
     // ============================================================
-    // STEP 1: SYNC dari Google Sheets → D1 (hanya new rows)
+    // STEP 1: SYNC dari Google Sheets → Neon (hanya new rows)
     // ------------------------------------------------------------
-    // Tanpa step ini, refresh hanya rebuild snapshot dari D1 yang
-    // datanya belum update sejak cron terakhir. Sekarang setiap klik
-    // Refresh Data akan trigger sync dulu.
-    //
-    // Kalau sync gagal (misal Google API error), kita lanjut ke
-    // rebuild dari D1 existing — jangan fail total.
+    // Neon adalah authority untuk raw data dan sync position.
+    // Jika sync gagal, snapshot lama tetap dapat dipakai sebagai
+    // fallback sehingga refresh tidak merusak data yang sudah ada.
     // ============================================================
     try {
       const syncResults = await incrementalSync(env as SyncEnv);
@@ -245,7 +242,7 @@ async function runRefreshJob(
     }
 
     // ============================================================
-    // STEP 2: Rebuild snapshot dari D1 (yang sudah ter-update)
+    // STEP 2: Rebuild snapshot dari Neon (yang sudah ter-update)
     // ============================================================
     const result = await rebuildAndPersist(
       env,
@@ -337,8 +334,8 @@ export default {
         const maxRows = parseInt(url.searchParams.get('maxRows') || '1000', 10);
         if (!sheetName)
           return json({ ok: false, error: 'sheet wajib diisi' }, 400, origin);
-        const result = await neonSyncChunk(
-          env as NeonSyncEnv,
+        const result = await syncChunk(
+          env as SyncEnv,
           sheetName,
           startRow,
           maxRows,
@@ -376,8 +373,6 @@ export default {
     // CHUNKED SYNC
     // ============================================================
     if (url.pathname === '/api/sync/sheet') {
-      if (!env.DB)
-        return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
       const sheetName = url.searchParams.get('sheet');
       const startRow = parseInt(url.searchParams.get('startRow') || '2', 10);
       const maxRows = parseInt(url.searchParams.get('maxRows') || '1000', 10);
@@ -413,8 +408,6 @@ export default {
     // FULL / INCREMENTAL SYNC
     // ============================================================
     if (url.pathname === '/api/sync') {
-      if (!env.DB)
-        return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
       const mode = url.searchParams.get('mode') === 'full' ? 'full' : 'incremental';
       try {
         const result =
@@ -438,13 +431,9 @@ export default {
     // SYNC STATE
     // ============================================================
     if (url.pathname === '/api/sync/state') {
-      if (!env.DB)
-        return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
       try {
-        const rows = await env.DB.prepare(
-          `SELECT sheet, last_row, total_rows, last_synced_at, last_status, last_error FROM sheet_sync_state ORDER BY sheet`,
-        ).all();
-        return json({ ok: true, state: rows.results }, 200, origin);
+        const rows = await neonGetSyncState(env as NeonSyncEnv);
+        return json({ ok: true, state: rows }, 200, origin);
       } catch (err) {
         return json(
           {
@@ -716,7 +705,7 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    if (!env.DB) return;
+    if (!env.NEON_DATABASE_URL) return;
     ctx.waitUntil(
       incrementalSync(env as SyncEnv)
         .then((result) => {
