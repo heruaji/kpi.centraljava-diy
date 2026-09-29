@@ -13,6 +13,55 @@ export type ExportOptions = {
   meta?: Array<{ label: string; value: string }>;
 };
 
+/** Convert raw cell value: number untuk angka murni, string untuk % dan teks. */
+function toCellValue(raw: unknown): string | number {
+  if (raw === null || raw === undefined) return '';
+  if (typeof raw === 'number') return Number.isFinite(raw) ? raw : '';
+  if (typeof raw === 'boolean') return raw ? 'Ya' : 'Tidak';
+  if (typeof raw !== 'string') return String(raw);
+
+  const s = raw.trim();
+  if (!s || s === '—' || s === '-' || s === '–' || s === 'n/a' || s === 'N/A') return '';
+
+  // String dengan % → tetap string (persentase)
+  if (s.endsWith('%')) return s;
+
+  // Handle prefix + (mis. "+2.50")
+  let normalized = s.startsWith('+') ? s.slice(1) : s;
+
+  // Format ID dengan titik ribuan: "1.234" atau "1.234,56"
+  if (/^-?\d{1,3}(\.\d{3})+(,\d+)?$/.test(normalized)) {
+    normalized = normalized.replace(/\./g, '').replace(',', '.');
+  } else if (/^-?\d+,\d+$/.test(normalized)) {
+    // Format ID tanpa ribuan tapi pakai koma desimal: "1,5"
+    normalized = normalized.replace(',', '.');
+  }
+
+  // Parse sebagai number kalau memang numeric murni
+  if (/^-?\d+(\.\d+)?$/.test(normalized)) {
+    const n = Number(normalized);
+    if (Number.isFinite(n)) return n;
+  }
+
+  // Bukan numeric → kembalikan string asli
+  return s;
+}
+
+/** Helper untuk format function di kolom persen. Output: "98.32%" */
+export function fmtPct(v: unknown): string | number {
+  if (v === null || v === undefined || v === '—') return '';
+  const n = typeof v === 'number' ? v : Number(v);
+  if (!Number.isFinite(n)) return '';
+  return `${n.toFixed(2)}%`;
+}
+
+/** Helper untuk format function di kolom angka murni. Output: number */
+export function fmtNum(v: unknown): string | number {
+  if (v === null || v === undefined || v === '—') return '';
+  const n = typeof v === 'number' ? v : Number(v);
+  return Number.isFinite(n) ? n : '';
+}
+
 export function exportToExcel<T = any>(
   columns: ExportColumn<T>[],
   rows: T[],
@@ -28,19 +77,12 @@ export function exportToExcel<T = any>(
       } else {
         raw = row[col.value as keyof T];
       }
-
-      if (col.format) {
-        return col.format(raw, row, rowIndex);
-      }
-
-      if (raw === null || raw === undefined) return '';
-      if (typeof raw === 'number') return raw;
-      if (typeof raw === 'boolean') return raw ? 'Ya' : 'Tidak';
-      return String(raw);
+      const formatted = col.format ? col.format(raw, row, rowIndex) : raw;
+      return toCellValue(formatted);
     });
   });
 
-  const aoa: (string | number | null)[][] = [];
+  const aoa: (string | number)[][] = [];
 
   if (options.meta && options.meta.length > 0) {
     options.meta.forEach((m) => {
