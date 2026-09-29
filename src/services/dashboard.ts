@@ -93,17 +93,19 @@ export async function getRegionDashboard(
     ? `start=${encodeURIComponent(custom.start)}&end=${encodeURIComponent(custom.end)}`
     : `period=${period}`;
 
-  // Fast path: coba non-refresh dulu — kalau snapshot sudah ada, ini instan.
-  // Berlaku baik untuk refresh manual maupun auto-transition.
-  try {
-    return await fetchSnapshot(query);
-  } catch (err) {
-    const message = err instanceof Error ? err.message : '';
-    const needsSnapshot = message.toLowerCase().includes('belum memiliki snapshot');
-    // Kalau bukan karena snapshot belum ada, ini error lain → lempar.
-    if (!needsSnapshot) throw err;
-    // Kalau snapshot belum ada dan user tidak minta refresh, tetap lanjut
-    // ke refresh path — kita asumsikan user ingin data ini tampil.
+  // Fast path: HANYA dipakai kalau user TIDAK minta refresh.
+  // Kalau refresh=true (mis. ganti preset, atau klik Refresh Data),
+  // kita skip fast path supaya snapshot di-rebuild dari source terbaru.
+  if (!refresh) {
+    try {
+      return await fetchSnapshot(query);
+    } catch (err) {
+      const message = err instanceof Error ? err.message : '';
+      const needsSnapshot = message.toLowerCase().includes('belum memiliki snapshot');
+      // Kalau bukan karena snapshot belum ada, ini error lain → lempar.
+      if (!needsSnapshot) throw err;
+      // Kalau snapshot belum ada, tetap lanjut ke refresh path.
+    }
   }
 
   // Snapshot belum ada → trigger background refresh.
