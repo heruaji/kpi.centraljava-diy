@@ -334,7 +334,7 @@ const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row
     const m=mile.toUpperCase();
     const volumeKey=`TOTAL_PAKET_${m}_${suffix}`;
     const manpowerKey=`TOTAL_MP_${m}_${suffix}`;
-    const calc=(rows:Row[])=>{
+const calc=(rows:Row[])=>{
       if(!rows.length) return null;
       const byDate=new Map<string,{v:number;m:number}>();
       for(const r of rows){
@@ -347,13 +347,18 @@ const productivitySet=(items:Row[],previousItems:Row[],previousPreviousItems:Row
       }
       if(!byDate.size) return null;
       let totalV=0, totalM=0;
-      for(const x of byDate.values()){ totalV+=x.v; totalM+=x.m>0?x.m:1; }
+      for(const x of byDate.values()){
+        if(x.v===0 && x.m===0) continue;
+        totalV+=x.v;
+        totalM+=x.m>0?x.m:1;
+      }
       return totalM>0?totalV/totalM:null;
     };
     const calcDay=(rows:Row[])=>{
       if(!rows.length) return null;
       const v=sum(rows,volumeKey);
       const m=sum(rows,manpowerKey);
+      if(v===0 && m===0) return null;
       return ratio(v,m>0?m:1);
     };
     const dates=[...new Set(items.map(r=>r.__date as string).filter(Boolean))].sort();
