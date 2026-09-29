@@ -1,5 +1,5 @@
 // worker/src/sync.ts
-import { readRangeRaw, readSheet, type EnvSource, type Row } from './data-source';
+import { getSheetGridRowCount, readRangeRaw, readSheet, type EnvSource, type Row } from './data-source';
 import {
   neonGetSyncStateForSheet,
   neonSetSyncState,
@@ -125,10 +125,26 @@ export async function incrementalSync(
     try {
       const state = await neonGetSyncStateForSheet(env, def.sheet);
       const lastRow = state?.last_row ?? 1;
+      const rowCount = await getSheetGridRowCount(env, def.sheet);
+
+      if (lastRow >= rowCount) {
+        await neonSetSyncState(env, def.sheet, {
+          status: 'OK',
+          error: null,
+        });
+        results.push({
+          sheet: def.sheet,
+          newRows: 0,
+          validRows: 0,
+          neonWritten: 0,
+          lastRow,
+        });
+        continue;
+      }
 
       const [headerValues, newValues] = await Promise.all([
         readRangeRaw(env, def.sheet, `A1:${def.maxColumn}1`),
-        readRangeRaw(env, def.sheet, `A${lastRow + 1}:${def.maxColumn}`),
+        readRangeRaw(env, def.sheet, `A${lastRow + 1}:${def.maxColumn}${rowCount}`),
       ]);
 
       if (newValues.length === 0) {
@@ -206,7 +222,18 @@ export async function syncChunk(
   requireNeon(env);
 
   const def = getSheetDef(sheetName);
-  const endRow = startRow + maxRows - 1;
+  const rowCount = await getSheetGridRowCount(env, def.sheet);
+  if (startRow > rowCount) {
+    await neonSetSyncState(env, def.sheet, {
+      lastRow: rowCount,
+      totalRows: Math.max(0, rowCount - 1),
+      status: 'OK',
+      error: null,
+    });
+    return { sheet: def.sheet, synced: 0, hasMore: false, nextRow: startRow };
+  }
+
+  const endRow = Math.min(startRow + maxRows - 1, rowCount);
 
   const [headerValues, dataValues] = await Promise.all([
     readRangeRaw(env, def.sheet, `A1:${def.maxColumn}1`),
@@ -215,7 +242,7 @@ export async function syncChunk(
 
   const rows = rowsFromRaw(headerValues, dataValues);
   const synced = await syncRowsToNeon(env, def, rows);
-  const hasMore = dataValues.length === maxRows;
+  const hasMore = endRow < rowCount && dataValues.length === maxRows;
   const nextRow = endRow + 1;
 
   await neonSetSyncState(env, def.sheet, {
