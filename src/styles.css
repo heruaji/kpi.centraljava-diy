@@ -2578,3 +2578,27 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   flex-shrink: 0;
   align-self: flex-start;
 }
+/* KPI: function tabs row — tabs di kiri, tombol Kembali di kanan */
+.kpi-tabs-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+.kpi-tabs-row .kpi-function-tabs {
+  /* tetap seperti semula */
+}
+.kpi-tabs-row .back-scope.back-nav {
+  margin-left: auto;
+  flex-shrink: 0;
+}
+@media (max-width: 760px) {
+  .kpi-tabs-row {
+    align-items: stretch;
+  }
+  .kpi-tabs-row .back-scope.back-nav {
+    margin-left: 0;
+  }
+}
