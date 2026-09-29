@@ -20,7 +20,7 @@ const excelDate = (v: unknown): string | null => {
 const normHub = (v: unknown) =>
   String(v || '').trim().toLowerCase().replace(/^t?\d+\s*-\s*/, '');
 
-export export type SheetDef = {
+export export export type SheetDef = {
   sheet: string;
   table: string;
   maxColumn: string;
@@ -28,7 +28,7 @@ export export type SheetDef = {
   extractDate: (row: Row) => string | null;
 };
 
-export export const SHEETS: SheetDef[] = [
+export export export const SHEETS: SheetDef[] = [
   {
     sheet: 'SLA',
     table: 'sla_rows',
@@ -79,6 +79,12 @@ export export const SHEETS: SheetDef[] = [
     },
   },
 ];
+
+export function getSheetDef(sheet: string): SheetDef {
+  const def = SHEETS.find((item) => item.sheet === sheet);
+  if (!def) throw new Error(`Sheet tidak dikenal: ${sheet}`);
+  return def;
+}
 
 /**
  * Batch upsert rows ke Neon pakai tagged template + UNNEST.
@@ -206,62 +212,49 @@ export async function neonUpsertBatch(
   return total;
 }
 
-/**
- * Sync chunk dari 1 sheet → Neon.
- */
-export async function neonSyncChunk(
+export async function neonGetSyncStateForSheet(
   env: NeonSyncEnv,
-  sheetName: string,
-  startRow: number,
-  maxRows: number = 1000,
-): Promise<{
-  sheet: string;
-  synced: number;
-  hasMore: boolean;
-  nextRow: number;
-}> {
-  const def = SHEETS.find((s) => s.sheet === sheetName);
-  if (!def) throw new Error(`Sheet tidak dikenal: ${sheetName}`);
-
-  const endRow = startRow + maxRows - 1;
-
-  // Baca header + data paralel
-  const [headerValues, dataValues] = await Promise.all([
-    readRangeRaw(env, def.sheet, `A1:${def.maxColumn}1`),
-    readRangeRaw(env, def.sheet, `A${startRow}:${def.maxColumn}${endRow}`),
-  ]);
-
-  const header = (headerValues[0] || []).map(String);
-  const rows: Row[] = dataValues
-    .filter((r) => r.some((v) => v !== '' && v != null))
-    .map((r) => Object.fromEntries(header.map((h, i) => [h, r[i] ?? null])));
-
-  // Upsert ke Neon
-  const synced = await neonUpsertBatch(
-    env,
-    def.table,
-    rows,
-    def.extractKey,
-    def.extractDate,
-  );
-
-  const hasMore = dataValues.length === maxRows;
-  const nextRow = endRow + 1;
-
-  // Update sheet_sync_state di Neon (tagged template)
+  sheet: string,
+) {
   const sql = getNeonClient(env);
+  const rows = await sql`
+    SELECT sheet, last_row, total_rows, last_synced_at, last_status, last_error
+    FROM sheet_sync_state
+    WHERE sheet = ${sheet}
+    LIMIT 1
+  `;
+  return rows[0] || null;
+}
+
+export async function neonSetSyncState(
+  env: NeonSyncEnv,
+  sheet: string,
+  state: {
+    lastRow?: number;
+    totalRows?: number;
+    status?: string;
+    error?: string | null;
+  },
+): Promise<void> {
+  const sql = getNeonClient(env);
+  const current = await neonGetSyncStateForSheet(env, sheet);
+  const lastRow = state.lastRow ?? current?.last_row ?? 1;
+  const totalRows = state.totalRows ?? current?.total_rows ?? Math.max(0, lastRow - 1);
+  const status = state.status ?? current?.last_status ?? 'OK';
+  const error = state.error === undefined ? current?.last_error ?? null : state.error;
+
   await sql`
-    INSERT INTO sheet_sync_state (sheet, last_row, total_rows, last_synced_at, last_status, last_error)
-    VALUES (${def.sheet}, ${endRow}, ${endRow - 1}, NOW(), 'OK', NULL)
+    INSERT INTO sheet_sync_state
+      (sheet, last_row, total_rows, last_synced_at, last_status, last_error)
+    VALUES
+      (${sheet}, ${lastRow}, ${totalRows}, NOW(), ${status}, ${error})
     ON CONFLICT (sheet) DO UPDATE SET
       last_row = EXCLUDED.last_row,
       total_rows = EXCLUDED.total_rows,
       last_synced_at = EXCLUDED.last_synced_at,
-      last_status = 'OK',
-      last_error = NULL
+      last_status = EXCLUDED.last_status,
+      last_error = EXCLUDED.last_error
   `;
-
-  return { sheet: def.sheet, synced, hasMore, nextRow };
 }
 
 export async function neonGetSyncState(env: NeonSyncEnv) {
