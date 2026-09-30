@@ -172,11 +172,13 @@ export function exportToExcel<T = any>(
           break;
         case 'number':
           cell.t = 'n';
-          cell.z = '#,##0.##';
+          const v = cell.v as number;
+          cell.z = Number.isInteger(v) ? '#,##0' : '#,##0.##';
           break;
         case 'signed-number':
           cell.t = 'n';
-          cell.z = '+#,##0.###;-#,##0.###';
+          const v = cell.v as number;
+          cell.z = Number.isInteger(v) ? '+#,##0;-#,##0' : '+#,##0.##;-#,##0.##';
           break;
         default:
           break;
