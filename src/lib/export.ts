@@ -13,7 +13,6 @@ export type ExportColumn<T = any> = {
   header: string;
   value: keyof T | ((row: T, index: number) => unknown);
   format?: (value: unknown, row: T, index: number) => string | number | null;
-  /** Tipe sel untuk XLSX. Default: auto-detect dari header. */
   type?: ExportCellType;
 };
 
@@ -44,76 +43,58 @@ function parseNum(raw: unknown): number | null {
 }
 
 function parseDate(raw: unknown): Date | null {
-  if (raw instanceof Date) return isNaN(raw.getTime()) ? null : raw;
+  if (raw instanceof Date) {
+    if (isNaN(raw.getTime())) return null;
+    return new Date(Date.UTC(raw.getUTCFullYear(), raw.getUTCMonth(), raw.getUTCDate()));
+  }
   if (raw === null || raw === undefined) return null;
   if (typeof raw === 'number') {
     const ms = (raw - 25569) * 86400 * 1000;
     const d = new Date(ms);
-    return isNaN(d.getTime()) ? null : d;
+    if (isNaN(d.getTime())) return null;
+    return new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate()));
   }
   const s = String(raw).trim();
   if (!s || s === '—' || s === '-') return null;
   const iso = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
   if (iso) return new Date(Date.UTC(+iso[1], +iso[2] - 1, +iso[3]));
   const d = new Date(s);
-  return isNaN(d.getTime()) ? null : d;
+  if (isNaN(d.getTime())) return null;
+  return new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
 }
 
-// ================= Type detection =================
+/** Excel serial date (days since 1899-12-30). */
+function toExcelSerial(d: Date): number {
+  return d.getTime() / 86400000 + 25569;
+}
+
+// ================= Auto type detection =================
 
 function detectType(header: string): ExportCellType {
   const h = String(header).toLowerCase().trim();
 
   if (h === 'tanggal' || h === 'date' || h === 'periode') return 'date';
-
-  if (h === 'gap' || h === 'gap ke target') return 'signed-percent';
-
-  if (
-    h === 'sla' ||
-    h === 'sla aktif' ||
-    h === 'sla bulan lalu' ||
-    h === 'sla harian' ||
-    h === 'cod transferred' ||
-    h === 'backlog rate' ||
-    h === 'failed delivery rate' ||
-    h === 'cod transfer rate' ||
-    h === 'failed delivery' ||
-    h === 'cod transfer' ||
-    h === 'total score' ||
-    h === 'actual' ||
-    h === 'pencapaian' ||
-    h === 'penalty' ||
-    h === 'max penalty' ||
-    h === 'weight' ||
-    h.startsWith('kpi ') ||
-    h.endsWith(' rate') ||
-    h.endsWith('%')
-  ) {
-    return 'percent';
-  }
+  if (h === 'gap' || h === 'gap ke target' || h === 'perubahan') return 'signed-percent';
 
   if (
-    h === 'no' ||
-    h === 'rank' ||
-    h === 'volume' ||
-    h === 'backlog' ||
-    h === 'productivity' ||
-    h === 'performa sebelumnya' ||
-    h === 'sorter fm' ||
-    h === 'sorter lm' ||
-    h === 'kurir fm' ||
-    h === 'kurir lm' ||
-    h === 'ranking point' ||
-    h === 'jumlah gerai lm' ||
-    h === 'manpower lm' ||
-    h === 'manpower fm' ||
-    h.startsWith('volume paket') ||
-    h.startsWith('manpower ')
-  ) {
-    return 'number';
-  }
+    h === 'sla' || h === 'sla aktif' || h === 'sla bulan lalu' ||
+    h === 'cod transferred' || h === 'total score' || h === 'actual' ||
+    h === 'max penalty' || h === 'weight' ||
+    h.startsWith('kpi ') || h.endsWith(' rate') ||
+    h.includes('(pencapaian)')
+  ) return 'percent';
 
-  if (h === 'perubahan') return 'signed-percent';
+  if (
+    h === 'no' || h === 'rank' || h === 'volume' || h === 'backlog' ||
+    h === 'productivity' || h === 'performa sebelumnya' ||
+    h === 'sorter fm' || h === 'sorter lm' || h === 'kurir fm' || h === 'kurir lm' ||
+    h === 'ranking point' || h === 'jumlah gerai lm' ||
+    h === 'manpower lm' || h === 'manpower fm' ||
+    h === 'penalty' || h === 'total penalty' || h === 'target' ||
+    h === 'failed delivery' || h === 'cod transfer' ||
+    h.startsWith('volume paket') || h.startsWith('manpower ') ||
+    h.includes('(penalty)')
+  ) return 'number';
 
   return 'text';
 }
@@ -128,7 +109,7 @@ export function exportToExcel<T = any>(
   const headers = columns.map((c) => c.header);
   const types = columns.map((c) => c.type ?? detectType(c.header));
 
-  const dataRows: (string | number | Date)[][] = rows.map((row, rowIndex) =>
+  const dataRows: (string | number)[][] = rows.map((row, rowIndex) =>
     columns.map((col, colIdx) => {
       let raw: unknown;
       if (typeof col.value === 'function') {
@@ -138,20 +119,21 @@ export function exportToExcel<T = any>(
       }
       const formatted = col.format ? col.format(raw, row, rowIndex) : raw;
       const type = types[colIdx];
+      const fallback = formatted === null || formatted === undefined ? '' : String(formatted);
 
       if (type === 'date') {
         const d = parseDate(raw) ?? parseDate(formatted);
-        return d ?? '';
+        return d ? toExcelSerial(d) : '';
       }
       if (type === 'percent' || type === 'signed-percent') {
         const n = parseNum(formatted);
-        return n === null ? '' : n / 100;
+        return n === null ? fallback : n / 100;
       }
       if (type === 'number' || type === 'signed-number') {
         const n = parseNum(formatted);
-        return n === null ? '' : n;
+        return n === null ? fallback : n;
       }
-      return formatted === null || formatted === undefined ? '' : String(formatted);
+      return fallback;
     }),
   );
 
@@ -164,7 +146,7 @@ export function exportToExcel<T = any>(
   aoa.push(headers);
   dataRows.forEach((r) => aoa.push(r));
 
-  const worksheet = XLSX.utils.aoa_to_sheet(aoa, { cellDates: true });
+  const worksheet = XLSX.utils.aoa_to_sheet(aoa);
 
   const dataStartRow = headerRowIdx + 1;
   const dataEndRow = dataStartRow + rows.length - 1;
@@ -173,10 +155,11 @@ export function exportToExcel<T = any>(
       const addr = XLSX.utils.encode_cell({ r: R, c: C });
       const cell = worksheet[addr] as XLSX.CellObject | undefined;
       if (!cell || cell.v === '' || cell.v === undefined || cell.v === null) continue;
+      if (typeof cell.v !== 'number') continue;
       const type = types[C];
       switch (type) {
         case 'date':
-          cell.t = 'd';
+          cell.t = 'n';
           cell.z = 'dd/mm/yyyy';
           break;
         case 'percent':
@@ -204,14 +187,17 @@ export function exportToExcel<T = any>(
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, options.sheetName);
 
-  const maxWidths: number[] = headers.map((h) => String(h).length);
+  const maxWidths: number[] = headers.map((h) => Math.min(String(h).length, 22));
   dataRows.forEach((row) => {
     row.forEach((cell, idx) => {
-      const len = cell == null ? 0 : String(cell).length;
-      if (len > (maxWidths[idx] ?? 0)) maxWidths[idx] = len;
+      const len = cell == null || cell === '' ? 0 : String(cell).length;
+      if (len > maxWidths[idx]) maxWidths[idx] = len;
     });
   });
-  worksheet['!cols'] = maxWidths.map((w) => ({ wch: Math.min(Math.max(w + 2, 10), 40) }));
+  worksheet['!cols'] = maxWidths.map((w, i) => {
+    const min = types[i] === 'date' ? 10 : 8;
+    return { wch: Math.min(Math.max(w + 1, min), 20) };
+  });
 
   const filename = options.filename.endsWith('.xlsx')
     ? options.filename
