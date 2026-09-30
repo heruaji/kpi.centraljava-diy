@@ -2626,3 +2626,57 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
     margin-right: 0;
   }
 }
+/* ============================================================
+   Area Performance Comparison — match KPI LM table style
+   ============================================================ */
+.area-performance-table thead th,
+.area-performance-table tbody td {
+  border-right: 0 !important;
+}
+
+.area-performance-table thead th {
+  height: 42px !important;
+  padding: 0 14px !important;
+  background: var(--ct-card2) !important;
+  color: var(--ct-muted) !important;
+  border-bottom: 1px solid var(--ct-border) !important;
+  border-right: 0 !important;
+  border-top: 0 !important;
+  font-size: 10px !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+  letter-spacing: .05em !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+  line-height: 1.2 !important;
+}
+
+.area-performance-table thead th:nth-child(2) {
+  text-align: left !important;
+}
+
+.area-performance-table tbody td {
+  height: 46px !important;
+  padding: 8px 14px !important;
+  border-bottom: 1px solid var(--ct-border) !important;
+  border-right: 0 !important;
+  text-align: center !important;
+  vertical-align: middle !important;
+}
+
+.area-performance-table tbody td:nth-child(2) {
+  text-align: left !important;
+}
+
+.area-performance-table tbody tr:last-child td {
+  border-bottom: 0 !important;
+}
+
+/* Sembunyikan vertical border yang sebelumnya menempel di kolom 1 & terakhir */
+.area-performance-table th:first-child,
+.area-performance-table td:first-child,
+.area-performance-table th:last-child,
+.area-performance-table td:last-child {
+  border-left: 0 !important;
+}
