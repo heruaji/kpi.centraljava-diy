@@ -74,7 +74,7 @@ function detectType(header: string): ExportCellType {
   const h = String(header).toLowerCase().trim();
 
   if (h === 'tanggal' || h === 'date' || h === 'periode') return 'date';
-  if (h === 'gap' || h === 'gap ke target' || h === 'perubahan') return 'signed-percent';
+  if (h === 'gap' || h === 'gap ke target' || h === 'perubahan') return 'signed-percent'; if (h === 'target') return 'percent';
 
   if (
     h === 'sla' || h === 'sla aktif' || h === 'sla bulan lalu' ||
@@ -176,7 +176,7 @@ export function exportToExcel<T = any>(
           break;
         case 'signed-number':
           cell.t = 'n';
-          cell.z = '+#,##0.##;-#,##0.##';
+          cell.z = '+#,##0.###;-#,##0.###';
           break;
         default:
           break;
