@@ -170,16 +170,18 @@ export function exportToExcel<T = any>(
           cell.t = 'n';
           cell.z = '+0.##%;-0.##%';
           break;
-        case 'number':
+        case 'number': {
           cell.t = 'n';
-          const v = cell.v as number;
+          const num = cell.v as number;
           cell.z = Number.isInteger(num) ? '#,##0' : '#,##0.##';
           break;
-        case 'signed-number':
+        }
+        case 'signed-number': {
           cell.t = 'n';
-          const v = cell.v as number;
+          const num = cell.v as number;
           cell.z = Number.isInteger(num) ? '+#,##0;-#,##0' : '+#,##0.##;-#,##0.##';
           break;
+        }
         default:
           break;
       }
