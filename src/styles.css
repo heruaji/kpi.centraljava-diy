@@ -3419,3 +3419,53 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   font-weight: 700 !important;
   opacity: 1 !important;
 }
+/* ============================================================
+   Trend View Toggle (Daily/Weekly/Monthly)
+   ============================================================ */
+.trend-view-toggle {
+  display: inline-flex;
+  gap: 2px;
+  padding: 3px;
+  border: 1px solid var(--ct-border);
+  border-radius: 7px;
+  background: var(--ct-card2);
+}
+
+.trend-view-toggle button {
+  height: 26px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 5px;
+  background: transparent;
+  color: var(--ct-muted);
+  font: inherit;
+  font-size: 10px;
+  font-weight: 650;
+  cursor: pointer;
+  transition: background .12s ease, color .12s ease;
+  white-space: nowrap;
+}
+
+.trend-view-toggle button:hover {
+  background: var(--ct-card);
+  color: var(--ct-text);
+}
+
+.trend-view-toggle button.active {
+  background: var(--ct-card);
+  color: var(--ct-text);
+  font-weight: 700;
+  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+}
+
+.theme-dark .trend-view-toggle button.active {
+  background: var(--ct-active, rgba(244, 63, 94, 0.16));
+  color: #fff;
+}
+
+@media (max-width: 760px) {
+  .trend-view-toggle button {
+    padding: 0 8px;
+    font-size: 9px;
+  }
+}
