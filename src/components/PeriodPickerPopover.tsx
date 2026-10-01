@@ -77,10 +77,10 @@ useEffect(() => {
   };
 
   const handleSelect = (range: DateRange | undefined) => {
-    // Klik pertama: set start, tunggu end.
-    // Klik kedua: set end, auto-apply + close + reset.
     setDraftRange(range);
-    if (range?.from && range?.to) {
+    // Auto-apply HANYA kalau from dan to berbeda tanggal
+    // (klik kedua benar-benar selesai)
+    if (range?.from && range?.to && dateToIso(range.from) !== dateToIso(range.to)) {
       onChange(periodPreset, {
         start: dateToIso(range.from),
         end: dateToIso(range.to),
