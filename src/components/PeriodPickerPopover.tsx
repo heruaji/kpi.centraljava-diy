@@ -3,7 +3,6 @@ import { useEffect, useRef, useState } from 'react';
 import { CalendarDays, ChevronDown } from 'lucide-react';
 import { DayPicker, type DateRange } from 'react-day-picker';
 import { id as idLocale } from 'date-fns/locale';
-import 'react-day-picker/dist/style.css';
 
 export type PeriodPreset =
   | 'TODAY' | 'YESTERDAY' | 'LAST_7' | 'LAST_30'
