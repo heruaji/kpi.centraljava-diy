@@ -293,8 +293,67 @@ export default function App() {
     courierFm:{label:'Kurir FM',field:'productivityCourierFm',target:115,tier2:88,direction:'HIGHER',percent:false},
     courierLm:{label:'Kurir LM',field:'productivityCourierLm',target:51,tier2:40,direction:'HIGHER',percent:false},
   } as const;
-  const activeControlTrend=controlTrendConfig[trendMetric];
-  const controlTrendValues=displayedTrend.map((point:any)=>point[activeControlTrend.field] as number|null|undefined).filter((v):v is number=>v!=null);
+const activeControlTrend=controlTrendConfig[trendMetric];
+// Aggregate trend by week/month
+const aggregateTrend = (data: any[], view: 'daily'|'weekly'|'monthly') => {
+  if (view === 'daily' || data.length === 0) return data.map(p => ({ ...p, displayLabel: null }));
+  const groups = new Map<string, any[]>();
+  if (view === 'weekly') {
+    data.forEach(p => {
+      const d = new Date(String(p.date) + 'T00:00:00Z');
+      const dow = d.getUTCDay();
+      const diff = dow === 0 ? -6 : 1 - dow;
+      d.setUTCDate(d.getUTCDate() + diff);
+      const key = d.toISOString().slice(0, 10);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(p);
+    });
+  } else {
+    data.forEach(p => {
+      const key = String(p.date).slice(0, 7);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(p);
+    });
+  }
+  const fmtShort = (iso: string) => new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(iso + 'T00:00:00Z')).replace(/\./g, '');
+  const fmtMonth = (iso: string) => new Intl.DateTimeFormat('id-ID', { month: 'short', year: 'numeric' }).format(new Date(iso + 'T00:00:00Z')).replace(/\./g, '');
+  return Array.from(groups.entries()).map(([key, items]) => {
+    const totalVolume = items.reduce((s, p) => s + (Number(p.volume) || 0), 0);
+    const w = (k: string) => {
+      const num = items.reduce((s, p) => s + (Number(p[k]) || 0) * (Number(p.volume) || 0), 0);
+      return totalVolume > 0 ? num / totalVolume : null;
+    };
+    const avg = (k: string) => {
+      const vals = items.map(p => Number(p[k])).filter(v => Number.isFinite(v));
+      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    };
+    const first = String(items[0].date);
+    const last = String(items[items.length - 1].date);
+    const displayLabel = view === 'weekly'
+      ? first === last ? fmtShort(first) : `${fmtShort(first).split(' ')[0]}–${fmtShort(last)}`
+      : fmtMonth(key + '-01');
+    return {
+      date: key,
+      displayLabel,
+      sla: w('sla'),
+      volume: totalVolume,
+      codTransferRate: w('codTransferRate'),
+      failedDeliveryRate: w('failedDeliveryRate'),
+      backlogRate: w('backlogRate'),
+      productivitySorterFm: avg('productivitySorterFm'),
+      productivitySorterLm: avg('productivitySorterLm'),
+      productivityCourierFm: avg('productivityCourierFm'),
+      productivityCourierLm: avg('productivityCourierLm'),
+      kpiLm: avg('kpiLm'),
+      kpiFm: avg('kpiFm'),
+      kpiMm: avg('kpiMm'),
+      productivityVolume: items.reduce((s, p) => s + (Number(p.productivityVolume) || 0), 0),
+      productivityManpower: items.reduce((s, p) => s + (Number(p.productivityManpower) || 0), 0),
+    };
+  });
+};
+const displayedTrend = aggregateTrend(trend, trendView);
+const controlTrendValues=displayedTrend.map((point:any)=>point[activeControlTrend.field] as number|null|undefined).filter((v):v is number=>v!=null);
   const controlTrendPeak=Math.max(activeControlTrend.target,activeControlTrend.tier2,...controlTrendValues);
   const controlTrendAdaptivePercent=trendMetric==='backlog'||trendMetric==='failed';
   const controlTrendScaleMax=controlTrendAdaptivePercent
@@ -418,65 +477,6 @@ export default function App() {
     ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
     : 'MTD • Memuat...';
   const periodSlug = activeRange ? `${activeRange.start}_${activeRange.end}` : null;
-  // Aggregate trend by week/month
-const aggregateTrend = (data: any[], view: 'daily'|'weekly'|'monthly') => {
-  if (view === 'daily' || data.length === 0) return data.map(p => ({ ...p, displayLabel: null }));
-  const groups = new Map<string, any[]>();
-  if (view === 'weekly') {
-    data.forEach(p => {
-      const d = new Date(String(p.date) + 'T00:00:00Z');
-      const dow = d.getUTCDay();
-      const diff = dow === 0 ? -6 : 1 - dow;
-      d.setUTCDate(d.getUTCDate() + diff);
-      const key = d.toISOString().slice(0, 10);
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(p);
-    });
-  } else {
-    data.forEach(p => {
-      const key = String(p.date).slice(0, 7);
-      if (!groups.has(key)) groups.set(key, []);
-      groups.get(key)!.push(p);
-    });
-  }
-  const fmtShort = (iso: string) => new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(iso + 'T00:00:00Z')).replace(/\./g, '');
-  const fmtMonth = (iso: string) => new Intl.DateTimeFormat('id-ID', { month: 'short', year: 'numeric' }).format(new Date(iso + 'T00:00:00Z')).replace(/\./g, '');
-  return Array.from(groups.entries()).map(([key, items]) => {
-    const totalVolume = items.reduce((s, p) => s + (Number(p.volume) || 0), 0);
-    const w = (k: string) => {
-      const num = items.reduce((s, p) => s + (Number(p[k]) || 0) * (Number(p.volume) || 0), 0);
-      return totalVolume > 0 ? num / totalVolume : null;
-    };
-    const avg = (k: string) => {
-      const vals = items.map(p => Number(p[k])).filter(v => Number.isFinite(v));
-      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
-    };
-    const first = String(items[0].date);
-    const last = String(items[items.length - 1].date);
-    const displayLabel = view === 'weekly'
-      ? first === last ? fmtShort(first) : `${fmtShort(first).split(' ')[0]}–${fmtShort(last)}`
-      : fmtMonth(key + '-01');
-    return {
-      date: key,
-      displayLabel,
-      sla: w('sla'),
-      volume: totalVolume,
-      codTransferRate: w('codTransferRate'),
-      failedDeliveryRate: w('failedDeliveryRate'),
-      backlogRate: w('backlogRate'),
-      productivitySorterFm: avg('productivitySorterFm'),
-      productivitySorterLm: avg('productivitySorterLm'),
-      productivityCourierFm: avg('productivityCourierFm'),
-      productivityCourierLm: avg('productivityCourierLm'),
-      kpiLm: avg('kpiLm'),
-      kpiFm: avg('kpiFm'),
-      kpiMm: avg('kpiMm'),
-      productivityVolume: items.reduce((s, p) => s + (Number(p.productivityVolume) || 0), 0),
-      productivityManpower: items.reduce((s, p) => s + (Number(p.productivityManpower) || 0), 0),
-    };
-  });
-};
-const displayedTrend = aggregateTrend(trend, trendView);
 
   const territoryNav = (() => {
     if (activeModule === 'sla') return {
