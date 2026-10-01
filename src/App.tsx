@@ -544,7 +544,7 @@ export default function App() {
                 setSlaBranchDetailId(null);
                 setKpiDailyDate(null);
               }}
-            />
+            </div>
         </header>
 
         <section className="content">
