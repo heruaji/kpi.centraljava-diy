@@ -49,16 +49,6 @@ function formatDateShort(d: Date): string {
     .replace(/\./g, '');
 }
 
-function formatDateShort(d: Date): string {
-  return new Intl.DateTimeFormat('id-ID', {
-    day: '2-digit',
-    month: 'short',
-    year: 'numeric',
-  })
-    .format(d)
-    .replace(/\./g, '');
-}
-
 export function PeriodPickerPopover({
   periodPreset,
   customRange,
