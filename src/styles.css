@@ -2680,3 +2680,59 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .area-performance-table td:last-child {
   border-left: 0 !important;
 }
+/* ============================================================
+   Area Performance Comparison — fixed column widths
+   Header & body align perfect
+   ============================================================ */
+.area-performance-table table {
+  table-layout: fixed !important;
+  width: 100% !important;
+}
+
+/* Kolom Rank — sempit */
+.area-performance-table col:nth-child(1),
+.area-performance-table th:nth-child(1),
+.area-performance-table td:nth-child(1) {
+  width: 56px !important;
+  min-width: 56px !important;
+  max-width: 56px !important;
+  text-align: center !important;
+}
+
+/* Kolom Nama Area — lebar */
+.area-performance-table col:nth-child(2),
+.area-performance-table th:nth-child(2),
+.area-performance-table td:nth-child(2) {
+  width: 190px !important;
+  text-align: left !important;
+}
+
+/* Kolom metric (SLA, COD, Failed, Backlog, Sorter FM, Sorter LM, Kurir FM, Kurir LM) — sama rata */
+.area-performance-table col:nth-child(n+3):nth-child(-n+10),
+.area-performance-table th:nth-child(n+3):nth-child(-n+10),
+.area-performance-table td:nth-child(n+3):nth-child(-n+10) {
+  width: auto !important;
+  text-align: center !important;
+}
+
+/* Kolom Ranking Point — lebih lebar */
+.area-performance-table col:nth-child(11),
+.area-performance-table th:nth-child(11),
+.area-performance-table td:nth-child(11) {
+  width: 110px !important;
+  text-align: center !important;
+}
+
+/* Pastikan header & body pakai vertical-align yang sama */
+.area-performance-table thead th,
+.area-performance-table tbody td {
+  vertical-align: middle !important;
+  text-align: center !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
+}
+
+.area-performance-table thead th:nth-child(2),
+.area-performance-table tbody td:nth-child(2) {
+  text-align: left !important;
+}
