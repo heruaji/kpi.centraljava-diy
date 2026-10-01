@@ -3056,3 +3056,58 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   background: rgba(99, 102, 241, 0.24) !important;
   color: #e0e7ff !important;
 }
+/* ============================================================
+   Period Picker — constrain calendar width
+   ============================================================ */
+.app-shell .period-picker-popover {
+  overflow: hidden !important;
+  width: 360px !important;
+  max-width: calc(100vw - 24px) !important;
+}
+
+.app-shell .period-picker-cal {
+  width: 100% !important;
+  max-width: 100% !important;
+  overflow: hidden !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .period-picker-cal .rdp-root,
+.app-shell .period-picker-cal .rdp-months,
+.app-shell .period-picker-cal .rdp-month,
+.app-shell .period-picker-cal .rdp-month_grid {
+  width: 100% !important;
+  max-width: 100% !important;
+  min-width: 0 !important;
+  box-sizing: border-box !important;
+}
+
+.app-shell .period-picker-cal .rdp-month_grid {
+  table-layout: fixed !important;
+  border-collapse: collapse !important;
+}
+
+.app-shell .period-picker-cal .rdp-weekdays,
+.app-shell .period-picker-cal .rdp-week {
+  display: grid !important;
+  grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  width: 100% !important;
+}
+
+.app-shell .period-picker-cal .rdp-day,
+.app-shell .period-picker-cal .rdp-weekday {
+  min-width: 0 !important;
+}
+
+.app-shell .period-picker-cal .rdp-day_button {
+  width: 100% !important;
+  max-width: 100% !important;
+  aspect-ratio: 1 / 1 !important;
+  height: auto !important;
+  font-size: 11px !important;
+}
+
+.app-shell .period-picker-cal .rdp-caption,
+.app-shell .period-picker-cal .rdp-month_caption {
+  width: 100% !important;
+}
