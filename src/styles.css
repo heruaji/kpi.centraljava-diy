@@ -3212,3 +3212,80 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   background: rgba(99, 102, 241, 0.24) !important;
   color: #c7d2fe !important;
 }
+/* ============================================================
+   Period Picker — footer with range info + apply button
+   ============================================================ */
+.app-shell .period-picker-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px 4px 4px;
+  margin-top: 8px;
+  border-top: 1px solid var(--ct-border, #26394b);
+}
+
+.app-shell .period-picker-range-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: baseline;
+  gap: 5px;
+  font-size: 10px;
+  color: var(--ct-muted, #a7b8ca);
+  line-height: 1.3;
+}
+
+.app-shell .period-picker-range-info > span {
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  color: var(--ct-soft, #7590a8);
+  flex-shrink: 0;
+}
+
+.app-shell .period-picker-range-info > strong {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--ct-text, #f5f7fb);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.app-shell .period-picker-range-info > em {
+  font-style: normal;
+  font-size: 9px;
+  color: var(--ct-soft, #7590a8);
+  white-space: nowrap;
+}
+
+.app-shell .period-picker-apply {
+  flex-shrink: 0;
+  height: 30px;
+  padding: 0 14px;
+  border: 1px solid #6366f1;
+  border-radius: 7px;
+  background: #6366f1;
+  color: #ffffff;
+  font: inherit;
+  font-size: 10px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background .12s ease, border-color .12s ease, opacity .12s ease;
+  white-space: nowrap;
+}
+
+.app-shell .period-picker-apply:hover:not(:disabled) {
+  background: #4f46e5;
+  border-color: #4f46e5;
+}
+
+.app-shell .period-picker-apply:disabled {
+  background: transparent;
+  border-color: var(--ct-border, #26394b);
+  color: var(--ct-soft, #7590a8);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
