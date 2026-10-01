@@ -32,11 +32,14 @@ function isoToDate(iso: string | undefined): Date | undefined {
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 }
 
-function dateToIso(d: Date): string {
-  const y = d.getFullYear();
-  const m = String(d.getMonth() + 1).padStart(2, '0');
-  const day = String(d.getDate()).padStart(2, '0');
-  return `${y}-${m}-${day}`;
+function formatDateShort(d: Date): string {
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+    .format(d)
+    .replace(/\./g, '');
 }
 
 export function PeriodPickerPopover({
@@ -78,18 +81,22 @@ useEffect(() => {
 
   const handleSelect = (range: DateRange | undefined) => {
     setDraftRange(range);
-    // Auto-apply HANYA kalau from dan to berbeda tanggal
-    // (klik kedua benar-benar selesai)
-    if (range?.from && range?.to && dateToIso(range.from) !== dateToIso(range.to)) {
-      onChange(periodPreset, {
-        start: dateToIso(range.from),
-        end: dateToIso(range.to),
-      });
-      window.setTimeout(() => {
-        setOpen(false);
-        setDraftRange(undefined);
-      }, 260);
-    }
+  };
+
+  const rangeComplete =
+    draftRange?.from && draftRange?.to
+      ? dateToIso(draftRange.from) !== dateToIso(draftRange.to) ||
+        !!draftRange.to
+      : false;
+
+  const handleApply = () => {
+    if (!draftRange?.from || !draftRange?.to) return;
+    onChange(periodPreset, {
+      start: dateToIso(draftRange.from),
+      end: dateToIso(draftRange.to),
+    });
+    setOpen(false);
+    setDraftRange(undefined);
   };
 
   const clearCustom = () => {
@@ -167,6 +174,35 @@ useEffect(() => {
               weekStartsOn={1}
               showOutsideDays={false}
             />
+          </div>
+
+          <div className="period-picker-footer">
+            <div className="period-picker-range-info">
+              {draftRange?.from && draftRange?.to ? (
+                <>
+                  <span>Terpilih:</span>
+                  <strong>
+                    {formatDateShort(draftRange.from)} — {formatDateShort(draftRange.to)}
+                  </strong>
+                </>
+              ) : draftRange?.from ? (
+                <>
+                  <span>Awal:</span>
+                  <strong>{formatDateShort(draftRange.from)}</strong>
+                  <em>· pilih tanggal akhir</em>
+                </>
+              ) : (
+                <em>Pilih tanggal awal lalu tanggal akhir</em>
+              )}
+            </div>
+            <button
+              type="button"
+              className="period-picker-apply"
+              disabled={!draftRange?.from || !draftRange?.to}
+              onClick={handleApply}
+            >
+              Tampilkan
+            </button>
           </div>
         </div>
       )}
