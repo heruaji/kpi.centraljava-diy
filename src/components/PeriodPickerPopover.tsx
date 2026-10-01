@@ -32,6 +32,23 @@ function isoToDate(iso: string | undefined): Date | undefined {
   return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
 }
 
+function dateToIso(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
+function formatDateShort(d: Date): string {
+  return new Intl.DateTimeFormat('id-ID', {
+    day: '2-digit',
+    month: 'short',
+    year: 'numeric',
+  })
+    .format(d)
+    .replace(/\./g, '');
+}
+
 function formatDateShort(d: Date): string {
   return new Intl.DateTimeFormat('id-ID', {
     day: '2-digit',
