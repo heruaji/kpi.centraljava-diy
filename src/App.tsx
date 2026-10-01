@@ -78,6 +78,7 @@ export default function App() {
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [trendMetric, setTrendMetric] = useState<'sla'|'cod'|'failed'|'backlog'|'sorterFm'|'sorterLm'|'courierFm'|'courierLm'>('sla');
+  const [trendView, setTrendView] = useState<'daily'|'weekly'|'monthly'>('daily');
   const [selectedAreaId, setSelectedAreaId] = useState<string | null>(null);
   const [controlAreaCategory, setControlAreaCategory] = useState<'sla'|'kpi'|'productivity'|'drivers'>('sla');
   const [controlAreaKpiFunction, setControlAreaKpiFunction] = useState<'LM'|'FM'|'MM'>('LM');
@@ -293,7 +294,7 @@ export default function App() {
     courierLm:{label:'Kurir LM',field:'productivityCourierLm',target:51,tier2:40,direction:'HIGHER',percent:false},
   } as const;
   const activeControlTrend=controlTrendConfig[trendMetric];
-  const controlTrendValues=trend.map(point=>point[activeControlTrend.field] as number|null|undefined).filter((v):v is number=>v!=null);
+  const controlTrendValues=displayedTrend.map((point:any)=>point[activeControlTrend.field] as number|null|undefined).filter((v):v is number=>v!=null);
   const controlTrendPeak=Math.max(activeControlTrend.target,activeControlTrend.tier2,...controlTrendValues);
   const controlTrendAdaptivePercent=trendMetric==='backlog'||trendMetric==='failed';
   const controlTrendScaleMax=controlTrendAdaptivePercent
@@ -417,6 +418,65 @@ export default function App() {
     ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
     : 'MTD • Memuat...';
   const periodSlug = activeRange ? `${activeRange.start}_${activeRange.end}` : null;
+  // Aggregate trend by week/month
+const aggregateTrend = (data: any[], view: 'daily'|'weekly'|'monthly') => {
+  if (view === 'daily' || data.length === 0) return data.map(p => ({ ...p, displayLabel: null }));
+  const groups = new Map<string, any[]>();
+  if (view === 'weekly') {
+    data.forEach(p => {
+      const d = new Date(String(p.date) + 'T00:00:00Z');
+      const dow = d.getUTCDay();
+      const diff = dow === 0 ? -6 : 1 - dow;
+      d.setUTCDate(d.getUTCDate() + diff);
+      const key = d.toISOString().slice(0, 10);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(p);
+    });
+  } else {
+    data.forEach(p => {
+      const key = String(p.date).slice(0, 7);
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key)!.push(p);
+    });
+  }
+  const fmtShort = (iso: string) => new Intl.DateTimeFormat('id-ID', { day: 'numeric', month: 'short' }).format(new Date(iso + 'T00:00:00Z')).replace(/\./g, '');
+  const fmtMonth = (iso: string) => new Intl.DateTimeFormat('id-ID', { month: 'short', year: 'numeric' }).format(new Date(iso + 'T00:00:00Z')).replace(/\./g, '');
+  return Array.from(groups.entries()).map(([key, items]) => {
+    const totalVolume = items.reduce((s, p) => s + (Number(p.volume) || 0), 0);
+    const w = (k: string) => {
+      const num = items.reduce((s, p) => s + (Number(p[k]) || 0) * (Number(p.volume) || 0), 0);
+      return totalVolume > 0 ? num / totalVolume : null;
+    };
+    const avg = (k: string) => {
+      const vals = items.map(p => Number(p[k])).filter(v => Number.isFinite(v));
+      return vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : null;
+    };
+    const first = String(items[0].date);
+    const last = String(items[items.length - 1].date);
+    const displayLabel = view === 'weekly'
+      ? first === last ? fmtShort(first) : `${fmtShort(first).split(' ')[0]}–${fmtShort(last)}`
+      : fmtMonth(key + '-01');
+    return {
+      date: key,
+      displayLabel,
+      sla: w('sla'),
+      volume: totalVolume,
+      codTransferRate: w('codTransferRate'),
+      failedDeliveryRate: w('failedDeliveryRate'),
+      backlogRate: w('backlogRate'),
+      productivitySorterFm: avg('productivitySorterFm'),
+      productivitySorterLm: avg('productivitySorterLm'),
+      productivityCourierFm: avg('productivityCourierFm'),
+      productivityCourierLm: avg('productivityCourierLm'),
+      kpiLm: avg('kpiLm'),
+      kpiFm: avg('kpiFm'),
+      kpiMm: avg('kpiMm'),
+      productivityVolume: items.reduce((s, p) => s + (Number(p.productivityVolume) || 0), 0),
+      productivityManpower: items.reduce((s, p) => s + (Number(p.productivityManpower) || 0), 0),
+    };
+  });
+};
+const displayedTrend = aggregateTrend(trend, trendView);
 
   const territoryNav = (() => {
     if (activeModule === 'sla') return {
@@ -635,12 +695,12 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
           {(selectedArea||selectedBranch||selectedKpi)&&<div className="control-scope-actions">{selectedKpi?<button className="back-scope back-nav" onClick={()=>setSelectedKpiKey(null)}>← Kembali ke Gerai</button>:selectedBranch?<button className="back-scope back-nav" onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null)}}>← Kembali ke Area</button>:<button className="back-scope back-nav" onClick={()=>{setSelectedAreaId(null);setControlAreaCategory('sla')}}>← Kembali ke Control Tower Region</button>}</div>}
 
           <div className="dashboard-grid">
-            {!selectedArea && !selectedBranch && !selectedKpi && <article className={`panel wide performance-trend-panel ${selectedArea ? 'scope-wide' : ''}`}><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>Region Trend</h3><small>Performa harian seluruh region pada periode aktif</small></div>{ <select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA Performance</option><option value="cod">COD Transferred</option><option value="failed">Failed Delivery</option><option value="backlog">Backlog Rate</option><option value="sorterFm">Sorter FM</option><option value="sorterLm">Sorter LM</option><option value="courierFm">Kurir FM</option><option value="courierLm">Kurir LM</option></select>}</div>
+            {!selectedArea && !selectedBranch && !selectedKpi && <article className={`panel wide performance-trend-panel ${selectedArea ? 'scope-wide' : ''}`}><div className="panel-title"><div><span>PERFORMANCE TREND</span><h3>Region Trend</h3><small>Performa {trendView==='daily'?'harian':trendView==='weekly'?'mingguan':'bulanan'} seluruh region pada periode aktif</small></div><div style={{display:'flex',alignItems:'center',gap:'8px'}}><div className="trend-view-toggle"><button type="button" className={trendView==='daily'?'active':''} onClick={()=>setTrendView('daily')}>Daily</button><button type="button" className={trendView==='weekly'?'active':''} onClick={()=>setTrendView('weekly')}>Weekly</button><button type="button" className={trendView==='monthly'?'active':''} onClick={()=>setTrendView('monthly')}>Monthly</button></div>{ <select className="trend-select" value={trendMetric} onChange={e=>setTrendMetric(e.target.value as typeof trendMetric)}><option value="sla">SLA Performance</option><option value="cod">COD Transferred</option><option value="failed">Failed Delivery</option><option value="backlog">Backlog Rate</option><option value="sorterFm">Sorter FM</option><option value="sorterLm">Sorter LM</option><option value="courierFm">Kurir FM</option><option value="courierLm">Kurir LM</option></select>}</div>
               {trend.length ? <div className="trend-chart-shell">
                 <div className="trend-plot" aria-label={`${activeControlTrend.label} daily trend`}>
                   <div className="trend-y-label y100">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax):fmtNumber(controlTrendScaleMax)}</div><div className="trend-y-label y75">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax*.75):fmtNumber(controlTrendScaleMax*.75)}</div><div className="trend-y-label y50">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax*.5):fmtNumber(controlTrendScaleMax*.5)}</div><div className="trend-y-label y25">{activeControlTrend.percent?fmtPercent(controlTrendScaleMax*.25):fmtNumber(controlTrendScaleMax*.25)}</div><div className="trend-y-label y0">{activeControlTrend.percent?'0%':'0'}</div><div className="trend-grid-line grid100"/><div className="trend-grid-line grid75"/><div className="trend-grid-line grid50"/><div className="trend-grid-line grid25"/><div className="trend-grid-line grid0"/>
                   <div className="trend-target-scale"><div className="trend-target-line" style={{bottom:`${controlTrendTargetPosition}%`}}><span>Tier 1-{activeControlTrend.percent?`${activeControlTrend.target}%`:activeControlTrend.target}</span></div><div className="control-tier2-line" style={{bottom:`${controlTrendTier2Position}%`}}><span>Tier 2-{activeControlTrend.percent?`${activeControlTrend.tier2}%`:activeControlTrend.tier2}</span></div></div>
-                  <div className="trend-bars">{trend.map(point=>{const value=point[activeControlTrend.field] as number|null|undefined;const tier=controlTrendTier(value);const tierClass=tier==='Tier 1'?'tier-1':tier==='Tier 2'?'tier-2':'tier-3';const height=value==null?0:Math.max(2,Math.min(100,(value/controlTrendScaleMax)*100));return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${activeControlTrend.percent?fmtPercent(value??null):fmtNumber(value??null)} • ${tier??'No Data'}`}><div className="trend-track">{value!=null&&<div className={`trend-value ${tierClass}`} style={{bottom:`calc(${height}% + 4px)`}}>{activeControlTrend.percent?value.toFixed(1):fmtNumber(value)}</div>}<div className={`trend-bar ${tierClass}`} style={{height:`${height}%`}}/></div><small>{new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}</div>
+                  <div className="trend-bars">{displayedTrend.map((point:any)=>{const value=point[activeControlTrend.field] as number|null|undefined;const tier=controlTrendTier(value);const tierClass=tier==='Tier 1'?'tier-1':tier==='Tier 2'?'tier-2':'tier-3';const height=value==null?0:Math.max(2,Math.min(100,(value/controlTrendScaleMax)*100));return <div className="trend-column" key={point.date} title={`${fmtDate(point.date)}: ${activeControlTrend.percent?fmtPercent(value??null):fmtNumber(value??null)} • ${tier??'No Data'}`}><div className="trend-track">{value!=null&&<div className={`trend-value ${tierClass}`} style={{bottom:`calc(${height}% + 4px)`}}>{activeControlTrend.percent?value.toFixed(1):fmtNumber(value)}</div>}<div className={`trend-bar ${tierClass}`} style={{height:`${height}%`}}/></div><small>{point.displayLabel ?? new Date(`${point.date}T00:00:00`).getDate()}</small></div>})}</div>
                 </div>
                 <div className="trend-legend control-tier-legend"><span><i className="legend-tier-1"/>Tier 1</span><span><i className="legend-tier-2"/>Tier 2</span><span><i className="legend-tier-3"/>Tier 3</span></div>
               </div> : <div className="placeholder">Data trend belum tersedia</div>}</article>}
