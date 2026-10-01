@@ -5,6 +5,7 @@ import type { RegionDashboard } from './types/dashboard';
 import { getRegionDashboard, latestFreshness, type DashboardPeriod } from './services/dashboard';
 import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Gauge, Menu, Moon, RefreshCw, Route, Sun, Target, TrendingUp, X, CircleHelp } from 'lucide-react';
 import { ExportButton } from './components/ExportButton';
+import { PeriodPickerPopover } from './components/PeriodPickerPopover';
 
 const DriverApexChart=({daily,metric,label}:{daily:any[];metric:'volume'|'backlog'|'failedDelivery'|'codTransfer';label:string})=>{
   const rateKey=metric==='backlog'?'backlogRate':metric==='failedDelivery'?'failedDeliveryRate':'codTransferRate';
@@ -72,7 +73,6 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [theme, setTheme] = useState<'light'|'dark'>(() => (localStorage.getItem('kpi-dashboard-theme') as 'light'|'dark') || 'dark');
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [periodOpen, setPeriodOpen] = useState(false);
   const [periodPreset, setPeriodPreset] = useState<DashboardPeriod>(() => (localStorage.getItem('kpi-dashboard-period') as DashboardPeriod) || 'MTD');
   const [customRange, setCustomRange] = useState<{start:string;end:string}|null>(null);
   const [customStart, setCustomStart] = useState('');
@@ -195,13 +195,13 @@ export default function App() {
       setKpiAreaId(n.kpiAreaId??null); setKpiBranchDetailId(n.kpiBranchDetailId??null); setKpiDailyDate(n.kpiDailyDate??null);
       setProductivityAreaId(n.productivityAreaId??null); setProductivityBranchId(n.productivityBranchId??null);
       setDriversAreaId(n.driversAreaId??null); setDriversBranchId(n.driversBranchId??null);
-      setMobileOpen(false); setPeriodOpen(false);
+      setMobileOpen(false);
     };
     const onPop=(e:PopStateEvent)=>{
       if(e.state?.kpiNav){restore(e.state);return}
       // Keep the first browser Back action inside the SPA instead of leaving the dashboard.
       restoringHistory.current=true;
-      setMobileOpen(false); setPeriodOpen(false);
+      setMobileOpen(false);
       setSelectedKpiKey(null); setSelectedDriver(null);
       setSelectedBranchId(null); setSelectedAreaId(null);
       setSlaBranchDetailId(null); setSlaAreaId(null);
@@ -247,13 +247,13 @@ export default function App() {
     driversAreaId, driversBranchId
   ]);
   useEffect(() => {
-    if (!mobileOpen && !periodOpen) return;
+    if (!mobileOpen) return;
     const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') { setMobileOpen(false); setPeriodOpen(false); }
+      if (event.key === 'Escape') setMobileOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [mobileOpen, periodOpen]);
+  }, [mobileOpen]);
 
   const cards = dashboard?.metrics ?? [];
   const penalties = dashboard?.penalties;
@@ -524,7 +524,7 @@ export default function App() {
 
       {mobileOpen && <button className="scrim" aria-label="Tutup menu" onClick={() => setMobileOpen(false)}/>}
 
-      <main className="main" onClick={()=>{if(periodOpen)setPeriodOpen(false)}}>
+      <main className="main">
         <header className="topbar">
           <button className="mobile-menu" onClick={() => setMobileOpen(true)}><Menu size={22}/></button>
           <div className="title-row">
@@ -532,25 +532,19 @@ export default function App() {
               {faqOpen?<><h1>FAQ</h1><div className="breadcrumb"><strong>Panduan KPI, Tier & Pengurang</strong></div></>:activeModule==='productivity'?<><h1>Productivity</h1><div className="breadcrumb"><button onClick={()=>{setProductivityAreaId(null);setProductivityBranchId(null)}}>Productivity</button><span>/</span><strong>{productivityRole==='courier'?'Kurir':'Sorter'} {productivityMile.toUpperCase()}</strong></div></>:activeModule==='drivers'?<><h1>Performance Drivers</h1><div className="breadcrumb"><button>Performance Drivers</button><span>/</span><strong>Region</strong></div></>:activeModule==='kpi'?<><h1>{kpiSelectedBranch?'Detail KPI Gerai':kpiSelectedArea?'Area KPI Performance':'KPI Performance'}</h1><div className="breadcrumb"><button onClick={()=>{setKpiAreaId(null);setKpiBranchDetailId(null);setKpiDailyDate(null)}}>KPI Performance</button><span>/</span><button onClick={()=>{setKpiAreaId(null);setKpiBranchDetailId(null);setKpiDailyDate(null)}}>{kpiFunction}</button>{kpiSelectedArea&&<><span>/</span><button onClick={()=>{setKpiBranchDetailId(null);setKpiDailyDate(null)}}>{kpiSelectedArea.name}</button></>}{kpiSelectedBranch&&<><span>/</span><strong>{kpiSelectedBranch.name}</strong></>}</div></>:activeModule==='sla'?<><h1>{slaSelectedBranch?'Detail Gerai':slaSelectedArea?'Area SLA Performance':'SLA Performance'}</h1><div className="breadcrumb"><button onClick={()=>{setSlaAreaId(null);setSlaBranchDetailId(null)}}>Central Java - DIY</button><span>/</span><button onClick={()=>{setSlaAreaId(null);setSlaBranchDetailId(null)}}>Region</button>{slaSelectedArea&&<><span>/</span><button onClick={()=>setSlaBranchDetailId(null)}>{slaSelectedArea.name}</button></>}{slaSelectedBranch&&<><span>/</span><strong>{slaSelectedBranch.name}</strong></>}</div></>:<><h1>{selectedKpi ? 'KPI Detail' : selectedBranch ? 'Branch Command Center' : selectedArea ? 'Area Control Tower' : 'Region Control Tower'}</h1><div className="breadcrumb"><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null)}}>Central Java - DIY</button><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null)}}>Region</button>{selectedArea&&<><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null)}}>{selectedArea.name}</button></>}{selectedBranch&&<><span>/</span><button onClick={()=>{setSelectedKpiKey(null);setSelectedDriver(null)}}>{selectedBranch.name}</button></>}{selectedKpi&&<><span>/</span><strong>{selectedKpi.label}</strong></>}</div></>}
             </div>
           </div>
-          {!faqOpen && <div className="topbar-actions" onClick={e=>e.stopPropagation()}><button className="theme-toggle refresh-button" onClick={()=>void refreshDashboard(false,true)} disabled={loading||refreshing} title="Refresh data sekarang"><RefreshCw size={15} className={refreshing?'refresh-spin':''}/><span>{refreshing?'Memperbarui...':'Refresh Data'}</span></button><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><div className="period-wrap">
-            <button className={`period-button ${periodOpen?'open':''}`} aria-expanded={periodOpen} aria-haspopup="dialog" onClick={() => setPeriodOpen(v => !v)}>
-              <CalendarDays size={17}/><span><small>Periode Aktif</small><strong>{periodLabel}</strong></span><ChevronDown size={14} className="period-chevron"/>
-            </button>
-            {periodOpen && (
-              <div className="period-popover">
-                <div className="period-popover-head"><div className="period-icon"><CalendarDays size={19}/></div><div><strong>Pilih Periode</strong><small>Data dihitung berdasarkan tanggal data terbaru</small></div></div>
-                <div className="period-presets">
-                {([
-                  ['TODAY','Hari Ini','Hanya tanggal terbaru'],['YESTERDAY','Kemarin','1 hari sebelumnya'],['LAST_7','7 Hari Terakhir','7 hari terakhir'],['LAST_30','30 Hari Terakhir','30 hari terakhir'],['WTD','WTD','Week to Date'],['MTD','MTD','Month to Date'],['YTD','YTD','Year to Date']
-                ] as [DashboardPeriod,string,string][]).map(([value,label,desc]) =>
-                  <button key={value} className={value === periodPreset && !customRange ? 'selected' : ''} onClick={() => {setCustomRange(null);setPeriodPreset(value);setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null);setSlaBranchDetailId(null);setKpiDailyDate(null)}}><span>{label}</span><small>{desc}</small></button>
-                )}
-                </div>
-                <div className="custom-range"><div className="custom-range-title"><CalendarDays size={17}/><div><strong>Custom Range</strong><small>Pilih tanggal awal dan akhir secara manual</small></div></div><div className="custom-date-fields"><label><span>Tanggal Awal</span><input type="date" value={customStart} onChange={e=>setCustomStart(e.target.value)}/></label><b>—</b><label><span>Tanggal Akhir</span><input type="date" value={customEnd} onChange={e=>setCustomEnd(e.target.value)}/></label></div><button disabled={!customStart||!customEnd||customStart>customEnd} onClick={()=>{setCustomRange({start:customStart,end:customEnd});setPeriodOpen(false);setSelectedKpiKey(null);setSelectedDriver(null);setSlaBranchDetailId(null);setKpiDailyDate(null)}}>Terapkan</button></div>
-                <div className="period-note"><span>Preset mengikuti tanggal data terbaru.</span><span>Custom Range memakai tanggal pilihan.</span></div>
-              </div>
-            )}
-          </div></div>}
+          {!faqOpen && <div className="topbar-actions" onClick={e=>e.stopPropagation()}><button className="theme-toggle refresh-button" onClick={()=>void refreshDashboard(false,true)} disabled={loading||refreshing} title="Refresh data sekarang"><RefreshCw size={15} className={refreshing?'refresh-spin':''}/><span>{refreshing?'Memperbarui...':'Refresh Data'}</span></button><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><PeriodPickerPopover
+              periodPreset={periodPreset}
+              customRange={customRange}
+              periodLabel={periodLabel}
+              onChange={(preset, custom) => {
+                setCustomRange(custom);
+                setPeriodPreset(preset as DashboardPeriod);
+                setSelectedKpiKey(null);
+                setSelectedDriver(null);
+                setSlaBranchDetailId(null);
+                setKpiDailyDate(null);
+              }}
+            />
         </header>
 
         <section className="content">
