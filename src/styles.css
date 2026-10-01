@@ -3372,3 +3372,50 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   color: var(--ct-soft, #7590a8) !important;
   font-weight: 700 !important;
 }
+/* ============================================================
+   Period Picker — FIX dark mode middle text visibility
+   ============================================================ */
+
+/* Dark mode middle: text putih penuh, bold */
+.theme-dark .period-picker-cal .rdp-range_middle .rdp-day_button,
+.theme-dark .period-picker-cal .rdp-range_middle .rdp-day_button:hover {
+  background: rgba(220, 38, 38, 0.22) !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+  text-shadow: 0 1px 1px rgba(0, 0, 0, 0.35) !important;
+}
+
+/* Force semua angka day visible di dark */
+.theme-dark .period-picker-cal .rdp-day .rdp-day_button {
+  color: #e2e8f0 !important;
+  opacity: 1 !important;
+}
+
+/* Override react-day-picker outline (kotak aneh di screenshot) */
+.theme-dark .period-picker-cal .rdp-range_middle,
+.theme-dark .period-picker-cal .rdp-range_start,
+.theme-dark .period-picker-cal .rdp-range_end,
+.theme-dark .period-picker-cal .rdp-day.rdp-selected {
+  background: transparent !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+.theme-dark .period-picker-cal .rdp-day_button {
+  outline: none !important;
+}
+
+.theme-dark .period-picker-cal .rdp-day_button:focus,
+.theme-dark .period-picker-cal .rdp-day_button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Light mode middle tetap konsisten */
+.theme-light .period-picker-cal .rdp-range_middle .rdp-day_button {
+  background: rgba(220, 38, 38, 0.12) !important;
+  color: #7f1d1d !important;
+  font-weight: 700 !important;
+  opacity: 1 !important;
+}
