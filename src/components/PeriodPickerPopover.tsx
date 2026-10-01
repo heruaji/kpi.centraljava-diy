@@ -49,16 +49,11 @@ export function PeriodPickerPopover({
   const [draftRange, setDraftRange] = useState<DateRange | undefined>(undefined);
   const wrapRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (open && customRange) {
-      setDraftRange({
-        from: isoToDate(customRange.start),
-        to: isoToDate(customRange.end),
-      });
-    } else if (open) {
+useEffect(() => {
+    if (open) {
       setDraftRange(undefined);
     }
-  }, [open, customRange]);
+  }, [open]);
 
   useEffect(() => {
     if (!open) return;
@@ -82,13 +77,18 @@ export function PeriodPickerPopover({
   };
 
   const handleSelect = (range: DateRange | undefined) => {
+    // Klik pertama: set start, tunggu end.
+    // Klik kedua: set end, auto-apply + close + reset.
     setDraftRange(range);
     if (range?.from && range?.to) {
       onChange(periodPreset, {
         start: dateToIso(range.from),
         end: dateToIso(range.to),
       });
-      window.setTimeout(() => setOpen(false), 180);
+      window.setTimeout(() => {
+        setOpen(false);
+        setDraftRange(undefined);
+      }, 260);
     }
   };
 
