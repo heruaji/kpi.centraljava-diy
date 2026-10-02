@@ -515,14 +515,19 @@ const calc=(rows:Row[])=>{
       const kpiScorePrevious=fn==='LM'?lmScore(lmPreviousBranch):fn==='FM'?fmScore(fmPreviousBranch):fn==='MM'?mmScore(mmPreviousBranch):null;
       const penaltyPrevious=fn==='LM'?lmPenalty(lmPreviousBranch):fn==='FM'?fmPenalty(fmPreviousBranch):fn==='MM'?mmPenalty(mmPreviousBranch):null;
       const branchDayKeys=[...new Set([...sourceItems.map(x=>x.__date as string),...slaItems.map(x=>x.__date as string)].filter(Boolean))].sort();
+      // Pre-group rows by date sekali — hindari O(n²) scan berulang
+      const sourceByDate=new Map<string,Row[]>();
+      sourceItems.forEach(r=>{const d=r.__date as string;if(!d)return;const arr=sourceByDate.get(d);if(arr)arr.push(r);else sourceByDate.set(d,[r]);});
+      const slaByDate=new Map<string,Row[]>();
+      slaItems.forEach(r=>{const d=r.__date as string;if(!d)return;const arr=slaByDate.get(d);if(arr)arr.push(r);else slaByDate.set(d,[r]);});
       const branchTrend=branchDayKeys.map(date=>{
-        const day=sourceItems.filter(x=>x.__date===date);
-        const slaDay=slaItems.filter(x=>x.__date===date);
+        const day=sourceByDate.get(date)||[];
+        const slaDay=slaByDate.get(date)||[];
         const dailyAgg=aggregate(slaDay);
         return {date,sla:dailyAgg.sla,slaMeet:sum(slaDay,'VOLUME_SLA_MEET'),slaAll:sum(slaDay,'VOLUME_SLA_ALL'),productivity:fn==='LM'?dailyAgg.productivityLm:null,productivityVolume:fn==='LM'?sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'):null,productivityManpower:fn==='LM'?sum(slaDay,'TOTAL_MP_LM_SIGESIT'):null,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
       });
       const operationalTrend=branchDayKeys.map(date=>{
-        const day=slaItems.filter(x=>x.__date===date);
+        const day=slaByDate.get(date)||[];
         return {
           date,
           volume:sum(day,'VOLUME_SLA_ALL'),
@@ -559,11 +564,16 @@ const calc=(rows:Row[])=>{
       };
     });
     const areaDayKeys=[...new Set(items.map(r=>r.__date as string))].sort();
+    const groupByDate=(list:Row[])=>{const m=new Map<string,Row[]>();list.forEach(r=>{const d=r.__date as string;if(!d)return;const arr=m.get(d);if(arr)arr.push(r);else m.set(d,[r]);});return m;};
+    const areaSlaByDate=groupByDate(items);
+    const areaLmByDate=groupByDate(lmItems);
+    const areaFmByDate=groupByDate(fmItems);
+    const areaMmByDate=groupByDate(mmItems);
     const areaTrend=areaDayKeys.map(date=>{
-      const slaDay=items.filter(r=>r.__date===date);
-      const lmDay=lmItems.filter(r=>r.__date===date);
-      const fmDay=fmItems.filter(r=>r.__date===date);
-      const mmDay=mmItems.filter(r=>r.__date===date);
+      const slaDay=areaSlaByDate.get(date)||[];
+      const lmDay=areaLmByDate.get(date)||[];
+      const fmDay=areaFmByDate.get(date)||[];
+      const mmDay=areaMmByDate.get(date)||[];
       return {date,sla:aggregate(slaDay).sla,volume:sum(slaDay,'VOLUME_SLA_ALL'),backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
     const kpiDetailsLm=lmDetails(lmItems);
