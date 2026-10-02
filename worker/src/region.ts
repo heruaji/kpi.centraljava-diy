@@ -782,3 +782,86 @@ export async function buildRegionDashboardFromNeon(
 
   return buildRegionDashboardFromSources(env, { sla, sto, lm, fm, mm }, preset, customRange);
 }
+// ============================================================
+// MONTHLY SNAPSHOT (Fase B1 — chunked build)
+// ============================================================
+
+export type MonthlySnapshotEnv = EnvSource & NeonQueryEnv & {
+  DASHBOARD_CACHE?: KVNamespace;
+};
+
+const MONTHLY_VERSION = 'v12-monthly';
+
+const cacheKeyMonthly = (year: number, month: number) =>
+  `${MONTHLY_VERSION}:${year}-${String(month).padStart(2, '0')}::`;
+
+const monthStart = (year: number, month: number) =>
+  `${year}-${String(month).padStart(2, '0')}-01`;
+
+const monthEnd = (year: number, month: number) => {
+  const lastDay = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  return `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+};
+
+export async function buildMonthlySnapshot(
+  env: MonthlySnapshotEnv,
+  year: number,
+  month: number,
+  opts: { force?: boolean } = {},
+): Promise<{ data: any; fromCache: boolean; updatedAt: string }> {
+  const key = cacheKeyMonthly(year, month);
+
+  // 1. Cek cache
+  if (!opts.force && env.DASHBOARD_CACHE) {
+    const cached = await env.DASHBOARD_CACHE.get<{ updatedAt: string; data: any }>(key, 'json');
+    if (cached) return { data: cached.data, fromCache: true, updatedAt: cached.updatedAt };
+  }
+
+  // 2. Query Neon untuk range 1 bulan (dengan window prev-prev untuk comparison)
+  const start = monthStart(year, month);
+  const end = monthEnd(year, month);
+
+  // Hitung window (prev-prev) — sama logika seperti existing
+  const shiftMonth = (iso: string, m: number) => {
+    const [y, mo, d] = iso.split('-').map(Number);
+    const target = new Date(Date.UTC(y, mo - 1 + m, 1));
+    const lastDay = new Date(Date.UTC(target.getUTCFullYear(), target.getUTCMonth() + 1, 0)).getUTCDate();
+    return `${target.getUTCFullYear()}-${String(target.getUTCMonth() + 1).padStart(2, '0')}-${String(Math.min(d, lastDay)).padStart(2, '0')}`;
+  };
+  const previousRange = { start: shiftMonth(start, -1), end: shiftMonth(end, -1) };
+  const periodDays = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const prevPrevEnd = new Date(new Date(previousRange.start + 'T00:00:00Z').getTime() - 86400000);
+  const prevPrevStart = new Date(prevPrevEnd.getTime() - (periodDays - 1) * 86400000);
+  const iso = (d: Date) => d.toISOString().slice(0, 10);
+  const windowStart = iso(prevPrevStart);
+  const windowEnd = end;
+
+  const [sla, lm, fm, mm] = await Promise.all([
+    querySlaNeon(env, windowStart, windowEnd),
+    queryLmNeon(env, windowStart, windowEnd),
+    queryFmNeon(env, windowStart, windowEnd),
+    queryMmNeon(env, windowStart, windowEnd),
+  ]);
+  const sto = await readSheet(env, 'STO', 'A:I');
+
+  // 3. Build snapshot dengan range = 1 bulan (bukan YTD)
+  // Panggil buildRegionDashboardFromSources dengan customRange = [start, end]
+  const snapshot = await buildRegionDashboardFromSources(
+    env,
+    { sla, sto, lm, fm, mm },
+    undefined,  // preset
+    { start, end },  // customRange = tepat 1 bulan
+  );
+
+  // 4. Save ke KV
+  const updatedAt = new Date().toISOString();
+  if (env.DASHBOARD_CACHE) {
+    try {
+      await env.DASHBOARD_CACHE.put(key, JSON.stringify({ updatedAt, data: snapshot }), { expirationTtl: 60 * 60 * 24 * 90 });
+    } catch (err) {
+      console.error('[monthly] save failed:', err);
+    }
+  }
+
+  return { data: snapshot, fromCache: false, updatedAt };
+}
