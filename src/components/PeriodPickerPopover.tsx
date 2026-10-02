@@ -22,7 +22,8 @@ const PRESETS: { value: PeriodPreset; label: string; desc: string }[] = [
   { value: 'LAST_30', label: '30 Hari', desc: '30 hari terakhir' },
   { value: 'WTD', label: 'WTD', desc: 'Week to date' },
   { value: 'MTD', label: 'MTD', desc: 'Month to date' },
-  { value: 'YTD', label: 'YTD', desc: 'Year to date' },
+  // YTD sementara disabled — sedang di-refactor ke chunked build
+  // { value: 'YTD', label: 'YTD', desc: 'Year to date' },
 ];
 
 function isoToDate(iso: string | undefined): Date | undefined {
