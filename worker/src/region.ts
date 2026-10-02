@@ -865,3 +865,44 @@ export async function buildMonthlySnapshot(
 
   return { data: snapshot, fromCache: false, updatedAt };
 }
+// ============================================================
+// YTD SUMMARY (dari sheet YTD Summary)
+// ============================================================
+
+export type YtdSummaryRow = {
+  month: string;
+  sla: number | null;
+  codTransferRate: number | null;
+  failedDeliveryRate: number | null;
+  backlogRate: number | null;
+  productivitySorterFm: number | null;
+  productivitySorterLm: number | null;
+  productivityCourierFm: number | null;
+  productivityCourierLm: number | null;
+};
+
+export async function readYtdSummary(env: EnvSource): Promise<YtdSummaryRow[]> {
+  const rows = await readSheet(env, 'YTD Summary', 'A:Q');
+  const num = (v: unknown) => {
+    if (typeof v === 'number') return v;
+    const s = String(v ?? '').replace(/[^\d.-]/g, '');
+    const n = Number(s);
+    return Number.isFinite(n) ? n : 0;
+  };
+  const rate = (a: number, b: number) => b > 0 ? (a / b) * 100 : null;
+  const prod = (vol: number, mp: number) => mp > 0 ? vol / mp : (vol > 0 ? vol : null);
+
+  return rows
+    .filter(r => String(r.Bulan || '').trim())
+    .map(r => ({
+      month: String(r.Bulan || '').trim(),
+      sla: rate(num(r.VOLUME_SLA_MEET), num(r.VOLUME_SLA_ALL)),
+      codTransferRate: rate(num(r.VOLUME_COD_TF), num(r.VOLUME_COD_ALL)),
+      failedDeliveryRate: rate(num(r.VOLUME_FD), num(r.VOLUME_FD_ALL)),
+      backlogRate: rate(num(r.VOLUME_BACKLOG), num(r.VOLUME_BACKLOG_ALL)),
+      productivitySorterFm: prod(num(r.TOTAL_PAKET_FM_SORTER), num(r.TOTAL_MP_FM_SORTER)),
+      productivitySorterLm: prod(num(r.TOTAL_PAKET_LM_SORTER), num(r.TOTAL_MP_LM_SORTER)),
+      productivityCourierFm: prod(num(r.TOTAL_PAKET_FM_SIGESIT), num(r.TOTAL_MP_FM_SIGESIT)),
+      productivityCourierLm: prod(num(r.TOTAL_PAKET_LM_SIGESIT), num(r.TOTAL_MP_LM_SIGESIT)),
+    }));
+}
