@@ -481,7 +481,29 @@ export default {
         origin,
       );
     }
-
+if (url.pathname === '/api/dashboard/ytd-summary') {
+  try {
+    const cacheKey = 'v1:ytd-summary::';
+    const force = url.searchParams.get('refresh') === '1';
+    if (env.DASHBOARD_CACHE && !force) {
+      const cached = await env.DASHBOARD_CACHE.get<{ updatedAt: string; data: any }>(cacheKey, 'json');
+      if (cached) {
+        return json(cached.data, 200, origin, {
+          'x-ytd-cache': 'HIT',
+          'x-ytd-updated-at': cached.updatedAt,
+        });
+      }
+    }
+    const data = await readYtdSummary(env);
+    const updatedAt = new Date().toISOString();
+    if (env.DASHBOARD_CACHE) {
+      await env.DASHBOARD_CACHE.put(cacheKey, JSON.stringify({ updatedAt, data }), { expirationTtl: 3600 });
+    }
+    return json(data, 200, origin, { 'x-ytd-cache': 'MISS', 'x-ytd-updated-at': updatedAt });
+  } catch (err) {
+    return json({ ok: false, error: err instanceof Error ? err.message : 'Gagal baca YTD' }, 500, origin);
+  }
+}
     // ============================================================
     // DASHBOARD REGION
     // ============================================================
