@@ -260,11 +260,10 @@
   'use strict';
 
   const SHEETS = [
-    // Urutan: MM (kecil) → FM → LM → SLA (besar) — SLA sudah selesai, akan di-skip otomatis
-    { name: 'KPI MM', expected: 1600 },
-    { name: 'KPI FM', expected: 9600 },
-    { name: 'KPI LM', expected: 27000 },
-    { name: 'SLA', expected: 32422 },
+    { name: 'KPI MM', expected: 1700 },
+    { name: 'KPI FM', expected: 9700 },
+    { name: 'KPI LM', expected: 27500 },
+    { name: 'SLA', expected: 33400 },
   ];
 
   const els = {
@@ -343,6 +342,13 @@
     return fetchJson(url);
   }
 
+  async function getSheetRowCount(sheet) {
+    const url = els.workerUrl.value.replace(/\/$/, '') +
+      `/api/sheet/rowcount?sheet=${encodeURIComponent(sheet)}`;
+    const resp = await fetchJson(url);
+    return resp.rowCount || 0;
+  }
+
   async function syncChunk(sheet, startRow, maxRows) {
     const url =
       els.workerUrl.value.replace(/\/$/, '') +
@@ -393,22 +399,35 @@
 
       const sheetName = sheetDef.name;
       const currentState = initialState[sheetName];
-      const alreadyDone = currentState && currentState.lastRow > sheetDef.expected;
-      const alreadyFull = currentState && currentState.totalRows >= sheetDef.expected * 0.95;
 
-      if (alreadyFull || alreadyDone) {
-        log(`⏭ Skip ${sheetName} — sudah lengkap (${currentState.totalRows.toLocaleString('id-ID')} rows)`, 'info');
-        setSheetState(sheetName, 'done', currentState.totalRows);
-        grandTotal += currentState.totalRows;
+      // Tanya langsung ke sheet berapa row total sekarang
+      let liveRowCount = 0;
+      try {
+        liveRowCount = await getSheetRowCount(sheetName);
+        log(`📏 ${sheetName}: live row count = ${liveRowCount.toLocaleString('id-ID')}`, 'info');
+      } catch (err) {
+        log(`⚠ Gagal cek row count ${sheetName}: ${err.message}`, 'error');
+        liveRowCount = sheetDef.expected; // fallback ke expected
+      }
+
+      const lastRow = currentState?.lastRow || 2;
+      const alreadyFull = liveRowCount > 0 && lastRow >= liveRowCount;
+
+      if (alreadyFull) {
+        log(`⏭ Skip ${sheetName} — sudah lengkap (${(liveRowCount - 1).toLocaleString('id-ID')} rows)`, 'info');
+        setSheetState(sheetName, 'done', liveRowCount - 1);
+        grandTotal += liveRowCount - 1;
         updateProgress(grandTotal, totalExpected);
         continue;
       }
 
+      log(`▶ Mulai sync ${sheetName}: lastRow=${lastRow}, target=${liveRowCount}`, 'running');
+
       log(`▶ Mulai sync ${sheetName}`, 'running');
       setSheetState(sheetName, 'running', currentState?.totalRows || 0);
 
-      let startRow = Math.max(2, currentState?.lastRow || 2);
-      let sheetTotal = currentState?.totalRows || 0;
+      let startRow = Math.max(2, lastRow);
+      let sheetTotal = liveRowCount - 1;
       let hasMore = true;
       let chunkCount = 0;
 
