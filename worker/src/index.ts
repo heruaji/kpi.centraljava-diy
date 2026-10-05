@@ -721,3 +721,22 @@ export default {
     );
   },
 };
+    // ============================================================
+    // SHEET ROW COUNT (untuk incremental sync)
+    // ============================================================
+    if (url.pathname === '/api/sheet/rowcount') {
+      const sheet = url.searchParams.get('sheet');
+      if (!sheet)
+        return json({ ok: false, error: 'sheet wajib' }, 400, origin);
+      try {
+        const { getSheetGridRowCount } = await import('./data-source');
+        const count = await getSheetGridRowCount(env as any, sheet);
+        return json({ ok: true, sheet, rowCount: count }, 200, origin);
+      } catch (err) {
+        return json(
+          { ok: false, error: err instanceof Error ? err.message : 'Error' },
+          500,
+          origin,
+        );
+      }
+    }
