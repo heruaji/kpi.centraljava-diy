@@ -251,7 +251,7 @@
   <div class="summary" id="summary"></div>
 
   <div class="hint">
-    💡 Tips: Sync SLA sudah selesai (32.422 rows). Script akan otomatis skip sheet yang sudah lengkap.
+    💡 Tips: Script otomatis cek row count terbaru di sheet. Kalau D1 sudah sync sampai row terakhir, sheet akan di-skip (bukan sync ulang).
   </div>
 </div>
 
@@ -422,8 +422,6 @@
       }
 
       log(`▶ Mulai sync ${sheetName}: lastRow=${lastRow}, target=${liveRowCount}`, 'running');
-
-      log(`▶ Mulai sync ${sheetName}`, 'running');
       setSheetState(sheetName, 'running', currentState?.totalRows || 0);
 
       let startRow = Math.max(2, lastRow);
