@@ -431,9 +431,13 @@ export default {
     // SYNC STATE
     // ============================================================
     if (url.pathname === '/api/sync/state') {
+      if (!env.DB)
+        return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
       try {
-        const rows = await neonGetSyncState(env as NeonSyncEnv);
-        return json({ ok: true, state: rows }, 200, origin);
+        const rows = await env.DB.prepare(
+          `SELECT sheet, last_row, total_rows, last_synced_at, last_status, last_error FROM sheet_sync_state ORDER BY sheet`,
+        ).all();
+        return json({ ok: true, state: rows.results }, 200, origin);
       } catch (err) {
         return json(
           {
@@ -445,7 +449,7 @@ export default {
         );
       }
     }
-
+    
     // ============================================================
     // REFRESH STATUS
     // ============================================================
