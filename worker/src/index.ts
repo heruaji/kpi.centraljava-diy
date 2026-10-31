@@ -1,9 +1,8 @@
 // worker/src/index.ts
-import { buildRegionDashboard, buildRegionDashboardFromD1, buildRegionDashboardFromNeon, readDashboardFreshness } from './region';
+import { buildRegionDashboard, buildRegionDashboardFromD1, readDashboardFreshness } from './region';
 import type { PeriodPreset } from './period';
 import { fullSync, incrementalSync, syncChunk, type SyncEnv } from './sync';
-import { hasD1Data, hasNeonData, type QueryEnv, type NeonQueryEnv } from './query';
-import { testNeonConnection, getNeonTableCounts, type NeonEnv } from './neon'; import { neonGetSyncState, type NeonSyncEnv } from './neon-sync';
+import { hasD1Data, type QueryEnv } from './query';
 
 export interface Env {
   ALLOWED_ORIGIN?: string;
@@ -12,7 +11,6 @@ export interface Env {
   GOOGLE_PRIVATE_KEY?: string;
   DASHBOARD_CACHE?: KVNamespace;
   DB?: D1Database;
-  NEON_DATABASE_URL?: string;
 }
 
 const json = (
@@ -123,22 +121,12 @@ async function rebuildAndPersist(
   end: string | null,
   previous: Snapshot | null = null,
 ) {
-  const neonReady = env.NEON_DATABASE_URL
-    ? await hasNeonData(env as NeonQueryEnv).catch(() => false)
-    : false;
-
-  const d1Ready = !neonReady && env.DB
+  const d1Ready = env.DB
     ? await hasD1Data(env as QueryEnv).catch(() => false)
     : false;
 
   let data: unknown;
-  if (neonReady) {
-    data = await buildRegionDashboardFromNeon(
-      env as Env & NeonQueryEnv,
-      period as PeriodPreset,
-      start && end ? { start, end } : undefined,
-    );
-  } else if (d1Ready) {
+  if (d1Ready) {
     data = await buildRegionDashboardFromD1(
       env as Env & QueryEnv,
       period as PeriodPreset,
@@ -228,9 +216,9 @@ async function runRefreshJob(
 ) {
   try {
     // ============================================================
-    // STEP 1: SYNC dari Google Sheets → Neon (hanya new rows)
+    // STEP 1: SYNC dari Google Sheets → D1 (hanya new rows)
     // ------------------------------------------------------------
-    // Neon adalah authority untuk raw data dan sync position.
+    // D1 menjadi satu-satunya database untuk raw data dan posisi sync.
     // Jika sync gagal, snapshot lama tetap dapat dipakai sebagai
     // fallback sehingga refresh tidak merusak data yang sudah ada.
     // ============================================================
@@ -242,7 +230,7 @@ async function runRefreshJob(
     }
 
     // ============================================================
-    // STEP 2: Rebuild snapshot dari Neon (yang sudah ter-update)
+    // STEP 2: Rebuild snapshot dari D1 (yang sudah ter-update)
     // ============================================================
     const result = await rebuildAndPersist(
       env,
@@ -300,75 +288,6 @@ export default {
         200,
         origin,
       );
-        if (url.pathname === '/api/neon-health') {
-      try {
-        const info = await testNeonConnection(env as NeonEnv);
-        return json(
-          {
-            ok: true,
-            service: 'neon',
-            connected: true,
-            info,
-          },
-          200,
-          origin,
-        );
-      } catch (err) {
-        return json(
-          {
-            ok: false,
-            service: 'neon',
-            connected: false,
-            error: err instanceof Error ? err.message : 'Unknown error',
-          },
-          500,
-          origin,
-        );
-      }
-    }
-
-    if (url.pathname === '/api/neon-sync/sheet') {
-      try {
-        const sheetName = url.searchParams.get('sheet');
-        const startRow = parseInt(url.searchParams.get('startRow') || '2', 10);
-        const maxRows = parseInt(url.searchParams.get('maxRows') || '1000', 10);
-        if (!sheetName)
-          return json({ ok: false, error: 'sheet wajib diisi' }, 400, origin);
-        const result = await syncChunk(
-          env as SyncEnv,
-          sheetName,
-          startRow,
-          maxRows,
-        );
-        return json({ ok: true, ...result }, 200, origin);
-      } catch (err) {
-        return json(
-          {
-            ok: false,
-            error: err instanceof Error ? err.message : 'Neon sync gagal',
-          },
-          500,
-          origin,
-        );
-      }
-    }
-
-    if (url.pathname === '/api/neon-sync/state') {
-      try {
-        const rows = await neonGetSyncState(env as NeonSyncEnv);
-        return json({ ok: true, state: rows }, 200, origin);
-      } catch (err) {
-        return json(
-          {
-            ok: false,
-            error: err instanceof Error ? err.message : 'Gagal baca state',
-          },
-          500,
-          origin,
-        );
-      }
-    }
-
     // ============================================================
     // CHUNKED SYNC
     // ============================================================
@@ -729,7 +648,7 @@ export default {
     env: Env,
     ctx: ExecutionContext,
   ): Promise<void> {
-    if (!env.NEON_DATABASE_URL) return;
+    if (!env.DB) return;
     ctx.waitUntil(
       incrementalSync(env as SyncEnv)
         .then((result) => {
