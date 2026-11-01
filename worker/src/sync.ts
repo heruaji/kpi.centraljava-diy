@@ -12,6 +12,10 @@ export interface SyncEnv extends EnvSource {
   DB: D1Database;
 }
 
+// Re-read a rolling window before the cursor so edits or previously skipped
+// rows are reconciled into D1 during ordinary incremental syncs.
+const RECONCILE_LOOKBACK_ROWS = 500;
+
 function rowsFromRaw(headerValues: unknown[][], dataValues: unknown[][]): Row[] {
   const header = (headerValues[0] || []).map(String);
   return dataValues
@@ -61,35 +65,53 @@ export async function incrementalSync(env: SyncEnv): Promise<
       const lastRow = state?.last_row ?? 1;
       const rowCount = await getSheetGridRowCount(env, def.sheet);
 
-      if (lastRow >= rowCount) {
-        await d1SetSyncState(env, def.sheet, { status: 'OK', error: null });
+      // Google Sheets grid rowCount is the last valid row boundary for A1 reads.
+      // Reconcile the tail even when no new rows have been appended.
+      if (rowCount < 2) {
+        await d1SetSyncState(env, def.sheet, {
+          lastRow: Math.max(lastRow, rowCount),
+          totalRows: Math.max(0, lastRow - 1),
+          status: 'OK',
+          error: null,
+        });
         results.push({ sheet: def.sheet, newRows: 0, validRows: 0, d1Written: 0, lastRow });
         continue;
       }
 
-      const [headerValues, newValues] = await Promise.all([
+      const startRow = Math.max(2, Math.min(lastRow - RECONCILE_LOOKBACK_ROWS + 1, rowCount));
+      const [headerValues, dataValues] = await Promise.all([
         readRangeRaw(env, def.sheet, `A1:${def.maxColumn}1`),
-        readRangeRaw(env, def.sheet, `A${lastRow + 1}:${def.maxColumn}${rowCount}`),
+        readRangeRaw(env, def.sheet, `A${startRow}:${def.maxColumn}${rowCount}`),
       ]);
 
-      if (newValues.length === 0) {
-        results.push({ sheet: def.sheet, newRows: 0, validRows: 0, d1Written: 0, lastRow });
-        continue;
-      }
-
-      const rows = rowsFromRaw(headerValues, newValues);
+      const rows = rowsFromRaw(headerValues, dataValues);
       const d1Written = await syncRowsToD1(env, def, rows);
-      const currentLastRow = lastRow + newValues.length;
+
+      // Values API omits trailing empty rows. Advance only to the last row
+      // actually returned, and never move the saved cursor backwards.
+      const scannedThroughRow = dataValues.length
+        ? startRow + dataValues.length - 1
+        : lastRow;
+      const currentLastRow = Math.max(lastRow, scannedThroughRow);
+      const newRows = Math.max(0, scannedThroughRow - lastRow);
 
       await d1SetSyncState(env, def.sheet, {
         lastRow: currentLastRow,
-        totalRows: currentLastRow - 1,
+        totalRows: Math.max(0, currentLastRow - 1),
         status: 'OK',
         error: null,
       });
 
-      console.log(`[sync] ${def.sheet}: newRows=${newValues.length}, validRows=${rows.length}, d1Written=${d1Written}, lastRow=${currentLastRow}`);
-      results.push({ sheet: def.sheet, newRows: newValues.length, validRows: rows.length, d1Written, lastRow: currentLastRow });
+      console.log(
+        `[sync] ${def.sheet}: scannedRows=${dataValues.length}, reconciledRows=${rows.length}, newRows=${newRows}, d1Written=${d1Written}, lastRow=${currentLastRow}, lookback=${RECONCILE_LOOKBACK_ROWS}`,
+      );
+      results.push({
+        sheet: def.sheet,
+        newRows,
+        validRows: rows.length,
+        d1Written,
+        lastRow: currentLastRow,
+      });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Unknown error';
       try { await d1SetSyncState(env, def.sheet, { status: 'ERROR', error: message }); } catch {}
