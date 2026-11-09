@@ -510,16 +510,16 @@ export default function App() {
           <button className="mobile-close" onClick={() => setMobileOpen(false)}><X size={20}/></button>
         </div>
         <nav>
+          <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>
+          <button title={collapsed?'Region Overview':undefined} className={!faqOpen && !territoryNav.areaId ? 'nav-item active' : 'nav-item'} onClick={()=>{setFaqOpen(false);territoryNav.region();territoryClose()}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
+          <button title={collapsed?territoryNav.areaLabel:undefined} className={!faqOpen && territoryNav.areaId && !territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.areaId} onClick={()=>{setFaqOpen(false);territoryNav.area();territoryClose()}}><Target size={18}/><span className="nav-label">{territoryNav.areaLabel}</span></button>
+          <button title={collapsed?territoryNav.branchLabel:undefined} className={!faqOpen && territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.branchId} onClick={territoryClose}><Route size={18}/><span className="nav-label">{territoryNav.branchLabel}</span></button>
           <span className="nav-section-label">CORE MODULES</span>
           {navigation.map(({ label, icon: Icon }) => { const key=label==='SLA Performance'?'sla':label==='KPI Performance'?'kpi':label==='Productivity'?'productivity':label==='Performance Drivers'?'drivers':'control'; const enabled=true; return (
             <button key={label} disabled={!enabled} className={enabled && !faqOpen && activeModule===key ? 'nav-item active' : 'nav-item'} title={collapsed ? label : undefined} onClick={()=>{if(!enabled)return;setFaqOpen(false);setActiveModule(key);setDriversAreaId(null);setDriversBranchId(null);setDriversBranchQuery('');setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setSlaAreaId(null);setSlaBranchDetailId(null);setKpiAreaId(null);setKpiBranchDetailId(null);setKpiDailyDate(null);setMobileOpen(false)}}>
               <Icon size={18}/><span className="nav-label">{label}</span>
             </button>
           )})}
-          <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>
-          <button title={collapsed?'Region Overview':undefined} className={!faqOpen && !territoryNav.areaId ? 'nav-item active' : 'nav-item'} onClick={()=>{setFaqOpen(false);territoryNav.region();territoryClose()}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
-          <button title={collapsed?territoryNav.areaLabel:undefined} className={!faqOpen && territoryNav.areaId && !territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.areaId} onClick={()=>{setFaqOpen(false);territoryNav.area();territoryClose()}}><Target size={18}/><span className="nav-label">{territoryNav.areaLabel}</span></button>
-          <button title={collapsed?territoryNav.branchLabel:undefined} className={!faqOpen && territoryNav.branchId ? 'nav-item active' : 'nav-item'} disabled={!territoryNav.branchId} onClick={territoryClose}><Route size={18}/><span className="nav-label">{territoryNav.branchLabel}</span></button>
         </nav>
         <div className="sidebar-faq-section">
           <button className={faqOpen?'nav-item faq-nav active':'nav-item faq-nav'} title={collapsed?'FAQ':undefined} onClick={()=>{setFaqOpen(true);setMobileOpen(false)}}><CircleHelp size={18}/><span className="nav-label">FAQ</span></button>
