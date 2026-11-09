@@ -8,6 +8,7 @@ export type DashboardPeriod =
   | 'YESTERDAY'
   | 'LAST_7'
   | 'LAST_30'
+  | 'LAST_MONTH'
   | 'WTD'
   | 'MTD'
   | 'YTD';
