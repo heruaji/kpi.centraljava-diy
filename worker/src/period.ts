@@ -19,10 +19,16 @@ export function resolvePreset(preset:PeriodPreset,maxDate:string){
   if(preset==='LAST_7') return {start:iso(shift(end,-6)),end:maxDate,label:'7 Hari Terakhir',preset};
   if(preset==='LAST_30') return {start:iso(shift(end,-29)),end:maxDate,label:'30 Hari Terakhir',preset};
   if(preset==='LAST_MONTH'){
-    const year=end.getUTCFullYear();
-    const month=end.getUTCMonth();
-    const start=new Date(Date.UTC(year,month-1,1));
-    const lastDay=new Date(Date.UTC(year,month,0));
+    // Last Month follows the current Jakarta calendar month, not the latest source date.
+    const parts=new Intl.DateTimeFormat('en-US',{
+      timeZone:'Asia/Jakarta',
+      year:'numeric',
+      month:'numeric',
+    }).formatToParts(new Date());
+    const year=Number(parts.find(part=>part.type==='year')?.value);
+    const month=Number(parts.find(part=>part.type==='month')?.value);
+    const start=new Date(Date.UTC(year,month-2,1));
+    const lastDay=new Date(Date.UTC(year,month-1,0));
     return {start:iso(start),end:iso(lastDay),label:'Last Month',preset};
   }
   if(preset==='YTD') return {start:`${end.getUTCFullYear()}-01-01`,end:maxDate,label:'YTD',preset};
