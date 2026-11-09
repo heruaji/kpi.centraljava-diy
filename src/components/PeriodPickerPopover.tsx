@@ -5,7 +5,7 @@ import { DayPicker, type DateRange } from 'react-day-picker';
 import { id as idLocale } from 'date-fns/locale';
 
 export type PeriodPreset =
-  | 'TODAY' | 'YESTERDAY' | 'LAST_7' | 'LAST_30'
+  | 'TODAY' | 'YESTERDAY' | 'LAST_7' | 'LAST_30' | 'LAST_MONTH'
   | 'WTD' | 'MTD' | 'YTD';
 
 type Props = {
@@ -20,6 +20,7 @@ const PRESETS: { value: PeriodPreset; label: string; desc: string }[] = [
   { value: 'YESTERDAY', label: 'Kemarin', desc: 'Kemarin' },
   { value: 'LAST_7', label: '7 Hari', desc: '7 hari terakhir' },
   { value: 'LAST_30', label: '30 Hari', desc: '30 hari terakhir' },
+  { value: 'LAST_MONTH', label: 'Last Month', desc: 'Bulan kalender sebelumnya' },
   { value: 'WTD', label: 'WTD', desc: 'Week to date' },
   { value: 'MTD', label: 'MTD', desc: 'Month to date' },
   { value: 'YTD', label: 'YTD', desc: 'Year to date' },
