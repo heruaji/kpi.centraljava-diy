@@ -95,7 +95,7 @@ export default function App() {
   const [driversTrendMetric, setDriversTrendMetric] = useState<'volume'|'backlog'|'failedDelivery'|'codTransfer'>('volume');
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqFunction, setFaqFunction] = useState<'LM'|'FM'|'MM'>('LM');
-  const [activeModule, setActiveModule] = useState<'control'|'sla'|'kpi'|'productivity'|'drivers'>(() => (localStorage.getItem('kpi-dashboard-module') as 'control'|'sla'|'kpi'|'productivity'|'drivers') || 'control');
+  const [activeModule, setActiveModule] = useState<'control'|'sla'|'kpi'|'productivity'|'drivers'|'territory'>(() => (localStorage.getItem('kpi-dashboard-module') as 'control'|'sla'|'kpi'|'productivity'|'drivers'|'territory') || 'control');
   const [kpiFunction, setKpiFunction] = useState<'LM'|'FM'|'MM'>('LM');
   const [kpiAreaQuery, setKpiAreaQuery] = useState('');
   const [kpiAreaSort, setKpiAreaSort] = useState<'score-desc'|'score-asc'|'name'>('score-desc');
@@ -127,6 +127,10 @@ export default function App() {
   const [branchQuery, setBranchQuery] = useState('');
   const [controlDirectory, setControlDirectory] = useState<'region'|'area'|'gerai'>('region');
   const [geraiDirectoryQuery, setGeraiDirectoryQuery] = useState('');
+  const [territoryPage, setTerritoryPage] = useState<'region'|'area'|'gerai'>('region');
+  const [territoryAreaId, setTerritoryAreaId] = useState<string|null>(null);
+  const [territoryBranchId, setTerritoryBranchId] = useState<string|null>(null);
+  const [territorySearch, setTerritorySearch] = useState('');
   const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -273,6 +277,9 @@ export default function App() {
   const selectedArea = dashboard?.areas.find(area => area.id === selectedAreaId) ?? null;
   useEffect(() => { if(selectedAreaId && dashboard && !selectedArea) { setSelectedAreaId(null); setSelectedBranchId(null); setSelectedKpiKey(null); setSelectedDriver(null); } }, [dashboard, selectedAreaId, selectedArea]);
   const selectedBranchBase = selectedArea?.branches?.find(branch => branch.id === selectedBranchId) ?? null;
+  const territorySelectedArea = dashboard?.areas?.find(area => area.id === territoryAreaId) ?? null;
+  const territorySelectedBranch = territorySelectedArea?.branches?.find(branch => branch.id === territoryBranchId) ?? null;
+  const territoryAllGerai = (dashboard?.areas ?? []).flatMap(area => (area.branches ?? []).map(branch => ({...branch, territoryAreaId:area.id, territoryAreaName:area.name}))).filter(branch => !territorySearch.trim() || (branch.name+' '+branch.code+' '+branch.city+' '+branch.territoryAreaName+' '+branch.function).toLowerCase().includes(territorySearch.trim().toLowerCase())).sort((a,b)=>a.name.localeCompare(b.name,'id'));
   const selectedBranch = selectedBranchBase && controlAreaCategory==='kpi' ? (selectedArea?.branches?.find(branch=>branch.name.trim().toLowerCase()===selectedBranchBase.name.trim().toLowerCase()&&branch.function===controlGeraiKpiFunction) ?? selectedBranchBase) : selectedBranchBase;
   useEffect(() => { if(selectedBranchId && selectedArea && !selectedBranch) { setSelectedBranchId(null); setSelectedKpiKey(null); setSelectedDriver(null); } }, [selectedArea, selectedBranchId, selectedBranch]);
   const filteredBranches = selectedArea?.branches?.filter(branch => (branchFunctionFilter === 'ALL' || branch.function === branchFunctionFilter) && (!branchQuery.trim() || `${branch.name} ${branch.code} ${branch.city}`.toLowerCase().includes(branchQuery.trim().toLowerCase()))) ?? [];
@@ -514,9 +521,9 @@ export default function App() {
         </div>
         <nav>
           <span className="nav-section-label nav-region-label">NAVIGASI WILAYAH</span>
-          <button title={collapsed?'Region Overview':undefined} className={!faqOpen && activeModule==='control' && controlDirectory==='region' && !selectedAreaId ? 'nav-item active' : 'nav-item'} onClick={()=>{setFaqOpen(false);setActiveModule('control');setControlDirectory('region');setSelectedAreaId(null);setSelectedBranchId(null);setSelectedKpiKey(null);setSelectedDriver(null);territoryClose()}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
-          <button title={collapsed?'Area Control Tower':undefined} className={!faqOpen && activeModule==='control' && controlDirectory==='area' && !selectedAreaId ? 'nav-item active' : 'nav-item'} onClick={()=>{setFaqOpen(false);setActiveModule('control');setControlDirectory('area');setSelectedAreaId(null);setSelectedBranchId(null);setSelectedKpiKey(null);setSelectedDriver(null);territoryClose()}}><Target size={18}/><span className="nav-label">Area Control Tower</span></button>
-          <button title={collapsed?'Gerai Control Tower':undefined} className={!faqOpen && activeModule==='control' && controlDirectory==='gerai' && !selectedAreaId ? 'nav-item active' : 'nav-item'} onClick={()=>{setFaqOpen(false);setActiveModule('control');setControlDirectory('gerai');setSelectedAreaId(null);setSelectedBranchId(null);setSelectedKpiKey(null);setSelectedDriver(null);territoryClose()}}><Route size={18}/><span className="nav-label">Gerai Control Tower</span></button>
+          <button title={collapsed?'Region Overview':undefined} className={!faqOpen && activeModule==='territory' && territoryPage==='region'?'nav-item active':'nav-item'} onClick={()=>{setFaqOpen(false);setActiveModule('territory');setTerritoryPage('region');setTerritoryAreaId(null);setTerritoryBranchId(null);setTerritorySearch('');territoryClose()}}><BarChart3 size={18}/><span className="nav-label">Region Overview</span></button>
+          <button title={collapsed?'Area Control Tower':undefined} className={!faqOpen && activeModule==='territory' && territoryPage==='area'?'nav-item active':'nav-item'} onClick={()=>{setFaqOpen(false);setActiveModule('territory');setTerritoryPage('area');setTerritoryAreaId(null);setTerritoryBranchId(null);setTerritorySearch('');territoryClose()}}><Target size={18}/><span className="nav-label">Area Control Tower</span></button>
+          <button title={collapsed?'Gerai Control Tower':undefined} className={!faqOpen && activeModule==='territory' && territoryPage==='gerai'?'nav-item active':'nav-item'} onClick={()=>{setFaqOpen(false);setActiveModule('territory');setTerritoryPage('gerai');setTerritoryAreaId(null);setTerritoryBranchId(null);setTerritorySearch('');territoryClose()}}><Route size={18}/><span className="nav-label">Gerai Control Tower</span></button>
           <span className="nav-section-label">CORE MODULES</span>
           {navigation.map(({ label, icon: Icon }) => { const key=label==='SLA Performance'?'sla':label==='KPI Performance'?'kpi':label==='Productivity'?'productivity':label==='Performance Drivers'?'drivers':'control'; const enabled=true; return (
             <button key={label} disabled={!enabled} className={enabled && !faqOpen && activeModule===key ? 'nav-item active' : 'nav-item'} title={collapsed ? label : undefined} onClick={()=>{if(!enabled)return;setFaqOpen(false);setActiveModule(key);setDriversAreaId(null);setDriversBranchId(null);setDriversBranchQuery('');setSelectedKpiKey(null);setSelectedDriver(null);setSelectedBranchId(null);setSelectedAreaId(null);setSlaAreaId(null);setSlaBranchDetailId(null);setKpiAreaId(null);setKpiBranchDetailId(null);setKpiDailyDate(null);setMobileOpen(false)}}>
