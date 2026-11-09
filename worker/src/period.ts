@@ -1,4 +1,4 @@
-export type PeriodPreset='TODAY'|'YESTERDAY'|'LAST_7'|'LAST_30'|'WTD'|'MTD'|'YTD';
+export type PeriodPreset='TODAY'|'YESTERDAY'|'LAST_7'|'LAST_30'|'LAST_MONTH'|'WTD'|'MTD'|'YTD';
 
 const iso=(d:Date)=>d.toISOString().slice(0,10);
 const fromIso=(v:string)=>new Date(v+'T00:00:00Z');
@@ -18,6 +18,13 @@ export function resolvePreset(preset:PeriodPreset,maxDate:string){
   if(preset==='YESTERDAY'){const d=shift(end,-1);return {start:iso(d),end:iso(d),label:'Kemarin',preset}}
   if(preset==='LAST_7') return {start:iso(shift(end,-6)),end:maxDate,label:'7 Hari Terakhir',preset};
   if(preset==='LAST_30') return {start:iso(shift(end,-29)),end:maxDate,label:'30 Hari Terakhir',preset};
+  if(preset==='LAST_MONTH'){
+    const year=end.getUTCFullYear();
+    const month=end.getUTCMonth();
+    const start=new Date(Date.UTC(year,month-1,1));
+    const lastDay=new Date(Date.UTC(year,month,0));
+    return {start:iso(start),end:iso(lastDay),label:'Last Month',preset};
+  }
   if(preset==='YTD') return {start:`${end.getUTCFullYear()}-01-01`,end:maxDate,label:'YTD',preset};
   const day=(end.getUTCDay()+6)%7;
   return {start:iso(shift(end,-day)),end:maxDate,label:'WTD',preset};
