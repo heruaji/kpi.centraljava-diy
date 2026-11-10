@@ -226,7 +226,7 @@ export default function App() {
     if(activeModule!=='drivers') return;
     let alive=true;
     setDriversMonthlyLoading(true);
-    fetch(`${(import.meta.env.VITE_API_BASE_URL||'').replace(/\\/$/,'')}/api/dashboard/kpi-region`)
+    fetch(`${(import.meta.env.VITE_API_BASE_URL||'').replace(/\/$/,'')}/api/dashboard/kpi-region`)
       .then(async response=>{const body=await response.json();if(!response.ok)throw new Error(body.error||'Gagal memuat agregasi bulanan');return body;})
       .then(body=>{if(!alive)return;setDriversMonthly(body.months||[]);setDriversMonthlyError(null);})
       .catch(error=>{if(alive)setDriversMonthlyError(error instanceof Error?error.message:'Gagal memuat agregasi bulanan');})
