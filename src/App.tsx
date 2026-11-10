@@ -607,6 +607,7 @@ export default function App() {
               periodPreset={periodPreset}
               customRange={customRange}
               periodLabel={periodLabel}
+              scopeLabel={{control:'Control Tower',sla:'SLA Performance',kpi:'KPI Performance',productivity:'Productivity',drivers:'Performance Drivers'}[periodModule]}
               onChange={(preset, custom) => {
                 setCustomRange(custom);
                 setPeriodPreset(preset as DashboardPeriod);
