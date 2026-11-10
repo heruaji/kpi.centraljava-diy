@@ -160,6 +160,11 @@ const penaltyRow=(key:string,label:string,actual:number|null,rule:TierRule,maxPe
   const tr=tier(actual,rule);
   return {key,label,actual:pct(actual),targetLabel,tier:tierLabel(tr),maxPenalty,penalty:penaltyScore(tr,maxPenalty),daily};
 };
+const mmPenaltyScore=(tr:ReturnType<typeof tier>)=>tr==='T1'?0:tr==='T2'?20:tr==='T3'?40:0;
+const mmPenaltyRow=(key:string,label:string,actual:number|null,rule:TierRule,targetLabel:string,daily:PenaltyDaily[]):PenaltyDetail=>{
+  const tr=tier(actual,rule);
+  return {key,label,actual:pct(actual),targetLabel,tier:tierLabel(tr),maxPenalty:40,penalty:mmPenaltyScore(tr),daily};
+};
 function lmPenaltyDetails(items:Row[]):PenaltyDetail[]{
   const soRule:TierRule={direction:'HIGHER',tier1:.75,tier2:.70};
   const stuckRule:TierRule={direction:'LOWER',tier1:0,tier2:.0005};
@@ -194,9 +199,9 @@ function mmPenaltyDetails(items:Row[]):PenaltyDetail[]{
   const so=(day:Row[])=>ratio(sum(day,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(day,'MIDDLE_MILE_QUALITY_VOLUME_SO'));
   const stuck=(day:Row[])=>ratio(sum(day,'STUCK_RABU'),average(day,'AVERAGE_VOLUME'));
   return [
-    penaltyRow('unloading','Unloading Time',unloading(items),unloadingRule,20,'≥98%',penaltyDaily(items,unloading,unloadingRule)),
-    penaltyRow('so','SO Quality',so(items),soRule,20,'≥75%',penaltyDaily(items,so,soRule)),
-    penaltyRow('stuck','Stuck Rate',stuck(items),stuckRule,20,'0%',penaltyDaily(items,stuck,stuckRule)),
+    mmPenaltyRow('unloading','Unloading Time',unloading(items),unloadingRule,'≥98%',penaltyDaily(items,unloading,unloadingRule)),
+    mmPenaltyRow('so','SO Quality',so(items),soRule,'≥75%',penaltyDaily(items,so,soRule)),
+    mmPenaltyRow('stuck','Stuck Rate',stuck(items),stuckRule,'0%',penaltyDaily(items,stuck,stuckRule)),
   ];
 }
 
@@ -220,10 +225,10 @@ function fmPenalty(items:Row[]){
 
 function mmPenalty(items:Row[]){
   if(!items.length) return null;
-  const unloading=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_COST_AVERAGE_LOADING_TIME'),sum(items,'MIDDLE_MILE_COST_VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}),20);
-  const so=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
+  const unloading=mmPenaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_COST_AVERAGE_LOADING_TIME'),sum(items,'MIDDLE_MILE_COST_VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}));
+  const so=mmPenaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}));
   const stuckActual=ratio(sum(items,'STUCK_RABU'),average(items,'AVERAGE_VOLUME'));
-  const stuck=penaltyScore(tier(stuckActual,{direction:'LOWER',tier1:0,tier2:.0005}),20);
+  const stuck=mmPenaltyScore(tier(stuckActual,{direction:'LOWER',tier1:0,tier2:.0005}));
   return unloading+so+stuck;
 }
 
