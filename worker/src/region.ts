@@ -423,8 +423,8 @@ const calc=(rows:Row[])=>{
       rankingMetric('cod','COD Transferred',cod,99.5,99,5,'HIGHER'),
       rankingMetric('failed','Failed Delivery',failed,1,1.5,20,'LOWER'),
       rankingMetric('backlog','Backlog Rate',backlog,1.5,2,10,'LOWER'),
-      rankingMetric('sorterFm','Productivity Sorter FM',a.productivitySorterFm,980,750,5,'HIGHER'),
-      rankingMetric('sorterLm','Productivity Sorter LM',a.productivitySorterLm,780,550,5,'HIGHER'),
+      rankingMetric('sorterFm','Productivity Sorter FM',a.productivitySorterFm,820,750,5,'HIGHER'),
+      rankingMetric('sorterLm','Productivity Sorter LM',a.productivitySorterLm,650,550,5,'HIGHER'),
       rankingMetric('courierFm','Productivity Kurir FM',a.productivityFm,115,88,10,'HIGHER'),
       rankingMetric('courierLm','Productivity Kurir LM',a.productivityLm,51,40,15,'HIGHER'),
     ];
