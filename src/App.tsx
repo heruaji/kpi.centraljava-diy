@@ -187,6 +187,7 @@ export default function App() {
   const refreshDashboard = async (showLoading = false, manual = false, ensurePeriodSnapshot = false) => {
     const seq = ++refreshSeq.current;
     if (showLoading) setLoading(true);
+    if (ensurePeriodSnapshot) { setDashboard(null); setError(null); }
     if (manual) setRefreshing(true);
     try {
       const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual);
