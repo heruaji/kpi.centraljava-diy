@@ -1202,7 +1202,11 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix th,
   .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix td,
   .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th,
-  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td{min-width:0!important;padding-left:6px!important;padding-right:6px!important;font-size:9px!important}
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td{min-width:0!important;padding-left:6px!important;padding-right:6px!important}
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix th,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th{font-size:10px!important}
+  .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix td,
+  .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix td{font-size:12px!important}
   .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix th:nth-child(1),
   .sidebar-is-collapsed .kpi-area-table.kpi-points-matrix td:nth-child(1),
   .sidebar-is-collapsed .kpi-branch-table.kpi-points-matrix th:nth-child(1),
