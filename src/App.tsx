@@ -128,8 +128,7 @@ export default function App() {
   const [periodSettings,setPeriodSettings] = useState<PeriodSettings>(() => {
     try {
       const saved=JSON.parse(localStorage.getItem('kpi-dashboard-periods')||'{}');
-      const legacy=localStorage.getItem('kpi-dashboard-period');
-      return Object.fromEntries(periodModules.map(key=>[key,saved[key]||legacy||'MTD'])) as PeriodSettings;
+      return Object.fromEntries(periodModules.map(key=>[key,saved[key]||'MTD'])) as PeriodSettings;
     } catch { return Object.fromEntries(periodModules.map(key=>[key,'MTD'])) as PeriodSettings; }
   });
   const [customPeriodSettings,setCustomPeriodSettings] = useState<CustomPeriodSettings>(() => {
@@ -214,8 +213,9 @@ export default function App() {
   };
 
   useEffect(() => {
-    // A selected period/custom range must have its own snapshot. Build it when missing
-    // instead of silently keeping the previous period's dashboard visible.
+    // KPI REGION has its own monthly endpoint and does not use the operational date filter.
+    if(activeModule==='kpi-region') return;
+    // Each module loads its own period snapshot when opened or when its filter changes.
     void refreshDashboard(true, false, true);
   }, [periodPreset, customRange, activeModule]);
 
