@@ -33,7 +33,8 @@ const navigation = [
   { label: 'SLA Performance', icon: Target },
   { label: 'KPI Performance', icon: BarChart3 },
   { label: 'Productivity', icon: TrendingUp },
-  { label: 'Performance Drivers', icon: Route },\n  { label: 'KPI REGION', icon: Target },
+  { label: 'Performance Drivers', icon: Route },
+  { label: 'KPI REGION', icon: Target },
 ];
 
 const fmtPercent = (value: number | null | undefined) => value == null ? '—' : `${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(value)}%`;
