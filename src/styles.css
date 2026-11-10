@@ -3444,3 +3444,22 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-region-bars small{font-size:11px;white-space:nowrap;color:var(--text-secondary)}
 .kpi-region-bars em{font-size:11px;font-style:normal;color:var(--text-secondary)}
 @media(max-width:760px){.kpi-region-score-grid{grid-template-columns:1fr}.kpi-region-module .section-heading{align-items:flex-start}.kpi-region-bars button{min-width:78px}}
+
+
+/* KPI REGION monthly final-score matrix */
+.kpi-region-nav{display:flex;gap:8px;align-items:center;border-bottom:1px solid var(--border-color);padding-bottom:12px}
+.kpi-region-nav button{border:1px solid var(--border-color);background:var(--panel-bg);color:var(--text-secondary);border-radius:9px;padding:10px 18px;font-weight:700;cursor:pointer}
+.kpi-region-nav button.active{background:var(--accent-soft);border-color:var(--accent);color:var(--text-primary)}
+.kpi-region-matrix .panel-title{align-items:center}
+.kpi-region-matrix .table-wrap{overflow:auto;max-width:100%}
+.kpi-region-matrix table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}
+.kpi-region-matrix th,.kpi-region-matrix td{min-width:118px;text-align:center;white-space:nowrap}
+.kpi-region-matrix th:first-child,.kpi-region-matrix td:first-child{min-width:210px;text-align:left}
+.kpi-region-matrix .kpi-region-sticky{position:sticky;left:0;z-index:2;background:var(--panel-bg)}
+.kpi-region-matrix thead .kpi-region-sticky{z-index:4}
+.kpi-region-matrix td small,.kpi-region-matrix tfoot th small{display:block;margin-top:4px;color:var(--text-secondary);font-size:10px;font-weight:500}
+.kpi-region-matrix .kpi-point-tier1 strong{color:#10b981}
+.kpi-region-matrix .kpi-point-tier2 strong{color:#eab308}
+.kpi-region-matrix .kpi-point-tier3 strong{color:#f87171}
+.kpi-region-matrix tfoot th{border-top:2px solid var(--border-color);padding-top:14px}
+@media(max-width:760px){.kpi-region-nav{position:sticky;top:0;z-index:5;background:var(--page-bg);padding:8px 0}.kpi-region-nav button{flex:1}.kpi-region-matrix th,.kpi-region-matrix td{min-width:104px}.kpi-region-matrix th:first-child,.kpi-region-matrix td:first-child{min-width:165px}}
