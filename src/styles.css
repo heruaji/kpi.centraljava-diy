@@ -3463,3 +3463,31 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
 .kpi-region-matrix .kpi-point-tier3 strong{color:#f87171}
 .kpi-region-matrix tfoot th{border-top:2px solid var(--border-color);padding-top:14px}
 @media(max-width:760px){.kpi-region-nav{position:sticky;top:0;z-index:5;background:var(--page-bg);padding:8px 0}.kpi-region-nav button{flex:1}.kpi-region-matrix th,.kpi-region-matrix td{min-width:104px}.kpi-region-matrix th:first-child,.kpi-region-matrix td:first-child{min-width:165px}}
+
+
+/* Performance Drivers: monthly actual matrix with accessible contrast */
+.app-shell .drivers-monthly-actual{background:var(--ct-card);border:1px solid var(--ct-border);color:var(--ct-text)}
+.app-shell .drivers-monthly-actual .panel-title h3{color:var(--ct-text)!important}
+.app-shell .drivers-monthly-actual .panel-title small{display:block;margin-top:5px;color:var(--ct-muted)!important}
+.app-shell .drivers-monthly-table{border:1px solid var(--ct-border);border-radius:9px;overflow:auto;background:var(--ct-card)}
+.app-shell .drivers-monthly-table table{width:max-content;min-width:100%;border-collapse:separate;border-spacing:0}
+.app-shell .drivers-monthly-table th,.app-shell .drivers-monthly-table td{min-width:112px;padding:13px 12px;text-align:center;white-space:nowrap;border-bottom:1px solid var(--ct-border);color:var(--ct-text)!important;background:var(--ct-card);font-size:12px}
+.app-shell .drivers-monthly-table thead th{position:sticky;top:0;z-index:3;background:var(--ct-card2)!important;color:var(--ct-text)!important;font-size:10px;font-weight:750;letter-spacing:.035em}
+.app-shell .drivers-monthly-table th.drivers-monthly-sticky{position:sticky;left:0;z-index:2;min-width:220px;text-align:left;background:var(--ct-card2)!important;color:var(--ct-text)!important;font-weight:700}
+.app-shell .drivers-monthly-table thead th.drivers-monthly-sticky{z-index:5}
+.app-shell .drivers-monthly-table tbody tr:nth-child(even) td{background:var(--ct-card2)}
+.app-shell .drivers-monthly-table tbody tr:nth-child(even) th.drivers-monthly-sticky{background:var(--ct-card2)!important}
+.app-shell .drivers-monthly-table tbody tr:hover td{background:var(--ct-active)!important}
+.app-shell .drivers-monthly-table tbody td{font-variant-numeric:tabular-nums;font-weight:650}
+.app-shell .drivers-monthly-table tbody tr:last-child td,.app-shell .drivers-monthly-table tbody tr:last-child th{border-bottom:0}
+.theme-dark .drivers-monthly-table th,.theme-dark .drivers-monthly-table td{color:#f1f5f9!important}
+.theme-dark .drivers-monthly-table thead th,.theme-dark .drivers-monthly-table th.drivers-monthly-sticky{background:#1b3042!important;color:#e5edf5!important}
+.theme-dark .drivers-monthly-table tbody tr:nth-child(even) td{background:#102131}
+.theme-dark .drivers-monthly-table tbody tr:nth-child(even) th.drivers-monthly-sticky{background:#102131!important}
+.theme-dark .drivers-monthly-table tbody tr:hover td{background:#20384b!important}
+.theme-light .drivers-monthly-table th,.theme-light .drivers-monthly-table td{color:#1e293b!important}
+.theme-light .drivers-monthly-table thead th,.theme-light .drivers-monthly-table th.drivers-monthly-sticky{background:#eaf0f6!important;color:#1e293b!important}
+.theme-light .drivers-monthly-table tbody tr:nth-child(even) td{background:#f8fafc}
+.theme-light .drivers-monthly-table tbody tr:nth-child(even) th.drivers-monthly-sticky{background:#f8fafc!important}
+.theme-light .drivers-monthly-table tbody tr:hover td{background:#e8eef6!important}
+@media(max-width:760px){.app-shell .drivers-monthly-table th.drivers-monthly-sticky{min-width:165px}.app-shell .drivers-monthly-table th,.app-shell .drivers-monthly-table td{min-width:98px;padding:11px 9px}}
