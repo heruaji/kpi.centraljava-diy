@@ -777,6 +777,17 @@ export async function buildKpiRegionMonthly(env:QueryEnv) {
   const dated=source.map(row=>({...row,__date:excelDate(row.PERIODE)})).filter(row=>row.__date) as (Row&{__date:string})[];
   const groups=new Map<string,(Row&{__date:string})[]>();
   for(const row of dated){const month=row.__date.slice(0,7);const items=groups.get(month)??[];items.push(row);groups.set(month,items);}
+  const daily=[...new Set(dated.map(row=>row.__date))].sort().map(date=>{
+    const rows=dated.filter(row=>row.__date===date);
+    const details=regionKpiDefinitions.map(def=>{
+      let actual:number|null=null;
+      if('num'in def){const raw=ratio(sum(rows,def.num),sum(rows,def.den));actual=raw===null?null:raw*100;}
+      else actual=regionKpiProductivity(rows,def.volume,def.manpower);
+      const tier=regionKpiTier(actual,def);
+      return {key:def.key,actual,tier,score:tier==='Tier 1'?def.weight:tier==='Tier 2'?def.weight/2:0};
+    });
+    return {date,score:details.reduce((total,item)=>total+item.score,0),hasData:details.some(item=>item.actual!==null)};
+  });
   const months=[...groups.keys()].sort();
   const results:KpiRegionMonth[]=months.map(month=>{
     const rows=groups.get(month)!;
@@ -793,5 +804,5 @@ export async function buildKpiRegionMonthly(env:QueryEnv) {
     return {month,start:month+'-01',end,complete:end===monthEnd,score:details.reduce((total,item)=>total+item.score,0),maxScore:100,previousScore:null,change:null,details};
   });
   results.forEach((item,index)=>{if(index>0){item.previousScore=results[index-1].score;item.change=item.score-item.previousScore;}});
-  return {latestDate:latest.max,months:results};
+  return {latestDate:latest.max,months:results,daily};
 }
