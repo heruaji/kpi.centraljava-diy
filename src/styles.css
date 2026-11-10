@@ -3441,3 +3441,13 @@ table td .daily-actual strong,
 table td .sla-table-tier {
   font-size: 12px !important;
 }
+
+/* Detail KPI Gerai — keep every table aligned with the shared typography standard. */
+.kpi-gerai-detail .kpi-matrix-wrap th,
+.kpi-gerai-detail .kpi-penalty-matrix th{font-size:10px!important}
+.kpi-gerai-detail .kpi-matrix-wrap th button{font-size:10px!important}
+.kpi-gerai-detail .kpi-matrix-wrap td,
+.kpi-gerai-detail .kpi-penalty-matrix td{font-size:12px!important}
+.kpi-gerai-detail .kpi-matrix-wrap td:first-child strong,
+.kpi-gerai-detail .kpi-matrix-wrap td:first-child small,
+.kpi-gerai-detail .kpi-penalty-matrix .penalty-actual{font-size:12px!important}
