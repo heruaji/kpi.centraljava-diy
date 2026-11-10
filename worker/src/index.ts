@@ -1,5 +1,5 @@
 // worker/src/index.ts
-import { buildRegionDashboard, buildRegionDashboardFromD1, readDashboardFreshness } from './region';
+import { buildRegionDashboard, buildRegionDashboardFromD1, readDashboardFreshness, buildKpiRegionMonthly } from './region';
 import type { PeriodPreset } from './period';
 import { fullSync, incrementalSync, syncChunk, type SyncEnv } from './sync';
 import { hasD1Data, type QueryEnv } from './query';
@@ -423,6 +423,17 @@ export default {
         200,
         origin,
       );
+    }
+
+    // KPI REGION monthly score — independent from KPI OPERATION.
+    if (url.pathname === '/api/dashboard/kpi-region') {
+      if (!env.DB) return json({ ok: false, error: 'D1 tidak tersedia' }, 503, origin);
+      try {
+        const data = await buildKpiRegionMonthly(env as QueryEnv);
+        return json(data, 200, origin, { 'cache-control': 'public, max-age=120' });
+      } catch (err) {
+        return json({ ok: false, error: err instanceof Error ? err.message : 'Gagal menghitung KPI REGION' }, 500, origin);
+      }
     }
 
     // ============================================================

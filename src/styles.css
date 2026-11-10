@@ -3419,3 +3419,28 @@ button,.nav-item,.clickable-row,.driver-card{touch-action:manipulation}.clickabl
   font-weight: 700 !important;
   opacity: 1 !important;
 }
+
+/* KPI REGION monthly scorecard */
+.kpi-region-module{display:flex;flex-direction:column;gap:18px}
+.kpi-region-module .section-heading{display:flex;align-items:flex-end;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.kpi-region-month-tabs{display:flex;gap:8px;overflow-x:auto;padding:2px 0 8px}
+.kpi-region-month-tabs button{white-space:nowrap;border:1px solid var(--border-color);background:var(--panel-bg);color:var(--text-secondary);border-radius:9px;padding:9px 14px;cursor:pointer}
+.kpi-region-month-tabs button.active{background:var(--accent-soft);border-color:var(--accent);color:var(--text-primary);font-weight:700}
+.kpi-region-score-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+.kpi-region-score-grid .metric-card{min-width:0}
+.kpi-region-score-grid .metric-card>strong{display:block;font-size:clamp(22px,3vw,32px);margin:10px 0 4px}
+.kpi-region-score-grid .metric-card small{color:var(--text-secondary);font-size:12px}
+.kpi-region-detail,.kpi-region-trend{min-width:0}
+.kpi-region-detail .table-wrap{overflow-x:auto}
+.kpi-region-detail table{min-width:760px;width:100%}
+.kpi-region-detail td small{display:block;color:var(--text-secondary);font-size:11px;margin-top:3px}
+.kpi-region-detail tfoot th{border-top:2px solid var(--border-color);padding-top:14px}
+.kpi-region-bars{display:flex;align-items:stretch;gap:12px;overflow-x:auto;padding:12px 2px 4px}
+.kpi-region-bars button{border:0;background:transparent;color:var(--text-primary);min-width:90px;flex:1;display:flex;flex-direction:column;align-items:center;gap:7px;cursor:pointer;padding:8px;border-radius:9px}
+.kpi-region-bars button.active{background:var(--accent-soft)}
+.kpi-region-bar-track{height:150px;width:26px;border-radius:7px;background:var(--surface-2);display:flex;align-items:flex-end;overflow:hidden}
+.kpi-region-bar-track i{display:block;width:100%;background:var(--accent);border-radius:7px 7px 0 0}
+.kpi-region-bar-value{font-weight:700;font-size:13px}
+.kpi-region-bars small{font-size:11px;white-space:nowrap;color:var(--text-secondary)}
+.kpi-region-bars em{font-size:11px;font-style:normal;color:var(--text-secondary)}
+@media(max-width:760px){.kpi-region-score-grid{grid-template-columns:1fr}.kpi-region-module .section-heading{align-items:flex-start}.kpi-region-bars button{min-width:78px}}
