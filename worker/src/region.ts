@@ -739,3 +739,59 @@ export async function buildRegionDashboardFromD1(
     customRange,
   );
 }
+
+
+// ============================================================
+// KPI REGION — monthly independent scoring (separate from KPI OPERATION)
+// ============================================================
+export type KpiRegionMonth = {
+  month:string; start:string; end:string; complete:boolean; score:number; maxScore:100;
+  previousScore:number|null; change:number|null;
+  details:Array<{key:string;label:string;actual:number|null;unit:'percent'|'number';target1:number;target2:number;direction:'HIGHER'|'LOWER';tier:string;weight:number;score:number}>;
+};
+const regionKpiDefinitions = [
+  {key:'sla',label:'SLA Performance',target1:96,target2:95,weight:30,direction:'HIGHER' as const,unit:'percent' as const,num:'VOLUME_SLA_MEET',den:'VOLUME_SLA_ALL'},
+  {key:'cod',label:'COD Transferred',target1:99.5,target2:99,weight:5,direction:'HIGHER' as const,unit:'percent' as const,num:'VOLUME_COD_TF',den:'VOLUME_COD_ALL'},
+  {key:'failed',label:'Failed Delivery',target1:1,target2:1.5,weight:20,direction:'LOWER' as const,unit:'percent' as const,num:'VOLUME_FD',den:'VOLUME_FD_ALL'},
+  {key:'backlog',label:'Backlog Rate',target1:1.5,target2:2,weight:10,direction:'LOWER' as const,unit:'percent' as const,num:'VOLUME_BACKLOG',den:'VOLUME_BACKLOG_ALL'},
+  {key:'sorterFm',label:'Productivity Sorter FM',target1:820,target2:750,weight:5,direction:'HIGHER' as const,unit:'number' as const,volume:'TOTAL_PAKET_FM_SORTER',manpower:'TOTAL_MP_FM_SORTER'},
+  {key:'sorterLm',label:'Productivity Sorter LM',target1:650,target2:550,weight:5,direction:'HIGHER' as const,unit:'number' as const,volume:'TOTAL_PAKET_LM_SORTER',manpower:'TOTAL_MP_LM_SORTER'},
+  {key:'sigesitFm',label:'Productivity Sigesit FM',target1:115,target2:88,weight:10,direction:'HIGHER' as const,unit:'number' as const,volume:'TOTAL_PAKET_FM_SIGESIT',manpower:'TOTAL_MP_FM_SIGESIT'},
+  {key:'sigesitLm',label:'Productivity Sigesit LM',target1:51,target2:40,weight:15,direction:'HIGHER' as const,unit:'number' as const,volume:'TOTAL_PAKET_LM_SIGESIT',manpower:'TOTAL_MP_LM_SIGESIT'},
+];
+function regionKpiProductivity(rows:Row[],volumeKey:string,manpowerKey:string):number|null {
+  const daily=new Map<string,{volume:number;manpower:number}>();
+  for(const row of rows){const date=String(row.__date??'');if(!date)continue;const value=daily.get(date)??{volume:0,manpower:0};value.volume+=n(row[volumeKey]);value.manpower+=n(row[manpowerKey]);daily.set(date,value);}
+  let volume=0,manpower=0;
+  for(const value of daily.values()){if(value.volume===0&&value.manpower===0)continue;volume+=value.volume;manpower+=value.manpower>0?value.manpower:1;}
+  return manpower>0?volume/manpower:null;
+}
+function regionKpiTier(actual:number|null,def:typeof regionKpiDefinitions[number]) {
+  if(actual===null)return 'No Data';
+  return def.direction==='HIGHER'?(actual>=def.target1?'Tier 1':actual>=def.target2?'Tier 2':'Tier 3'):(actual<=def.target1?'Tier 1':actual<=def.target2?'Tier 2':'Tier 3');
+}
+export async function buildKpiRegionMonthly(env:QueryEnv) {
+  const latest=await env.DB.prepare('SELECT MAX(date) AS max FROM sla_rows').first<{max:string|null}>();
+  if(!latest?.max)throw new Error('D1 belum memiliki data SLA.');
+  const source=await querySla(env,'2000-01-01',latest.max);
+  const dated=source.map(row=>({...row,__date:excelDate(row.PERIODE)})).filter(row=>row.__date) as (Row&{__date:string})[];
+  const groups=new Map<string,(Row&{__date:string})[]>();
+  for(const row of dated){const month=row.__date.slice(0,7);const items=groups.get(month)??[];items.push(row);groups.set(month,items);}
+  const months=[...groups.keys()].sort();
+  const results:KpiRegionMonth[]=months.map(month=>{
+    const rows=groups.get(month)!;
+    const monthEnd=new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7)),0)).toISOString().slice(0,10);
+    const end=month===latest.max!.slice(0,7)?latest.max!:monthEnd;
+    const details=regionKpiDefinitions.map(def=>{
+      let actual:number|null=null;
+      if('num'in def){const raw=ratio(sum(rows,def.num),sum(rows,def.den));actual=raw===null?null:raw*100;}
+      else actual=regionKpiProductivity(rows,def.volume,def.manpower);
+      const tier=regionKpiTier(actual,def);
+      const score=tier==='Tier 1'?def.weight:tier==='Tier 2'?def.weight/2:0;
+      return {key:def.key,label:def.label,actual,unit:def.unit,target1:def.target1,target2:def.target2,direction:def.direction,tier,weight:def.weight,score};
+    });
+    return {month,start:month+'-01',end,complete:end===monthEnd,score:details.reduce((total,item)=>total+item.score,0),maxScore:100,previousScore:null,change:null,details};
+  });
+  results.forEach((item,index)=>{if(index>0){item.previousScore=results[index-1].score;item.change=item.score-item.previousScore;}});
+  return {latestDate:latest.max,months:results};
+}
