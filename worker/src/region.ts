@@ -166,7 +166,7 @@ function lmPenaltyDetails(items:Row[]):PenaltyDetail[]{
   const rosteringRule:TierRule={direction:'HIGHER',tier1:1,tier2:.90};
   const unloadingRule:TierRule={direction:'HIGHER',tier1:.98,tier2:.90};
   const so=(day:Row[])=>ratio(sum(day,'LAST_MILE_QUALITY_VOLUME_SO_DONE'),sum(day,'LAST_MILE_QUALITY_VOLUME_SO'));
-  const stuck=(day:Row[])=>ratio(sum(day,'LAST_MILE_QUALITY_STUCK_IN_WEDNESDAY'),sum(day,'LAST_MILE_QUALITY_VOLUME'));
+  const stuck=(day:Row[])=>ratio(sum(day,'LAST_MILE_QUALITY_STUCK_IN_WEDNESDAY'),average(day,'LAST_MILE_QUALITY_VOLUME'));
   const rostering=(day:Row[])=>{const raw=ratio(sum(day,'IDEAL_SORTER'),sum(day,'ACTUAL_SORTER'));return raw===null?1:Math.min(1,raw)};
   const unloading=(day:Row[])=>ratio(sum(day,'AVG_LOADING_TIME'),sum(day,'VOLUME_ARRIVE'));
   return [
@@ -203,7 +203,7 @@ function mmPenaltyDetails(items:Row[]):PenaltyDetail[]{
 function lmPenalty(items:Row[]){
   if(!items.length) return null;
   const so=penaltyScore(tier(ratio(sum(items,'LAST_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'LAST_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
-  const stuck=penaltyScore(tier(ratio(sum(items,'LAST_MILE_QUALITY_STUCK_IN_WEDNESDAY'),sum(items,'LAST_MILE_QUALITY_VOLUME')),{direction:'LOWER',tier1:0,tier2:.0005}),20);
+  const stuck=penaltyScore(tier(ratio(sum(items,'LAST_MILE_QUALITY_STUCK_IN_WEDNESDAY'),average(items,'LAST_MILE_QUALITY_VOLUME')),{direction:'LOWER',tier1:0,tier2:.0005}),20);
   const rosteringRaw=ratio(sum(items,'IDEAL_SORTER'),sum(items,'ACTUAL_SORTER'));
   const rostering=penaltyScore(tier(rosteringRaw===null?1:Math.min(1,rosteringRaw),{direction:'HIGHER',tier1:1,tier2:.90}),20);
   const unloading=penaltyScore(tier(ratio(sum(items,'AVG_LOADING_TIME'),sum(items,'VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}),20);
