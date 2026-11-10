@@ -10,7 +10,7 @@ import { PeriodPickerPopover } from './components/PeriodPickerPopover';
 const DriverApexChart=({daily,metric,label}:{daily:any[];metric:'volume'|'backlog'|'failedDelivery'|'codTransfer'|'kpiRegion';label:string})=>{
   const rateKey=metric==='backlog'?'backlogRate':metric==='failedDelivery'?'failedDeliveryRate':'codTransferRate';
   const isRate=metric!=='volume'&&metric!=='kpiRegion';
-  const points=daily.map(d=>({date:d.date,value:Number(metric==='kpiRegion'?d.score:isRate?d[rateKey]:d.volume)})).filter(p=>Number.isFinite(p.value)&&(!('hasData'in daily.find(d=>d.date===p.date)!)||daily.find(d=>d.date===p.date)!.hasData));
+  const points=daily.filter(d=>metric!=='kpiRegion'||d.hasData!==false).map(d=>({date:d.date,value:Number(metric==='kpiRegion'?d.score:isRate?d[rateKey]:d.volume)})).filter(p=>Number.isFinite(p.value));
   const tier=(v:number)=>metric==='kpiRegion'?'volume':metric==='backlog'?v<=1.5?'tier-1':v<=2?'tier-2':'tier-3':metric==='failedDelivery'?v<=1?'tier-1':v<=1.5?'tier-2':'tier-3':metric==='codTransfer'?v>=99.5?'tier-1':v>=99?'tier-2':'tier-3':'volume';
   const maxValue=Math.max(...points.map(p=>p.value),0);
   const max=metric==='kpiRegion'?100:metric==='codTransfer'?100:metric==='backlog'||metric==='failedDelivery'?Math.max(metric==='backlog'?2:1.5,Math.ceil((maxValue+2.5)*10)/10):niceAxisMax(maxValue);
