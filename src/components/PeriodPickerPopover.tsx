@@ -12,6 +12,7 @@ type Props = {
   periodPreset: PeriodPreset;
   customRange: { start: string; end: string } | null;
   periodLabel: string;
+  scopeLabel: string;
   onChange: (preset: PeriodPreset, customRange: { start: string; end: string } | null) => void;
 };
 
@@ -54,6 +55,7 @@ export function PeriodPickerPopover({
   periodPreset,
   customRange,
   periodLabel,
+  scopeLabel,
   onChange,
 }: Props) {
   const [open, setOpen] = useState(false);
@@ -122,11 +124,11 @@ useEffect(() => {
         onClick={() => setOpen(v => !v)}
         aria-expanded={open}
         aria-haspopup="dialog"
-        title="Pilih periode"
+        title={`Pilih periode untuk ${scopeLabel}`}
       >
         <CalendarDays size={16} />
         <span className="period-picker-content">
-          <span className="period-picker-caption">Periode Aktif</span>
+          <span className="period-picker-caption">Filter {scopeLabel}</span>
           <span className="period-picker-value">{periodLabel}</span>
         </span>
         <ChevronDown size={14} className="period-picker-chevron" />
@@ -136,10 +138,10 @@ useEffect(() => {
         <div
           className="period-picker-popover"
           role="dialog"
-          aria-label="Pilih periode"
+          aria-label={`Pilih periode ${scopeLabel}`}
         >
           <div className="period-picker-head">
-            <strong>Pilih Periode</strong>
+            <strong>Periode {scopeLabel}</strong>
             <small>Data dihitung berdasarkan tanggal data terbaru</small>
           </div>
 
