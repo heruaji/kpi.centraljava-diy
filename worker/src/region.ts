@@ -199,8 +199,8 @@ function mmPenaltyDetails(items:Row[]):PenaltyDetail[]{
   const so=(day:Row[])=>ratio(sum(day,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(day,'MIDDLE_MILE_QUALITY_VOLUME_SO'));
   const stuck=(day:Row[])=>ratio(sum(day,'STUCK_RABU'),average(day,'AVERAGE_VOLUME'));
   return [
-    mmPenaltyRow('unloading','Unloading Time',unloading(items),unloadingRule,'≥98%',penaltyDaily(items,unloading,unloadingRule)),
-    mmPenaltyRow('so','SO Quality',so(items),soRule,'≥75%',penaltyDaily(items,so,soRule)),
+    penaltyRow('unloading','Unloading Time',unloading(items),unloadingRule,20,'≥98%',penaltyDaily(items,unloading,unloadingRule)),
+    penaltyRow('so','SO Quality',so(items),soRule,20,'≥75%',penaltyDaily(items,so,soRule)),
     mmPenaltyRow('stuck','Stuck Rate',stuck(items),stuckRule,'0%',penaltyDaily(items,stuck,stuckRule)),
   ];
 }
@@ -225,8 +225,8 @@ function fmPenalty(items:Row[]){
 
 function mmPenalty(items:Row[]){
   if(!items.length) return null;
-  const unloading=mmPenaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_COST_AVERAGE_LOADING_TIME'),sum(items,'MIDDLE_MILE_COST_VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}));
-  const so=mmPenaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}));
+  const unloading=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_COST_AVERAGE_LOADING_TIME'),sum(items,'MIDDLE_MILE_COST_VOLUME_ARRIVE')),{direction:'HIGHER',tier1:.98,tier2:.90}),20);
+  const so=penaltyScore(tier(ratio(sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO_DONE'),sum(items,'MIDDLE_MILE_QUALITY_VOLUME_SO')),{direction:'HIGHER',tier1:.75,tier2:.70}),20);
   const stuckActual=ratio(sum(items,'STUCK_RABU'),average(items,'AVERAGE_VOLUME'));
   const stuck=mmPenaltyScore(tier(stuckActual,{direction:'LOWER',tier1:0,tier2:.0005}));
   return unloading+so+stuck;
