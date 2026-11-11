@@ -797,16 +797,10 @@ function regionKpiNumber(value:unknown):number|null {
  * Numerator 0 tetap valid dan menghasilkan actual 0%.
  */
 function regionKpiRatio(rows:Row[],numKey:string,denKey:string):number|null {
-  let numerator=0,denominator=0,availableRows=0;
-  for(const row of rows){
-    const num=regionKpiNumber(row[numKey]);
-    const den=regionKpiNumber(row[denKey]);
-    if(num===null||den===null) continue;
-    numerator+=num;
-    denominator+=den;
-    availableRows++;
-  }
-  if(!availableRows||denominator<=0) return null;
+  // Sama dengan menu lama: sel kosong diperlakukan sebagai 0 saat SUM.
+  const numerator=rows.reduce((total,row)=>total+(regionKpiNumber(row[numKey])??0),0);
+  const denominator=rows.reduce((total,row)=>total+(regionKpiNumber(row[denKey])??0),0);
+  if(denominator<=0) return null;
   return numerator/denominator;
 }
 
@@ -822,9 +816,9 @@ function regionKpiProductivity(rows:Row[],volumeKey:string,manpowerKey:string):n
   for(const row of rows){
     const date=String(row.__date??excelDate(row.PERIODE)??'');
     if(!date) continue;
-    const volume=regionKpiNumber(row[volumeKey]);
-    const manpower=regionKpiNumber(row[manpowerKey]);
-    if(volume===null||manpower===null) continue;
+    // Menu Productivity lama memakai SUM dengan sel kosong sebagai 0.
+    const volume=regionKpiNumber(row[volumeKey])??0;
+    const manpower=regionKpiNumber(row[manpowerKey])??0;
     const current=byDate.get(date)??{volume:0,manpower:0,available:false};
     current.volume+=volume;
     current.manpower+=manpower;
