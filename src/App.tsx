@@ -102,6 +102,7 @@ type KpiRegionMonth = {
 function KpiRegionModule({onOperational}:{onOperational:()=>void}){
   const [months,setMonths]=useState<KpiRegionMonth[]>([]);
   const [latestDate,setLatestDate]=useState<string|null>(null);
+  const [selectedMetric,setSelectedMetric]=useState('sla');
   const [loading,setLoading]=useState(true);
   const [error,setError]=useState<string|null>(null);
   useEffect(()=>{
@@ -127,51 +128,89 @@ function KpiRegionModule({onOperational}:{onOperational:()=>void}){
   const fmt=(v:number|null|undefined,unit:'percent'|'number'='number')=>
     v==null?'—':new Intl.NumberFormat('id-ID',{maximumFractionDigits:2}).format(v)+(unit==='percent'?'%':'');
   const fmtMonth=(v:string)=>new Intl.DateTimeFormat('id-ID',{month:'long',year:'numeric'}).format(new Date(v+'-01T00:00:00'));
+  const shortMonth=(v:string)=>new Intl.DateTimeFormat('id-ID',{month:'short'}).format(new Date(v+'-01T00:00:00'));
   const tierClass=(tier:string|undefined)=>tier==='Tier 1'?'kpi-point-tier1':tier==='Tier 2'?'kpi-point-tier2':tier==='Tier 3'?'kpi-point-tier3':'';
+  const latest=months[months.length-1];
+  const definitions=latest?.details||months[0]?.details||[];
+  const selectedDefinition=definitions.find(item=>item.key===selectedMetric)||definitions[0];
+  const scoreColor=(score:number)=>score>=90?'#059669':score>=75?'#d97706':'#e11d48';
+  const tierColor=(tier:string)=>tier==='Tier 1'?'#059669':tier==='Tier 2'?'#d97706':tier==='Tier 3'?'#e11d48':'#94a3b8';
+  const scoreCoverage=latest?.coverage??latest?.availableWeight??0;
   return <div className="kpi-region-module">
     <div className="kpi-region-nav" role="tablist" aria-label="Navigasi KPI">
       <button type="button" role="tab" aria-selected="true" className="active">KPI REGION</button>
       <button type="button" role="tab" aria-selected="false" onClick={onOperational}>OPERATIONAL</button>
     </div>
     <div className="section-heading">
-      <div><p className="eyebrow">REGIONAL SCORECARD</p><h2>KPI REGION</h2><p className="muted">Skor bulanan, nilai aktual, tier, dan kelengkapan data • hanya level Region</p></div>
+      <div><p className="eyebrow">REGIONAL SCORECARD</p><h2>KPI REGION</h2><p className="muted">Ringkasan seluruh indikator performa Region</p></div>
       <span className="freshness">Data terakhir: {latestDate||'—'}</span>
     </div>
     {loading?<div className="placeholder">Memuat penilaian KPI REGION…</div>
     :error?<div className="placeholder">{error}</div>
     :!months.length?<div className="placeholder">Belum ada data KPI REGION.</div>
-    :<article className="panel kpi-region-detail kpi-region-matrix">
-      <div className="panel-title">
-        <div><span>MONTHLY SCORECARD</span><h3>Penilaian KPI REGION per Bulan</h3><small>Tier 1 = bobot penuh • Tier 2 = ½ bobot • Tier 3 = 0 poin • No Data tidak masuk penyebut skor</small></div>
-        <span className="metric-target">Maks. 100 poin / bulan</span>
-      </div>
-      <div className="table-wrap"><table>
-        <thead><tr><th className="kpi-region-sticky">KPI / Bobot</th>{months.map(item=><th key={item.month}>{fmtMonth(item.month)}</th>)}</tr></thead>
-        <tbody>
-          <tr className="kpi-region-summary-row">
-            <th className="kpi-region-sticky">FINAL SCORE</th>
-            {months.map(item=><td key={item.month}><strong>{fmt(item.score)} / 100</strong><small>{item.change==null?'Belum ada pembanding':`${item.change>0?'+':''}${fmt(item.change)} vs bulan lalu`}</small></td>)}
-          </tr>
-          <tr className="kpi-region-summary-row">
-            <th className="kpi-region-sticky">COVERAGE</th>
-            {months.map(item=><td key={item.month}><strong>{fmt(item.coverage??item.availableWeight??0)}%</strong><small>{fmt(item.availableWeight??item.coverage??0)} dari 100 bobot tersedia</small></td>)}
-          </tr>
-          {(months[0]?.details||[]).map(detail=><tr key={detail.key}>
-            <td className="kpi-region-sticky"><strong>{detail.label}</strong><small>Bobot {detail.weight} poin</small></td>
-            {months.map(month=>{
-              const value=month.details.find(item=>item.key===detail.key);
-              const available=value?.available??(value?.actual!==null&&value?.actual!==undefined);
-              return <td key={month.month} className={tierClass(value?.tier)}>
-                <strong>{available?fmt(value?.score):'—'}</strong>
-                <small>{value?.tier||'No Data'}</small>
-                <small>Actual: {available?fmt(value?.actual,value?.unit||'number'):'—'}</small>
-              </td>;
-            })}
-          </tr>)}
-        </tbody>
-        <tfoot><tr><th className="kpi-region-sticky">STATUS PERIODE</th>{months.map(item=><th key={item.month}><strong>{item.complete?'Bulan selesai':'Berjalan'}</strong><small>Data s.d. {item.end}</small></th>)}</tr></tfoot>
-      </table></div>
-    </article>}
+    :<>
+      <article className="panel kpi-region-detail" style={{marginBottom:16}}>
+        <div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:16,flexWrap:'wrap'}}>
+          <div><span className="eyebrow">REGIONAL PERFORMANCE SCORE</span><h2 style={{fontSize:38,lineHeight:1.1,margin:'8px 0',color:scoreColor(latest.score)}}>{fmt(latest.score)} <small style={{fontSize:16,color:'var(--muted,#64748b)'}}>/ 100</small></h2><p className="muted" style={{margin:0}}>{fmtMonth(latest.month)} • Final Score berdasarkan bobot KPI yang tersedia</p></div>
+          <div style={{minWidth:180,textAlign:'right'}}><span className="metric-target">Coverage {fmt(scoreCoverage)}%</span><p className="muted" style={{fontSize:12,marginTop:8}}>{fmt(latest.earnedWeight)} poin diperoleh dari {fmt(latest.availableWeight)} bobot tersedia</p></div>
+        </div>
+        <div style={{height:9,background:'var(--surface-muted,#e2e8f0)',borderRadius:20,overflow:'hidden',marginTop:16}}><div style={{height:'100%',width:`${Math.max(0,Math.min(100,latest.score))}%`,background:scoreColor(latest.score),borderRadius:20}}/></div>
+        <div style={{display:'flex',justifyContent:'space-between',gap:12,flexWrap:'wrap',marginTop:10,fontSize:12,color:'var(--muted,#64748b)'}}><span>Tier 1: bobot penuh</span><span>Tier 2: ½ bobot</span><span>Tier 3: 0 poin</span><span>No Data: dikecualikan</span></div>
+      </article>
+
+      <article className="panel kpi-region-detail" style={{marginBottom:16}}>
+        <div className="panel-title"><div><span>MONTHLY PERFORMANCE</span><h3>Tren Final Score per Bulan</h3><small>Perbandingan skor gabungan delapan indikator KPI Region</small></div><span className="metric-target">{months.length} bulan</span></div>
+        <div style={{display:'flex',alignItems:'flex-end',gap:8,height:190,overflowX:'auto',padding:'18px 4px 4px'}}>
+          {months.map(item=><div key={item.month} title={`${fmtMonth(item.month)} • ${fmt(item.score)} poin • Coverage ${fmt(item.coverage)}%`} style={{flex:'1 0 42px',minWidth:42,height:'100%',display:'flex',flexDirection:'column',justifyContent:'flex-end',alignItems:'center',gap:6}}>
+            <small style={{fontSize:10,color:'var(--muted,#64748b)'}}>{fmt(item.score)}</small>
+            <div style={{width:'70%',height:`${Math.max(2,Math.min(100,item.score))}%`,minHeight:3,background:scoreColor(item.score),borderRadius:'5px 5px 0 0'}}/>
+            <small style={{fontSize:10,color:'var(--muted,#64748b)'}}>{shortMonth(item.month)}</small>
+          </div>)}
+        </div>
+      </article>
+
+      <article className="panel kpi-region-detail" style={{marginBottom:16}}>
+        <div className="panel-title"><div><span>MONTHLY KPI TREND</span><h3>Aktual Indikator per Bulan</h3><small>Pilih indikator untuk melihat agregasi aktual bulanan dan status Tier</small></div><span className="metric-target">{months.length} bulan</span></div>
+        <div style={{display:'flex',justifyContent:'flex-end',marginBottom:12}}>
+          <select aria-label="Pilih indikator KPI Region" value={selectedMetric} onChange={event=>setSelectedMetric(event.target.value)} style={{minWidth:220,padding:'9px 12px',border:'1px solid var(--border,#cbd5e1)',borderRadius:8,background:'var(--panel,#fff)',color:'inherit'}}>
+            {definitions.map(item=><option key={item.key} value={item.key}>{item.label}</option>)}
+          </select>
+        </div>
+        {selectedDefinition&&<div style={{display:'flex',alignItems:'flex-end',gap:8,height:220,overflowX:'auto',padding:'18px 4px 4px'}}>
+          {months.map(month=>{
+            const item=month.details.find(detail=>detail.key===selectedMetric);
+            const actual=item?.actual??null;
+            const tier=item?.tier||'No Data';
+            const max=selectedDefinition.unit==='percent'?100:Math.max(selectedDefinition.target1*1.2,...months.map(m=>m.details.find(d=>d.key===selectedMetric)?.actual??0),1);
+            const height=actual===null?0:Math.max(2,Math.min(100,actual/max*100));
+            return <div key={month.month} title={`${fmtMonth(month.month)} • Aktual ${fmt(actual,selectedDefinition.unit)} • ${tier}`} style={{flex:'1 0 42px',minWidth:42,height:'100%',display:'flex',flexDirection:'column',justifyContent:'flex-end',alignItems:'center',gap:6}}>
+              <small style={{fontSize:10,color:'var(--muted,#64748b)',whiteSpace:'nowrap'}}>{fmt(actual,selectedDefinition.unit)}</small>
+              <div style={{width:'70%',height:`${height}%`,minHeight:actual===null?0:3,background:tierColor(tier),borderRadius:'5px 5px 0 0'}}/>
+              <small style={{fontSize:10,color:'var(--muted,#64748b)'}}>{shortMonth(month.month)}</small>
+            </div>;
+          })}
+        </div>}
+        {selectedDefinition&&<div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:11,marginTop:8}}><span style={{color:'#059669'}}>● Tier 1 ≥ {fmt(selectedDefinition.target1,selectedDefinition.unit)}</span><span style={{color:'#d97706'}}>● Tier 2 ≥ {fmt(selectedDefinition.target2,selectedDefinition.unit)}</span><span style={{color:'#e11d48'}}>● Tier 3 di bawah target Tier 2</span></div>}
+      </article>
+
+      <article className="panel kpi-region-detail kpi-region-matrix">
+        <div className="panel-title"><div><span>KPI BREAKDOWN</span><h3>Rincian Aktual dan Penilaian KPI Region</h3><small>Bobot, Tier, poin, dan aktual masing-masing dari delapan indikator</small></div><span className="metric-target">Total bobot 100</span></div>
+        <div className="table-wrap"><table>
+          <thead><tr><th className="kpi-region-sticky">INDIKATOR</th><th>BOBOT</th><th>AKTUAL</th><th>TIER</th><th>POIN</th><th>TARGET TIER 1 / 2</th></tr></thead>
+          <tbody>{latest.details.map(detail=><tr key={detail.key} className={tierClass(detail.tier)}>
+            <td className="kpi-region-sticky"><strong>{detail.label}</strong></td><td>{fmt(detail.weight)}</td><td><strong>{detail.available?fmt(detail.actual,detail.unit):'—'}</strong></td><td>{detail.tier}</td><td>{detail.available?fmt(detail.score):'—'}</td><td>{fmt(detail.target1,detail.unit)} / {fmt(detail.target2,detail.unit)}</td>
+          </tr>)}</tbody>
+        </table></div>
+      </article>
+
+      <article className="panel kpi-region-detail kpi-region-matrix" style={{marginTop:16}}>
+        <div className="panel-title"><div><span>MONTHLY ACTUAL</span><h3>Agregasi Aktual KPI per Bulan</h3><small>Nilai aktual delapan indikator berdasarkan total data pada setiap bulan.</small></div><span className="metric-target">{months.length} bulan</span></div>
+        <div className="table-wrap"><table>
+          <thead><tr><th className="kpi-region-sticky">INDIKATOR</th>{months.map(item=><th key={item.month}>{fmtMonth(item.month)}</th>)}</tr></thead>
+          <tbody>{definitions.map(detail=><tr key={detail.key}><td className="kpi-region-sticky"><strong>{detail.label}</strong><small>Bobot {detail.weight} poin</small></td>{months.map(month=>{const value=month.details.find(item=>item.key===detail.key);return <td key={month.month} className={tierClass(value?.tier)}><strong>{value?.available?fmt(value.actual,value.unit):'—'}</strong><small>{value?.tier||'No Data'}</small></td>)}</tr>)}</tbody>
+        </table></div>
+      </article>
+    </>}
   </div>;
 }
 
