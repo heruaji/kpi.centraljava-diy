@@ -28,7 +28,7 @@ const json = (
     },
   });
 
-const CACHE_VERSION = 'v12-mm-penalty-weights';
+const CACHE_VERSION = 'v13-mm-stuck-null-guard';
 const LEGACY_CACHE_VERSION = CACHE_VERSION;
 const cacheKey = (
   preset?: string,
