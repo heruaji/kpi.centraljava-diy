@@ -160,7 +160,7 @@ function KpiRegionModule({onOperational}:{onOperational:()=>void}){
             <td className="kpi-region-sticky"><strong>{detail.label}</strong><small>Bobot {detail.weight} poin</small></td>
             {months.map(month=>{
               const value=month.details.find(item=>item.key===detail.key);
-              const available=value?.available??value?.actual!==null&&value?.actual!==undefined;
+              const available=value?.available??(value?.actual!==null&&value?.actual!==undefined);
               return <td key={month.month} className={tierClass(value?.tier)}>
                 <strong>{available?fmt(value?.score):'—'}</strong>
                 <small>{value?.tier||'No Data'}</small>
