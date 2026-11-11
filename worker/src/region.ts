@@ -160,10 +160,10 @@ const penaltyRow=(key:string,label:string,actual:number|null,rule:TierRule,maxPe
   const tr=tier(actual,rule);
   return {key,label,actual:pct(actual),targetLabel,tier:tierLabel(tr),maxPenalty,penalty:penaltyScore(tr,maxPenalty),daily};
 };
-const mmPenaltyScore=(tr:ReturnType<typeof tier>)=>tr==='T1'?0:tr==='T2'?20:tr==='T3'?40:0;
+const mmPenaltyScore=(tr:ReturnType<typeof tier>)=>{if(tr===null)return 0;if(tr==='T1')return 0;if(tr==='T2')return 20;return 40;};
 const mmPenaltyRow=(key:string,label:string,actual:number|null,rule:TierRule,targetLabel:string,daily:PenaltyDaily[]):PenaltyDetail=>{
   const tr=tier(actual,rule);
-  return {key,label,actual:pct(actual),targetLabel,tier:tierLabel(tr),maxPenalty:40,penalty:mmPenaltyScore(tr),daily};
+  return {key,label,actual:pct(actual),targetLabel,tier:tierLabel(tr),maxPenalty:40,penalty:actual===null?0:mmPenaltyScore(tr),daily};
 };
 function lmPenaltyDetails(items:Row[]):PenaltyDetail[]{
   const soRule:TierRule={direction:'HIGHER',tier1:.75,tier2:.70};
