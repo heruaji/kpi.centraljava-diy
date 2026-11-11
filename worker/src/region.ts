@@ -811,23 +811,35 @@ function regionKpiRatio(rows:Row[],numKey:string,denKey:string):number|null {
 }
 
 /**
- * Produktivitas dihitung per baris (1 tanggal × 1 Hub).
- * Volume > 0 dan MP = 0 memakai MP pengganti 1.
- * Volume = 0 dan MP = 0 tidak dihitung.
- * Sel kosong tidak dianggap angka 0.
+ * Samakan dengan menu Productivity lama:
+ * agregasikan volume dan manpower per tanggal terlebih dahulu,
+ * lalu jumlahkan hasil harian untuk mendapatkan produktivitas periode.
+ * Volume > 0 dan MP = 0 memakai MP pengganti 1, sesuai perilaku lama.
+ * Baris dengan kedua sel kosong tidak dianggap sebagai data.
  */
 function regionKpiProductivity(rows:Row[],volumeKey:string,manpowerKey:string):number|null {
-  let totalVolume=0,totalManpower=0,availableRows=0;
+  const byDate=new Map<string,{volume:number;manpower:number;available:boolean}>();
   for(const row of rows){
+    const date=String(row.__date??excelDate(row.PERIODE)??'');
+    if(!date) continue;
     const volume=regionKpiNumber(row[volumeKey]);
     const manpower=regionKpiNumber(row[manpowerKey]);
     if(volume===null||manpower===null) continue;
-    if(volume===0&&manpower===0) continue;
-    totalVolume+=volume;
-    totalManpower+=volume>0&&manpower===0?1:manpower;
-    availableRows++;
+    const current=byDate.get(date)??{volume:0,manpower:0,available:false};
+    current.volume+=volume;
+    current.manpower+=manpower;
+    current.available=true;
+    byDate.set(date,current);
   }
-  return availableRows>0&&totalManpower>0?totalVolume/totalManpower:null;
+  if(!byDate.size) return null;
+  let totalVolume=0,totalManpower=0,availableDays=0;
+  for(const day of byDate.values()){
+    if(!day.available||(day.volume===0&&day.manpower===0)) continue;
+    totalVolume+=day.volume;
+    totalManpower+=day.manpower>0?day.manpower:1;
+    availableDays++;
+  }
+  return availableDays>0&&totalManpower>0?totalVolume/totalManpower:null;
 }
 
 function regionKpiActual(rows:Row[],def:RegionKpiDefinition):number|null {
