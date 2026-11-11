@@ -28,7 +28,7 @@ const json = (
     },
   });
 
-const CACHE_VERSION = 'v11-district-filter';
+const CACHE_VERSION = 'v12-mm-penalty-weights';
 const LEGACY_CACHE_VERSION = CACHE_VERSION;
 const cacheKey = (
   preset?: string,
