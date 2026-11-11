@@ -207,7 +207,7 @@ function KpiRegionModule({onOperational}:{onOperational:()=>void}){
         <div className="panel-title"><div><span>MONTHLY ACTUAL</span><h3>Agregasi Aktual KPI per Bulan</h3><small>Nilai aktual delapan indikator berdasarkan total data pada setiap bulan.</small></div><span className="metric-target">{months.length} bulan</span></div>
         <div className="table-wrap"><table>
           <thead><tr><th className="kpi-region-sticky">INDIKATOR</th>{months.map(item=><th key={item.month}>{fmtMonth(item.month)}</th>)}</tr></thead>
-          <tbody>{definitions.map(detail=><tr key={detail.key}><td className="kpi-region-sticky"><strong>{detail.label}</strong><small>Bobot {detail.weight} poin</small></td>{months.map(month=>{const value=month.details.find(item=>item.key===detail.key);return <td key={month.month} className={tierClass(value?.tier)}><strong>{value?.available?fmt(value.actual,value.unit):'—'}</strong><small>{value?.tier||'No Data'}</small></td>)}</tr>)}</tbody>
+          <tbody>{definitions.map(detail=><tr key={detail.key}><td className="kpi-region-sticky"><strong>{detail.label}</strong><small>Bobot {detail.weight} poin</small></td>{months.map(month=>{const value=month.details.find(item=>item.key===detail.key);return <td key={month.month} className={tierClass(value?.tier)}><strong>{value?.available?fmt(value.actual,value.unit):'—'}</strong><small>{value?.tier||'No Data'}</small></td>})}</tr>)}</tbody>
         </table></div>
       </article>
     </>}
