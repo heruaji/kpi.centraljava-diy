@@ -745,10 +745,32 @@ export async function buildRegionDashboardFromD1(
 // KPI REGION — monthly independent scoring (separate from KPI OPERATION)
 // ============================================================
 export type KpiRegionMonth = {
-  month:string; start:string; end:string; complete:boolean; score:number; maxScore:100;
-  previousScore:number|null; change:number|null;
-  details:Array<{key:string;label:string;actual:number|null;unit:'percent'|'number';target1:number;target2:number;direction:'HIGHER'|'LOWER';tier:string;weight:number;score:number}>;
+  month:string;
+  start:string;
+  end:string;
+  complete:boolean;
+  score:number;
+  maxScore:100;
+  coverage:number;
+  availableWeight:number;
+  earnedWeight:number;
+  previousScore:number|null;
+  change:number|null;
+  details:Array<{
+    key:string;
+    label:string;
+    actual:number|null;
+    unit:'percent'|'number';
+    target1:number;
+    target2:number;
+    direction:'HIGHER'|'LOWER';
+    tier:string;
+    weight:number;
+    score:number;
+    available:boolean;
+  }>;
 };
+
 const regionKpiDefinitions = [
   {key:'sla',label:'SLA Performance',target1:96,target2:95,weight:30,direction:'HIGHER' as const,unit:'percent' as const,num:'VOLUME_SLA_MEET',den:'VOLUME_SLA_ALL'},
   {key:'cod',label:'COD Transferred',target1:99.5,target2:99,weight:5,direction:'HIGHER' as const,unit:'percent' as const,num:'VOLUME_COD_TF',den:'VOLUME_COD_ALL'},
@@ -758,51 +780,159 @@ const regionKpiDefinitions = [
   {key:'sorterLm',label:'Productivity Sorter LM',target1:650,target2:550,weight:5,direction:'HIGHER' as const,unit:'number' as const,volume:'TOTAL_PAKET_LM_SORTER',manpower:'TOTAL_MP_LM_SORTER'},
   {key:'sigesitFm',label:'Productivity Sigesit FM',target1:115,target2:88,weight:10,direction:'HIGHER' as const,unit:'number' as const,volume:'TOTAL_PAKET_FM_SIGESIT',manpower:'TOTAL_MP_FM_SIGESIT'},
   {key:'sigesitLm',label:'Productivity Sigesit LM',target1:51,target2:40,weight:15,direction:'HIGHER' as const,unit:'number' as const,volume:'TOTAL_PAKET_LM_SIGESIT',manpower:'TOTAL_MP_LM_SIGESIT'},
-];
+] as const;
+
+type RegionKpiDefinition = typeof regionKpiDefinitions[number];
+
+/** Mengembalikan null untuk sel kosong; angka 0 tetap dianggap data valid. */
+function regionKpiNumber(value:unknown):number|null {
+  if(value===null||value===undefined||String(value).trim()==='') return null;
+  const parsed=typeof value==='number'?value:Number(String(value).replace(/,/g,''));
+  return Number.isFinite(parsed)?parsed:null;
+}
+
+/**
+ * Rasio bulanan dihitung dari total numerator / total denominator.
+ * Hanya pasangan kolom yang keduanya tersedia yang masuk agregasi.
+ * Numerator 0 tetap valid dan menghasilkan actual 0%.
+ */
+function regionKpiRatio(rows:Row[],numKey:string,denKey:string):number|null {
+  let numerator=0,denominator=0,availableRows=0;
+  for(const row of rows){
+    const num=regionKpiNumber(row[numKey]);
+    const den=regionKpiNumber(row[denKey]);
+    if(num===null||den===null) continue;
+    numerator+=num;
+    denominator+=den;
+    availableRows++;
+  }
+  if(!availableRows||denominator<=0) return null;
+  return numerator/denominator;
+}
+
+/**
+ * Produktivitas dihitung per baris (1 tanggal × 1 Hub).
+ * Volume > 0 dan MP = 0 memakai MP pengganti 1.
+ * Volume = 0 dan MP = 0 tidak dihitung.
+ * Sel kosong tidak dianggap angka 0.
+ */
 function regionKpiProductivity(rows:Row[],volumeKey:string,manpowerKey:string):number|null {
-  const daily=new Map<string,{volume:number;manpower:number}>();
-  for(const row of rows){const date=String(row.__date??'');if(!date)continue;const value=daily.get(date)??{volume:0,manpower:0};value.volume+=n(row[volumeKey]);value.manpower+=n(row[manpowerKey]);daily.set(date,value);}
-  let volume=0,manpower=0;
-  for(const value of daily.values()){if(value.volume===0&&value.manpower===0)continue;volume+=value.volume;manpower+=value.manpower>0?value.manpower:1;}
-  return manpower>0?volume/manpower:null;
+  let totalVolume=0,totalManpower=0,availableRows=0;
+  for(const row of rows){
+    const volume=regionKpiNumber(row[volumeKey]);
+    const manpower=regionKpiNumber(row[manpowerKey]);
+    if(volume===null||manpower===null) continue;
+    if(volume===0&&manpower===0) continue;
+    totalVolume+=volume;
+    totalManpower+=volume>0&&manpower===0?1:manpower;
+    availableRows++;
+  }
+  return availableRows>0&&totalManpower>0?totalVolume/totalManpower:null;
 }
-function regionKpiTier(actual:number|null,def:typeof regionKpiDefinitions[number]) {
-  if(actual===null)return 'No Data';
-  return def.direction==='HIGHER'?(actual>=def.target1?'Tier 1':actual>=def.target2?'Tier 2':'Tier 3'):(actual<=def.target1?'Tier 1':actual<=def.target2?'Tier 2':'Tier 3');
+
+function regionKpiActual(rows:Row[],def:RegionKpiDefinition):number|null {
+  if('num' in def){
+    const raw=regionKpiRatio(rows,def.num,def.den);
+    return raw===null?null:raw*100;
+  }
+  return regionKpiProductivity(rows,def.volume,def.manpower);
 }
+
+function regionKpiTier(actual:number|null,def:RegionKpiDefinition):string {
+  if(actual===null) return 'No Data';
+  return def.direction==='HIGHER'
+    ?(actual>=def.target1?'Tier 1':actual>=def.target2?'Tier 2':'Tier 3')
+    :(actual<=def.target1?'Tier 1':actual<=def.target2?'Tier 2':'Tier 3');
+}
+
+function regionKpiScore(tierName:string,weight:number):number {
+  return tierName==='Tier 1'?weight:tierName==='Tier 2'?weight/2:0;
+}
+
+function regionKpiSummarize(rows:Row[]) {
+  let availableWeight=0,earnedWeight=0;
+  const details=regionKpiDefinitions.map(def=>{
+    const actual=regionKpiActual(rows,def);
+    const tierName=regionKpiTier(actual,def);
+    const available=actual!==null;
+    const score=available?regionKpiScore(tierName,def.weight):0;
+    if(available){availableWeight+=def.weight;earnedWeight+=score;}
+    return {
+      key:def.key,label:def.label,actual,unit:def.unit,target1:def.target1,target2:def.target2,
+      direction:def.direction,tier:tierName,weight:def.weight,score,available
+    };
+  });
+  const coverage=availableWeight;
+  const score=availableWeight>0?(earnedWeight/availableWeight)*100:0;
+  return {details,score,coverage,availableWeight,earnedWeight};
+}
+
 export async function buildKpiRegionMonthly(env:QueryEnv) {
   const latest=await env.DB.prepare('SELECT MAX(date) AS max FROM sla_rows').first<{max:string|null}>();
-  if(!latest?.max)throw new Error('D1 belum memiliki data SLA.');
+  if(!latest?.max) throw new Error('D1 belum memiliki data SLA.');
+
   const source=await querySla(env,'2000-01-01',latest.max);
-  const dated=source.map(row=>({...row,__date:excelDate(row.PERIODE)})).filter(row=>row.__date) as (Row&{__date:string})[];
+  const dated=source
+    .map(row=>({...row,__date:excelDate(row.PERIODE)}))
+    .filter(row=>row.__date) as (Row&{__date:string})[];
+
   const groups=new Map<string,(Row&{__date:string})[]>();
-  for(const row of dated){const month=row.__date.slice(0,7);const items=groups.get(month)??[];items.push(row);groups.set(month,items);}
+  for(const row of dated){
+    const month=row.__date.slice(0,7);
+    const items=groups.get(month)??[];
+    items.push(row);
+    groups.set(month,items);
+  }
+
   const daily=[...new Set(dated.map(row=>row.__date))].sort().map(date=>{
     const rows=dated.filter(row=>row.__date===date);
-    const details=regionKpiDefinitions.map(def=>{
-      let actual:number|null=null;
-      if('num'in def){const raw=ratio(sum(rows,def.num),sum(rows,def.den));actual=raw===null?null:raw*100;}
-      else actual=regionKpiProductivity(rows,def.volume,def.manpower);
-      const tier=regionKpiTier(actual,def);
-      return {key:def.key,actual,tier,score:tier==='Tier 1'?def.weight:tier==='Tier 2'?def.weight/2:0};
-    });
-    return {date,score:details.reduce((total,item)=>total+item.score,0),hasData:details.some(item=>item.actual!==null)};
+    const summary=regionKpiSummarize(rows);
+    return {
+      date,
+      score:summary.score,
+      coverage:summary.coverage,
+      availableWeight:summary.availableWeight,
+      earnedWeight:summary.earnedWeight,
+      hasData:summary.availableWeight>0,
+      details:summary.details.map(item=>({
+        key:item.key,actual:item.actual,tier:item.tier,weight:item.weight,
+        score:item.score,available:item.available
+      }))
+    };
   });
+
   const months=[...groups.keys()].sort();
   const results:KpiRegionMonth[]=months.map(month=>{
     const rows=groups.get(month)!;
-    const monthEnd=new Date(Date.UTC(Number(month.slice(0,4)),Number(month.slice(5,7)),0)).toISOString().slice(0,10);
+    const monthEnd=new Date(Date.UTC(
+      Number(month.slice(0,4)),
+      Number(month.slice(5,7)),
+      0
+    )).toISOString().slice(0,10);
     const end=month===latest.max!.slice(0,7)?latest.max!:monthEnd;
-    const details=regionKpiDefinitions.map(def=>{
-      let actual:number|null=null;
-      if('num'in def){const raw=ratio(sum(rows,def.num),sum(rows,def.den));actual=raw===null?null:raw*100;}
-      else actual=regionKpiProductivity(rows,def.volume,def.manpower);
-      const tier=regionKpiTier(actual,def);
-      const score=tier==='Tier 1'?def.weight:tier==='Tier 2'?def.weight/2:0;
-      return {key:def.key,label:def.label,actual,unit:def.unit,target1:def.target1,target2:def.target2,direction:def.direction,tier,weight:def.weight,score};
-    });
-    return {month,start:month+'-01',end,complete:end===monthEnd,score:details.reduce((total,item)=>total+item.score,0),maxScore:100,previousScore:null,change:null,details};
+    const summary=regionKpiSummarize(rows);
+    return {
+      month,
+      start:month+'-01',
+      end,
+      complete:end===monthEnd,
+      score:summary.score,
+      maxScore:100,
+      coverage:summary.coverage,
+      availableWeight:summary.availableWeight,
+      earnedWeight:summary.earnedWeight,
+      previousScore:null,
+      change:null,
+      details:summary.details
+    };
   });
-  results.forEach((item,index)=>{if(index>0){item.previousScore=results[index-1].score;item.change=item.score-item.previousScore;}});
+
+  results.forEach((item,index)=>{
+    if(index>0){
+      item.previousScore=results[index-1].score;
+      item.change=item.score-item.previousScore;
+    }
+  });
+
   return {latestDate:latest.max,months:results,daily};
 }
