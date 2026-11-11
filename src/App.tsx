@@ -133,7 +133,7 @@ function KpiRegionModule({onOperational}:{onOperational:()=>void}){
   const latest=months[months.length-1];
   const definitions=latest?.details||months[0]?.details||[];
   const selectedDefinition=definitions.find(item=>item.key===selectedMetric)||definitions[0];
-  const scoreColor=(score:number)=>score>=90?'#059669':score>=75?'#d97706':'#e11d48';
+  const scoreColor=(_score:number)=>'#2563eb';
   const tierColor=(tier:string)=>tier==='Tier 1'?'#059669':tier==='Tier 2'?'#d97706':tier==='Tier 3'?'#e11d48':'#94a3b8';
   const scoreCoverage=latest?.coverage??latest?.availableWeight??0;
   return <div className="kpi-region-module">
@@ -190,7 +190,7 @@ function KpiRegionModule({onOperational}:{onOperational:()=>void}){
             </div>;
           })}
         </div>}
-        {selectedDefinition&&<div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:11,marginTop:8}}><span style={{color:'#059669'}}>● Tier 1 ≥ {fmt(selectedDefinition.target1,selectedDefinition.unit)}</span><span style={{color:'#d97706'}}>● Tier 2 ≥ {fmt(selectedDefinition.target2,selectedDefinition.unit)}</span><span style={{color:'#e11d48'}}>● Tier 3 di bawah target Tier 2</span></div>}
+        {selectedDefinition&&<div style={{display:'flex',gap:16,flexWrap:'wrap',fontSize:11,marginTop:8}}><span style={{color:'#059669'}}>● Tier 1 {selectedDefinition.direction==='HIGHER'?'≥':'≤'} {fmt(selectedDefinition.target1,selectedDefinition.unit)}</span><span style={{color:'#d97706'}}>● Tier 2 {selectedDefinition.direction==='HIGHER'?'≥':'≤'} {fmt(selectedDefinition.target2,selectedDefinition.unit)}</span><span style={{color:'#e11d48'}}>● Tier 3 di luar target Tier 2</span></div>}
       </article>
 
       <article className="panel kpi-region-detail kpi-region-matrix">
