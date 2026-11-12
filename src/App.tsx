@@ -112,7 +112,7 @@ export default function App() {
         if (!item || typeof item !== 'object') return;
         const preset = validPresets.includes(item.preset) ? item.preset : 'MTD';
         const range = item.customRange;
-        const customRange = range && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.start) && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.end) && range.start <= range.end
+        const customRange = range && /^\d{4}-\d{2}-\d{2}$/.test(range.start) && /^\d{4}-\d{2}-\d{2}$/.test(range.end) && range.start <= range.end
           ? { start: range.start, end: range.end }
           : null;
         defaults[module] = { preset, customRange };
@@ -447,9 +447,21 @@ export default function App() {
   const kpiBranchUnsatisfactory = kpiBranchWithData.filter(b=>(b.kpiScore??0)<40).length;
   useEffect(()=>{if(kpiAreaId&&dashboard&&!kpiSelectedArea){setKpiAreaId(null);setKpiBranchDetailId(null)}},[dashboard,kpiAreaId,kpiSelectedArea]);
   useEffect(()=>{if(kpiBranchDetailId&&kpiSelectedArea&&!kpiSelectedBranch){setKpiBranchDetailId(null);setKpiDailyDate(null)}},[kpiSelectedArea,kpiBranchDetailId,kpiSelectedBranch]);
-  const periodLabel = activeRange
-    ? `${activeRange.label} • ${fmtDate(activeRange.start)}–${fmtDate(activeRange.end)}`
-    : 'MTD • Memuat...';
+  const periodPresetLabels: Record<DashboardPeriod, string> = {
+    TODAY: 'Hari Ini',
+    YESTERDAY: 'Kemarin',
+    LAST_7: '7 Hari Terakhir',
+    LAST_30: '30 Hari Terakhir',
+    LAST_MONTH: 'Bulan Lalu',
+    WTD: 'WTD',
+    MTD: 'MTD',
+    YTD: 'YTD',
+  };
+  // The picker label must follow the active module's saved selection immediately,
+  // not dashboard.range, which can still contain the previous request while loading.
+  const periodLabel = customRange
+    ? `Custom • ${fmtDate(customRange.start)}–${fmtDate(customRange.end)}`
+    : periodPresetLabels[periodPreset];
   const periodSlug = activeRange ? `${activeRange.start}_${activeRange.end}` : null;
 
   const territoryNav = (() => {
