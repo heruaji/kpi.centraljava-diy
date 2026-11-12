@@ -21,7 +21,7 @@ export function ProductivityBranchControls({
   branchCount,
 }: ProductivityBranchControlsProps) {
   return (
-    <div className="productivity-branch-tools">
+    <>
       <input
         className="table-search"
         type="search"
@@ -52,6 +52,6 @@ export function ProductivityBranchControls({
         <option value="change-asc">Penurunan terbesar</option>
       </select>
       <span className="area-count">{branchCount} gerai</span>
-    </div>
+    </>
   );
 }
