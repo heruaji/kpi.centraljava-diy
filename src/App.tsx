@@ -3,7 +3,7 @@ import Chart from 'react-apexcharts';
 import type { ApexOptions } from 'apexcharts';
 import type { RegionDashboard } from './types/dashboard';
 import { getRegionDashboard, latestFreshness, type DashboardPeriod } from './services/dashboard';
-import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Gauge, Menu, Moon, RefreshCw, Route, Sun, Target, TrendingUp, X, CircleHelp } from 'lucide-react';
+import { BarChart3, CalendarDays, ChevronDown, ChevronLeft, ChevronRight, Gauge, Route, Target, TrendingUp, X, CircleHelp } from 'lucide-react';
 import { ExportButton } from './components/ExportButton';
 import { DashboardTopbar } from './components/DashboardTopbar';
 
