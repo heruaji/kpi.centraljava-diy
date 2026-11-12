@@ -176,7 +176,7 @@ export default function App() {
     if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
     noticeTimer.current = window.setTimeout(() => setRefreshNotice(null), 3500);
   };
-  const refreshDashboard = async (showLoading = false, manual = false, ensurePeriodSnapshot = false) => {
+  const refreshDashboard = async (showLoading = false, manual = false) => {
     const seq = ++refreshSeq.current;
     if (showLoading) setLoading(true);
     if (manual) setRefreshing(true);
@@ -204,10 +204,10 @@ export default function App() {
   };
 
   useEffect(() => {
-    // A selected period/custom range must have its own snapshot. Build it when missing
-    // instead of silently keeping the previous period's dashboard visible.
-    void refreshDashboard(true, false, true);
-  }, [periodPreset, customRange]);
+    // Load the active module's selected period. Each module owns its period state;
+    // the shared API resolves the matching snapshot from period/custom date params.
+    void refreshDashboard(true, false);
+  }, [activeModule, periodPreset, customRange]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-module-periods', JSON.stringify(modulePeriods)); }, [modulePeriods]);
   useEffect(() => { localStorage.setItem('kpi-dashboard-theme', theme); }, [theme]);
