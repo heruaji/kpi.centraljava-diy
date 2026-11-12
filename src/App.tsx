@@ -93,10 +93,13 @@ export default function App() {
   const [driversTrendMetric, setDriversTrendMetric] = useState<'volume'|'backlog'|'failedDelivery'|'codTransfer'>('volume');
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqFunction, setFaqFunction] = useState<'LM'|'FM'|'MM'>('LM');
-  const [activeModule, setActiveModule] = useState<'control'|'sla'|'kpi'|'productivity'|'drivers'>(() => (localStorage.getItem('kpi-dashboard-module') as 'control'|'sla'|'kpi'|'productivity'|'drivers') || 'control');
   type DashboardModule = 'control'|'sla'|'kpi'|'productivity'|'drivers';
   type ModulePeriodSelection = { preset: DashboardPeriod; customRange: {start:string;end:string}|null };
-  const [modulePeriods, setModulePeriods] = useState<Record<DashboardModule, ModulePeriodSelection>>(() => {
+  type DashboardContextState = {
+    activeModule: DashboardModule;
+    modulePeriods: Record<DashboardModule, ModulePeriodSelection>;
+  };
+  const [dashboardContext, setDashboardContext] = useState<DashboardContextState>(() => {
     const defaults: Record<DashboardModule, ModulePeriodSelection> = {
       control: { preset: 'MTD', customRange: null },
       sla: { preset: 'MTD', customRange: null },
@@ -106,31 +109,46 @@ export default function App() {
     };
     const validPresets: DashboardPeriod[] = ['TODAY','YESTERDAY','LAST_7','LAST_30','LAST_MONTH','WTD','MTD','YTD'];
     try {
-      const saved = JSON.parse(localStorage.getItem('kpi-dashboard-module-periods') || '{}');
+      const savedModule = localStorage.getItem('kpi-dashboard-module') as DashboardModule | null;
+      const savedPeriods = JSON.parse(localStorage.getItem('kpi-dashboard-module-periods') || '{}');
       (Object.keys(defaults) as DashboardModule[]).forEach(module => {
-        const item = saved?.[module];
+        const item = savedPeriods?.[module];
         if (!item || typeof item !== 'object') return;
         const preset = validPresets.includes(item.preset) ? item.preset : 'MTD';
         const range = item.customRange;
-        const customRange = range && /^\d{4}-\d{2}-\d{2}$/.test(range.start) && /^\d{4}-\d{2}-\d{2}$/.test(range.end) && range.start <= range.end
+        const customRange = range && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.start) && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.end) && range.start <= range.end
           ? { start: range.start, end: range.end }
           : null;
         defaults[module] = { preset, customRange };
       });
+      const activeModule: DashboardModule = savedModule && Object.prototype.hasOwnProperty.call(defaults, savedModule)
+        ? savedModule
+        : 'control';
+      return { activeModule, modulePeriods: defaults };
     } catch {
-      // Ignore invalid saved preferences and use MTD for every module.
+      return { activeModule: 'control', modulePeriods: defaults };
     }
-    return defaults;
   });
+  const { activeModule, modulePeriods } = dashboardContext;
+  const setActiveModule = (nextModule: DashboardModule) => setDashboardContext(current => ({
+    ...current,
+    activeModule: nextModule,
+  }));
   const periodPreset = modulePeriods[activeModule].preset;
   const customRange = modulePeriods[activeModule].customRange;
-  const setPeriodPreset = (preset: DashboardPeriod) => setModulePeriods(current => ({
+  const setPeriodPreset = (preset: DashboardPeriod) => setDashboardContext(current => ({
     ...current,
-    [activeModule]: { ...current[activeModule], preset },
+    modulePeriods: {
+      ...current.modulePeriods,
+      [current.activeModule]: { ...current.modulePeriods[current.activeModule], preset },
+    },
   }));
-  const setCustomRange = (range: {start:string;end:string}|null) => setModulePeriods(current => ({
+  const setCustomRange = (range: {start:string;end:string}|null) => setDashboardContext(current => ({
     ...current,
-    [activeModule]: { ...current[activeModule], customRange: range },
+    modulePeriods: {
+      ...current.modulePeriods,
+      [current.activeModule]: { ...current.modulePeriods[current.activeModule], customRange: range },
+    },
   }));
   const [kpiFunction, setKpiFunction] = useState<'LM'|'FM'|'MM'>('LM');
   const [kpiAreaQuery, setKpiAreaQuery] = useState('');
