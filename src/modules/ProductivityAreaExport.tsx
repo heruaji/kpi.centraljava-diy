@@ -3,7 +3,7 @@ import { ExportButton } from '../components/ExportButton';
 type ProductivityAreaExportProps = {
   role: 'courier' | 'sorter';
   mile: string;
-  period: string;
+  period: string | null;
   activeRangeLabel?: string | null;
   activeRange?: { start: string; end: string } | null;
   data: any[];
