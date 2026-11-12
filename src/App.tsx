@@ -579,6 +579,7 @@ export default function App() {
             </div>
           </div>
           {!faqOpen && (<div className="topbar-actions" onClick={e=>e.stopPropagation()}><button className="theme-toggle refresh-button" onClick={()=>void refreshDashboard(false,true)} disabled={loading||refreshing} title="Refresh data sekarang"><RefreshCw size={15} className={refreshing?'refresh-spin':''}/><span>{refreshing?'Memperbarui...':'Refresh Data'}</span></button><button className="theme-toggle" onClick={()=>setTheme(v=>v==='dark'?'light':'dark')}>{theme==='dark'?<Sun size={15}/>:<Moon size={15}/>}<span>{theme==='dark'?'Mode Terang':'Mode Gelap'}</span></button><PeriodPickerPopover
+               key={activeModule}
               periodPreset={periodPreset}
               customRange={customRange}
               periodLabel={periodLabel}
