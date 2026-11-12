@@ -73,8 +73,6 @@ export default function App() {
   const [collapsed, setCollapsed] = useState(false);
   const [theme, setTheme] = useState<'light'|'dark'>(() => (localStorage.getItem('kpi-dashboard-theme') as 'light'|'dark') || 'dark');
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [periodPreset, setPeriodPreset] = useState<DashboardPeriod>(() => (localStorage.getItem('kpi-dashboard-period') as DashboardPeriod) || 'MTD');
-  const [customRange, setCustomRange] = useState<{start:string;end:string}|null>(null);
   const [customStart, setCustomStart] = useState('');
   const [customEnd, setCustomEnd] = useState('');
   const [trendMetric, setTrendMetric] = useState<'sla'|'cod'|'failed'|'backlog'|'sorterFm'|'sorterLm'|'courierFm'|'courierLm'>('sla');
@@ -96,6 +94,44 @@ export default function App() {
   const [faqOpen, setFaqOpen] = useState(false);
   const [faqFunction, setFaqFunction] = useState<'LM'|'FM'|'MM'>('LM');
   const [activeModule, setActiveModule] = useState<'control'|'sla'|'kpi'|'productivity'|'drivers'>(() => (localStorage.getItem('kpi-dashboard-module') as 'control'|'sla'|'kpi'|'productivity'|'drivers') || 'control');
+  type DashboardModule = 'control'|'sla'|'kpi'|'productivity'|'drivers';
+  type ModulePeriodSelection = { preset: DashboardPeriod; customRange: {start:string;end:string}|null };
+  const [modulePeriods, setModulePeriods] = useState<Record<DashboardModule, ModulePeriodSelection>>(() => {
+    const defaults: Record<DashboardModule, ModulePeriodSelection> = {
+      control: { preset: 'MTD', customRange: null },
+      sla: { preset: 'MTD', customRange: null },
+      kpi: { preset: 'MTD', customRange: null },
+      productivity: { preset: 'MTD', customRange: null },
+      drivers: { preset: 'MTD', customRange: null },
+    };
+    const validPresets: DashboardPeriod[] = ['TODAY','YESTERDAY','LAST_7','LAST_30','LAST_MONTH','WTD','MTD','YTD'];
+    try {
+      const saved = JSON.parse(localStorage.getItem('kpi-dashboard-module-periods') || '{}');
+      (Object.keys(defaults) as DashboardModule[]).forEach(module => {
+        const item = saved?.[module];
+        if (!item || typeof item !== 'object') return;
+        const preset = validPresets.includes(item.preset) ? item.preset : 'MTD';
+        const range = item.customRange;
+        const customRange = range && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.start) && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.end) && range.start <= range.end
+          ? { start: range.start, end: range.end }
+          : null;
+        defaults[module] = { preset, customRange };
+      });
+    } catch {
+      // Ignore invalid saved preferences and use MTD for every module.
+    }
+    return defaults;
+  });
+  const periodPreset = modulePeriods[activeModule].preset;
+  const customRange = modulePeriods[activeModule].customRange;
+  const setPeriodPreset = (preset: DashboardPeriod) => setModulePeriods(current => ({
+    ...current,
+    [activeModule]: { ...current[activeModule], preset },
+  }));
+  const setCustomRange = (range: {start:string;end:string}|null) => setModulePeriods(current => ({
+    ...current,
+    [activeModule]: { ...current[activeModule], customRange: range },
+  }));
   const [kpiFunction, setKpiFunction] = useState<'LM'|'FM'|'MM'>('LM');
   const [kpiAreaQuery, setKpiAreaQuery] = useState('');
   const [kpiAreaSort, setKpiAreaSort] = useState<'score-desc'|'score-asc'|'name'>('score-desc');
@@ -173,7 +209,7 @@ export default function App() {
     void refreshDashboard(true, false, true);
   }, [periodPreset, customRange]);
 
-  useEffect(() => { localStorage.setItem('kpi-dashboard-period', periodPreset); }, [periodPreset]);
+  useEffect(() => { localStorage.setItem('kpi-dashboard-module-periods', JSON.stringify(modulePeriods)); }, [modulePeriods]);
   useEffect(() => { localStorage.setItem('kpi-dashboard-theme', theme); }, [theme]);
   const historyReady = useRef(false);
   const restoringHistory = useRef(false);
@@ -223,15 +259,6 @@ export default function App() {
     if(restoringHistory.current){restoringHistory.current=false;return}
     window.history.pushState({...window.history.state,kpiNav:navSnapshot},'');
   },[navKey]);
-
-  useEffect(() => {
-    setSelectedKpiKey(null); setSelectedDriver(null);
-    setSelectedAreaId(null); setSelectedBranchId(null);
-    setSlaAreaId(null); setSlaBranchDetailId(null);
-    setKpiAreaId(null); setKpiBranchDetailId(null); setKpiDailyDate(null);
-    setProductivityAreaId(null); setProductivityBranchId(null);
-    setDriversAreaId(null); setDriversBranchId(null);
-  }, [periodPreset, customRange]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-module', activeModule); }, [activeModule]);
   // Every navigation level opens from the top of the page instead of preserving
@@ -546,10 +573,6 @@ export default function App() {
               onChange={(preset, custom) => {
                 setCustomRange(custom);
                 setPeriodPreset(preset as DashboardPeriod);
-                setSelectedKpiKey(null);
-                setSelectedDriver(null);
-                setSlaBranchDetailId(null);
-                setKpiDailyDate(null);
               }}
             />
           </div>
