@@ -116,7 +116,7 @@ export default function App() {
         if (!item || typeof item !== 'object') return;
         const preset = validPresets.includes(item.preset) ? item.preset : 'MTD';
         const range = item.customRange;
-        const customRange = range && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.start) && /^\\d{4}-\\d{2}-\\d{2}$/.test(range.end) && range.start <= range.end
+        const customRange = range && /^\d{4}-\d{2}-\d{2}$/.test(range.start) && /^\d{4}-\d{2}-\d{2}$/.test(range.end) && range.start <= range.end
           ? { start: range.start, end: range.end }
           : null;
         defaults[module] = { preset, customRange };
