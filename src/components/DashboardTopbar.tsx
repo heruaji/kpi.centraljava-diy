@@ -26,9 +26,7 @@ function DashboardTopbarView({
   return (
     <header className="topbar">
       <button className="mobile-menu" onClick={onOpenMobileMenu}><Menu size={22}/></button>
-      <div className="title-row">
-        <div>{titleContent}</div>
-      </div>
+      {titleContent}
       {!faqOpen && (
         <div className="topbar-actions" onClick={e => e.stopPropagation()}>
           <button className="theme-toggle refresh-button" onClick={onRefresh} disabled={loading || refreshing} title="Refresh data sekarang">
