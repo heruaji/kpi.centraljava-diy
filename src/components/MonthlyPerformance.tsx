@@ -22,20 +22,24 @@ export function MonthlyPerformance({ areas }: Props) {
 
   useEffect(()=>{
     let active=true;
+    if(!areaId){setRows([]);setLoading(false);return ()=>{active=false;};}
     setLoading(true); setError('');
     const load=async()=>{
-      const result=await Promise.all(MONTHS.map(async(label,index)=>{
+      const result:MonthRow[]=[];
+      for(let index=0;index<MONTHS.length;index++){
+        const label=MONTHS[index];
         const month=index+1;
         const start=`${year}-${String(month).padStart(2,'0')}-01`;
-        const end=new Date(year,month,0).toISOString().slice(0,10);
+        const end=`${year}-${String(month).padStart(2,'0')}-${String(new Date(year,month,0).getDate()).padStart(2,'0')}`;
         try {
           const snapshot=await getRegionDashboard('MTD',{start,end});
           const area=snapshot.data.areas.find(item=>item.id===areaId) ?? null;
-          return {month,label,area} as MonthRow;
+          result.push({month,label,area});
         } catch(err) {
-          return {month,label,area:null,error:err instanceof Error?err.message:'Gagal memuat bulan'} as MonthRow;
+          result.push({month,label,area:null,error:err instanceof Error?err.message:'Gagal memuat bulan'});
         }
-      }));
+        if(!active)return;
+      }
       if(active) {
         setRows(result);
         const failed=result.filter(item=>item.error).length;
