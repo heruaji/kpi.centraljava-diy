@@ -156,6 +156,13 @@ export default function App() {
   }));
   const periodPreset = modulePeriods[activeModule].preset;
   const customRange = modulePeriods[activeModule].customRange;
+  // Scope every response to the exact module and period currently selected.
+  const dashboardRequestKey = JSON.stringify([
+    activeModule,
+    periodPreset,
+    customRange?.start ?? null,
+    customRange?.end ?? null,
+  ]);
   const setPeriodPreset = (preset: DashboardPeriod) => setDashboardContext(current => ({
     ...current,
     modulePeriods: {
@@ -199,13 +206,21 @@ export default function App() {
   const [areaQuery, setAreaQuery] = useState('');
   const [areaSort, setAreaSort] = useState<'ranking'|'name'|'sla'|'lm'|'fm'|'mm'>('ranking');
   const [branchQuery, setBranchQuery] = useState('');
-  const [dashboard, setDashboard] = useState<RegionDashboard | null>(null);
+  const [dashboardSnapshot, setDashboardSnapshot] = useState<{
+    requestKey: string;
+    data: RegionDashboard;
+    updatedAt: string | null;
+    checkedAt: string | null;
+  } | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [refreshNotice, setRefreshNotice] = useState<{kind:'updated'|'latest';text:string}|null>(null);
-  const [dashboardUpdatedAt, setDashboardUpdatedAt] = useState<string | null>(null);
-  const [dashboardCheckedAt, setDashboardCheckedAt] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [dashboardError, setDashboardError] = useState<{requestKey:string;message:string}|null>(null);
+  const dashboard = dashboardSnapshot?.requestKey === dashboardRequestKey ? dashboardSnapshot.data : null;
+  const dashboardUpdatedAt = dashboardSnapshot?.requestKey === dashboardRequestKey ? dashboardSnapshot.updatedAt : null;
+  const dashboardCheckedAt = dashboardSnapshot?.requestKey === dashboardRequestKey ? dashboardSnapshot.checkedAt : null;
+  const error = dashboardError?.requestKey === dashboardRequestKey ? dashboardError.message : null;
+  const dashboardLoading = loading || (!dashboard && !error);
 
   const refreshSeq = useRef(0);
   const noticeTimer = useRef<number | null>(null);
@@ -214,17 +229,25 @@ export default function App() {
     if (noticeTimer.current) window.clearTimeout(noticeTimer.current);
     noticeTimer.current = window.setTimeout(() => setRefreshNotice(null), 3500);
   };
+  const currentRequestKey = useRef(dashboardRequestKey);
+  // Update during render so stale promises are rejected before the next effect runs.
+  currentRequestKey.current = dashboardRequestKey;
+
   const refreshDashboard = async (showLoading = false, manual = false) => {
+    const requestKey = dashboardRequestKey;
     const seq = ++refreshSeq.current;
     if (showLoading) setLoading(true);
     if (manual) setRefreshing(true);
+    setDashboardError(null);
     try {
       const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual);
-      if (seq === refreshSeq.current) {
-        setDashboard(result.data);
-        setDashboardUpdatedAt(result.updatedAt);
-        setDashboardCheckedAt(result.checkedAt);
-        setError(null);
+      if (seq === refreshSeq.current && requestKey === currentRequestKey.current) {
+        setDashboardSnapshot({
+          requestKey,
+          data: result.data,
+          updatedAt: result.updatedAt,
+          checkedAt: result.checkedAt,
+        });
         if (manual) {
           const stamp=result.updatedAt?new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(result.updatedAt)):'—';
           showRefreshNotice(result.changed
@@ -233,10 +256,15 @@ export default function App() {
         }
       }
     } catch (err) {
-      // Keep the last successful dashboard visible when a background/manual refresh fails.
-      if (seq === refreshSeq.current && !dashboard) setError(err instanceof Error ? err.message : 'Gagal memuat dashboard');
+      // Errors are scoped to the active request; older snapshots cannot hide a failed request.
+      if (seq === refreshSeq.current && requestKey === currentRequestKey.current) {
+        setDashboardError({
+          requestKey,
+          message: err instanceof Error ? err.message : 'Gagal memuat dashboard',
+        });
+      }
     } finally {
-      if (showLoading && seq === refreshSeq.current) setLoading(false);
+      if (showLoading && seq === refreshSeq.current && requestKey === currentRequestKey.current) setLoading(false);
       if (manual) window.setTimeout(() => setRefreshing(false), 450);
     }
   };
@@ -245,7 +273,7 @@ export default function App() {
     // Load the active module's selected period. Each module owns its period state;
     // the shared API resolves the matching snapshot from period/custom date params.
     void refreshDashboard(true, false);
-  }, [activeModule, periodPreset, customRange]);
+  }, [dashboardRequestKey]);
 
   useEffect(() => { localStorage.setItem('kpi-dashboard-module-periods', JSON.stringify(modulePeriods)); }, [modulePeriods]);
   useEffect(() => { localStorage.setItem('kpi-dashboard-theme', theme); }, [theme]);
@@ -618,7 +646,7 @@ export default function App() {
           faqOpen={faqOpen}
           onOpenMobileMenu={() => setMobileOpen(true)}
           onRefresh={() => void refreshDashboard(false, true)}
-          loading={loading}
+          loading={dashboardLoading}
           refreshing={refreshing}
           theme={theme}
           onToggleTheme={() => setTheme(v => v === 'dark' ? 'light' : 'dark')}
@@ -689,7 +717,7 @@ return <article className="panel sla-branch-panel">{detailBranch?(()=>{const bra
           <div className={!faqOpen&&activeModule==='control'&&!controlAreaBridge?'':'module-hidden'}>
           <div className="section-heading">
             <div className="scope-heading"><p className="eyebrow">{selectedKpi ? 'KPI PERFORMANCE DETAIL' : selectedBranch ? 'GERAI PERFORMANCE' : selectedArea ? 'AREA PERFORMANCE' : 'EXECUTIVE OVERVIEW'}</p><h2>{selectedKpi ? selectedKpi.label : selectedBranch ? selectedBranch.name : selectedArea ? selectedArea.name : 'Control Tower Performance Summary'}</h2></div>
-            <span className="freshness" title={dashboardCheckedAt?`Terakhir dicek: ${new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(dashboardCheckedAt))}`:'Snapshot dashboard'}><i></i>{error ? `Error: ${error}` : loading ? 'Memuat data...' : dashboardUpdatedAt?`Update terakhir: ${new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(dashboardUpdatedAt))}`:`Data: ${fmtDate(freshDate)}`}{!error&&!loading&&<b>Snapshot</b>}</span>
+            <span className="freshness" title={dashboardCheckedAt?`Terakhir dicek: ${new Intl.DateTimeFormat('id-ID',{dateStyle:'medium',timeStyle:'short'}).format(new Date(dashboardCheckedAt))}`:'Snapshot dashboard'}><i></i>{error ? `Error: ${error}` : dashboardLoading ? 'Memuat data...' : dashboardUpdatedAt?`Update terakhir: ${new Intl.DateTimeFormat('id-ID',{day:'2-digit',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'}).format(new Date(dashboardUpdatedAt))}`:`Data: ${fmtDate(freshDate)}`}{!error&&!dashboardLoading&&<b>Snapshot</b>}</span>
           </div>
 
           {!selectedKpi && <div className="metric-grid">
