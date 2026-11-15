@@ -238,6 +238,7 @@ export default function App() {
     const seq = ++refreshSeq.current;
     if (showLoading) setLoading(true);
     if (manual) setRefreshing(true);
+    else setRefreshing(false);
     setDashboardError(null);
     try {
       const result = await getRegionDashboard(periodPreset, customRange ?? undefined, manual);
@@ -264,8 +265,10 @@ export default function App() {
         });
       }
     } finally {
-      if (showLoading && seq === refreshSeq.current && requestKey === currentRequestKey.current) setLoading(false);
-      if (manual) window.setTimeout(() => setRefreshing(false), 450);
+      if (seq === refreshSeq.current && requestKey === currentRequestKey.current) setLoading(false);
+      if (manual) window.setTimeout(() => {
+        if (seq === refreshSeq.current) setRefreshing(false);
+      }, 450);
     }
   };
 
