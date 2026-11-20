@@ -593,7 +593,7 @@ const calc=(rows:Row[])=>{
       const lmDay=lmItems.filter(r=>r.__date===date);
       const fmDay=fmItems.filter(r=>r.__date===date);
       const mmDay=mmItems.filter(r=>r.__date===date);
-      return {date,sla:aggregate(slaDay).sla,volume:sum(slaDay,'VOLUME_SLA_ALL'),backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
+      const daily=aggregate(slaDay);return {date,sla:daily.sla,volume:sum(slaDay,'VOLUME_SLA_ALL'),backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),productivitySorterFm:daily.productivitySorterFm,productivitySorterLm:daily.productivitySorterLm,productivityCourierFm:daily.productivityFm,productivityCourierLm:daily.productivityLm,kpiLm:lmScore(lmDay),kpiFm:fmScore(fmDay),kpiMm:mmScore(mmDay)};
     });
     const kpiDetailsLm=lmDetails(lmItems);
     const kpiDetailsFm=fmDetails(fmItems);
