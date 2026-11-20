@@ -53,11 +53,11 @@ const LM_POSITIVE:{num:string;den:string;rule:TierRule;weight:number}[]=[
 function sum(items:Row[],key:string){return items.reduce((a,r)=>a+n(r[key]),0)}
 function average(items:Row[],key:string){const values=items.map(r=>r[key]).filter(v=>v!==null&&v!==undefined&&v!=='').map(n);return values.length?values.reduce((a,v)=>a+v,0)/values.length:0}
 const normHub=(v:unknown)=>String(v||'').trim().toLowerCase().replace(/^t?\d+\s*-\s*/,'');
-const matchesBranch=(r:Row,name:string,code:string)=>{
+const matchesBranch=(r:Row,name:string,_code:string)=>{
   const candidates=[r.Nama_Hub,r['Hub Name'],r['Nama Hub'],r['Sortation Name']].map(normHub).filter(Boolean);
   const target=normHub(name);
-  const codeKey=String(code||'').toLowerCase();
-  return candidates.some(v=>v===target||v.includes(target)||target.includes(v)||(codeKey&&String(r['Hub Name']||r['Nama Hub']||r['Sortation Name']||'').toLowerCase().includes(codeKey)));
+  // Exact normalized identity only: substring matches can merge similarly named gerai.
+  return Boolean(target) && candidates.some(v=>v===target);
 };
 type KpiDetail={key:string;label:string;actual:number|null;target:number;targetLabel:string;tier:string;weight:number;score:number};
 const tierLabel=(v:ReturnType<typeof tier>)=>v??'—';
@@ -564,6 +564,7 @@ const calc=(rows:Row[])=>{
       });
       return {
         id:code||`branch-${index+1}-${branchIndex+1}`,code,name:branchName,function:fn,city:r.city,
+        ranking:areaRanking(slaItems),
         sla:aggregate(slaItems).sla,slaPrevious:aggregate(previousSlaItems).sla,kpiScore:score,kpiScorePrevious,penalty,penaltyPrevious,productivity:aggregate(slaItems).productivityLm??aggregate(slaItems).productivityFm,productivityPrevious:aggregate(previousSlaItems).productivityLm??aggregate(previousSlaItems).productivityFm,productivityByRole:productivityBundle(slaItems,previousSlaItems,previousPreviousSelected.filter(x=>String(x.District||'')===name&&matchesBranch(x,branchName,code))),
         operations:{
           volume:sum(slaItems,'VOLUME_SLA_ALL'),
