@@ -547,7 +547,7 @@ const calc=(rows:Row[])=>{
         const day=sourceItems.filter(x=>x.__date===date);
         const slaDay=slaItems.filter(x=>x.__date===date);
         const dailyAgg=aggregate(slaDay);
-        return {date,sla:dailyAgg.sla,slaMeet:sum(slaDay,'VOLUME_SLA_MEET'),slaAll:sum(slaDay,'VOLUME_SLA_ALL'),productivity:fn==='LM'?dailyAgg.productivityLm:null,productivityVolume:fn==='LM'?sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'):null,productivityManpower:fn==='LM'?sum(slaDay,'TOTAL_MP_LM_SIGESIT'):null,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
+        return {date,sla:dailyAgg.sla,slaMeet:sum(slaDay,'VOLUME_SLA_MEET'),slaAll:sum(slaDay,'VOLUME_SLA_ALL'),codTransferRate:pct(ratio(sum(slaDay,'VOLUME_COD_TF'),sum(slaDay,'VOLUME_COD_ALL'))),failedDeliveryRate:pct(ratio(sum(slaDay,'VOLUME_FD'),sum(slaDay,'VOLUME_FD_ALL'))),backlogRate:pct(ratio(sum(slaDay,'VOLUME_BACKLOG'),sum(slaDay,'VOLUME_BACKLOG_ALL'))),productivitySorterFm:dailyAgg.productivitySorterFm,productivitySorterLm:dailyAgg.productivitySorterLm,productivityCourierFm:dailyAgg.productivityFm,productivityCourierLm:dailyAgg.productivityLm,productivity:fn==='LM'?dailyAgg.productivityLm:null,productivityVolume:fn==='LM'?sum(slaDay,'TOTAL_PAKET_LM_SIGESIT'):null,productivityManpower:fn==='LM'?sum(slaDay,'TOTAL_MP_LM_SIGESIT'):null,kpiLm:fn==='LM'?lmScore(day):null,kpiFm:fn==='FM'?fmScore(day):null,kpiMm:fn==='MM'?mmScore(day):null};
       });
       const operationalTrend=branchDayKeys.map(date=>{
         const day=slaItems.filter(x=>x.__date===date);
