@@ -50,7 +50,10 @@ const KpiDailyTrend=({data,metricKey,label}:{data:any[];metricKey:'kpiLm'|'kpiFm
 const kpiCategory=(value:number|null|undefined)=>value==null?{label:'No Data',tone:'nodata'}:value>=95?{label:'Excellent',tone:'excellent'}:value>=85?{label:'Good',tone:'good'}:value>=60?{label:'Fair',tone:'fair'}:value>=40?{label:'Bad',tone:'bad'}:{label:'Unsatisfactory',tone:'unsatisfactory'};
 
 const navigation = [
-  { label: 'KPI REGION', icon: Gauge, active: true },
+  { label: 'Control Tower', icon: Gauge, active: true },
+  { label: 'SLA Performance', icon: Target },
+  { label: 'KPI Performance', icon: BarChart3 },
+  { label: 'Productivity', icon: TrendingUp },
 ];
 
 const fmtPercent = (value: number | null | undefined) => value == null ? '—' : `${new Intl.NumberFormat('id-ID', { maximumFractionDigits: 2 }).format(value)}%`;
@@ -138,7 +141,7 @@ export default function App() {
           : null;
         defaults[module] = { preset, customRange };
       });
-      const activeModule: DashboardModule = savedModule === 'control' ? 'control' : 'control';
+      const activeModule: DashboardModule = savedModule && Object.prototype.hasOwnProperty.call(defaults, savedModule) ? savedModule : 'control';
       return { activeModule, modulePeriods: defaults };
     } catch {
       return { activeModule: 'control', modulePeriods: defaults };
