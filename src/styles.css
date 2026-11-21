@@ -3538,3 +3538,8 @@ table td .sla-table-tier {
 .kpi-combined-daily-matrix .penalty-indicator-head{border-left:2px solid var(--ct-border-strong,#94a3b8);background:rgba(245,158,11,.08)}
 .kpi-combined-daily-matrix .penalty-indicator-cell{border-left:2px solid var(--ct-border,#cbd5e1);background:rgba(245,158,11,.035)}
 .kpi-combined-daily-matrix .penalty-indicator-cell:first-of-type{border-left-width:2px}
+
+.kpi-combined-daily-matrix thead th>span{display:block;font-weight:750;white-space:normal}
+.kpi-combined-daily-matrix thead th>small{display:block;margin-top:3px;font-size:9px;font-weight:500;color:var(--ct-muted,#718096);white-space:normal}
+.kpi-combined-daily-matrix .penalty-indicator-head{border-left:2px solid var(--ct-border-strong,#94a3b8);background:rgba(245,158,11,.10)}
+.kpi-combined-daily-matrix .penalty-indicator-cell{border-left:2px solid var(--ct-border,#cbd5e1);background:rgba(245,158,11,.04)}
