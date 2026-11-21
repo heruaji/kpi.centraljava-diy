@@ -3566,3 +3566,10 @@ table td .sla-table-tier {
  .kpi-combined-daily-matrix th.kpi-matrix-date,
  .kpi-combined-daily-matrix td.kpi-matrix-date{width:150px!important;min-width:150px!important}
 }
+
+/* Keep the sticky date cell opaque so KPI values never bleed beneath it */
+.kpi-combined-daily-matrix td.kpi-matrix-date{background:var(--ct-card,#132333)!important;isolation:isolate!important;z-index:6!important}
+.kpi-combined-daily-matrix td.kpi-matrix-date button{position:relative;z-index:1;background:transparent!important}
+.kpi-combined-daily-matrix table{table-layout:fixed!important;width:max-content!important;min-width:100%!important}
+.kpi-combined-daily-matrix th.kpi-matrix-date,.kpi-combined-daily-matrix td.kpi-matrix-date{width:190px!important;min-width:190px!important;max-width:190px!important}
+.kpi-combined-daily-matrix thead th:not(.kpi-matrix-date),.kpi-combined-daily-matrix tbody td:not(.kpi-matrix-date){width:112px!important;min-width:112px!important;max-width:112px!important}
