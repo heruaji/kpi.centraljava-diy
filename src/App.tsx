@@ -694,7 +694,7 @@ export default function App() {
           </div>}
           {/* Module intro dihapus — info sudah ada di topbar + metric cards */}
           {!faqOpen && showSlaModule && <div className="sla-module">{controlSlaBridge && slaAreaId ? (dashboard?.areas?.find(item=>item.id===slaAreaId) ? <KpiRegionDistrictView
-            area={dashboard.areas.find(item=>item.id===slaAreaId)!}
+            area={dashboard!.areas.find(item=>item.id===slaAreaId)!}
             selectedBranchId={slaBranchDetailId}
             trendMetric={trendMetric as ControlTrendKey}
             activeTrend={activeControlTrend}
