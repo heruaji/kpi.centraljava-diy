@@ -3482,3 +3482,25 @@ table td .sla-table-tier {
 .theme-dark .kpi-region-trend-chart .legend-tier-2{background:#fbbf24}
 .theme-dark .kpi-region-trend-chart .legend-tier-3{background:#fb7185}
 @media(max-width:760px){.kpi-region-trend-toolbar{align-items:flex-start}.kpi-region-trend-toolbar .trend-select{max-width:48%;min-width:125px}.kpi-region-trend-chart .trend-legend{justify-content:flex-start;overflow-x:auto}}
+
+/* KPI REGION area and gerai summary layout */
+.kpi-region-area-view,.kpi-region-gerai-view{display:grid;gap:14px;min-width:0}
+.kpi-region-summary-grid{display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;min-width:0}
+.kpi-region-summary-card{display:flex;flex-direction:column;gap:7px;min-width:0;padding:14px 15px;border:1px solid var(--ct-border,#dce4ef);border-radius:10px;background:var(--ct-card,#fff);box-shadow:0 2px 7px rgba(15,23,42,.035)}
+.kpi-region-summary-card small{font-size:10px;line-height:1.35;color:var(--ct-muted,#718096);font-weight:650}
+.kpi-region-summary-card strong{font-size:clamp(17px,1.6vw,23px);line-height:1.2;font-weight:750;color:var(--ct-text,#24344d);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.kpi-region-summary-card span{font-size:10px;line-height:1.4;color:var(--ct-muted,#718096)}
+.kpi-region-health-strip{display:flex;align-items:center;flex-wrap:wrap;gap:10px 18px;padding:12px 14px;border:1px solid var(--ct-border,#dce4ef);border-radius:9px;background:var(--ct-card,#fff);font-size:11px;color:var(--ct-muted,#64748b)}
+.kpi-region-health-strip>strong{font-size:12px;color:var(--ct-text,#24344d);margin-right:auto}
+.kpi-region-health-strip>span{white-space:nowrap}
+.kpi-region-health-strip b{color:var(--ct-text,#24344d);font-variant-numeric:tabular-nums}
+.kpi-region-area-chart,.kpi-region-ranking{min-width:0}
+.kpi-region-ranking .table-wrap,.kpi-region-ranking .area-performance-table,.kpi-region-daily-table-wrap{width:100%;max-width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.kpi-region-ranking table,.kpi-region-daily-table-wrap table{width:100%;border-collapse:separate;border-spacing:0;white-space:nowrap}
+.kpi-region-ranking th,.kpi-region-ranking td,.kpi-region-daily-table-wrap th,.kpi-region-daily-table-wrap td{padding:10px 11px;border-bottom:1px solid var(--ct-border,#e2e8f0);font-size:10px;text-align:left;font-variant-numeric:tabular-nums}
+.kpi-region-ranking th,.kpi-region-daily-table-wrap th{position:sticky;top:0;background:var(--ct-card2,#f8fafc);color:var(--ct-muted,#64748b);font-size:9px;font-weight:750;z-index:1}
+.kpi-region-ranking tbody tr:hover,.kpi-region-daily-table-wrap tbody tr:hover{background:rgba(99,102,241,.045)}
+.kpi-region-ranking td strong,.kpi-region-daily-table-wrap td strong{color:var(--ct-text,#24344d)}
+.kpi-region-gerai-view .kpi-region-summary-grid{margin-bottom:2px}
+@media(max-width:1050px){.kpi-region-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
+@media(max-width:560px){.kpi-region-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}.kpi-region-summary-card{padding:11px}.kpi-region-summary-card strong{font-size:17px}.kpi-region-health-strip{gap:8px 12px;padding:10px}.kpi-region-health-strip>strong{width:100%}.kpi-region-area-chart,.kpi-region-ranking{padding:10px}}
