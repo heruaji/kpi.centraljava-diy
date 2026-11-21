@@ -3584,3 +3584,38 @@ table td .sla-table-tier {
 @keyframes share-image-spin{to{transform:rotate(360deg)}}
 .share-image-actions-sm button{min-height:28px}
 .share-image-actions-md button{min-height:34px;padding:8px 12px;font-size:11px}
+
+
+/* Detail Gerai: keep daily table headings visible while date rows scroll */
+.kpi-region-gerai-view .kpi-region-daily-table-wrap,
+.sla-branch-detail-page .sla-daily-table{
+  position:relative!important;
+  max-height:min(68vh,640px)!important;
+  overflow-x:auto!important;
+  overflow-y:auto!important;
+  overscroll-behavior:contain!important;
+  -webkit-overflow-scrolling:touch!important;
+}
+.kpi-region-gerai-view .kpi-region-daily-table-wrap table,
+.sla-branch-detail-page .sla-daily-table table{
+  border-collapse:separate!important;
+  border-spacing:0!important;
+}
+.kpi-region-gerai-view .kpi-region-daily-table-wrap thead th,
+.sla-branch-detail-page .sla-daily-table thead th{
+  position:sticky!important;
+  top:0!important;
+  z-index:12!important;
+  background:var(--ct-card2,#f8fafc)!important;
+  box-shadow:0 1px 0 var(--ct-border,#dce4ef)!important;
+}
+.theme-dark .kpi-region-gerai-view .kpi-region-daily-table-wrap thead th,
+.theme-dark .sla-branch-detail-page .sla-daily-table thead th{
+  background:var(--ct-card2,#172231)!important;
+}
+@media(max-width:760px){
+  .kpi-region-gerai-view .kpi-region-daily-table-wrap,
+  .sla-branch-detail-page .sla-daily-table{
+    max-height:62vh!important;
+  }
+}
