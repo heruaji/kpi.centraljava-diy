@@ -3619,3 +3619,17 @@ table td .sla-table-tier {
     max-height:62vh!important;
   }
 }
+
+/* Keep the Gerai KPI REGION identity visible beneath the fixed app topbar */
+.kpi-region-gerai-view>.panel>.panel-title{
+  position:sticky!important;
+  top:82px!important;
+  z-index:18!important;
+  padding:10px 0!important;
+  margin:-10px 0 0!important;
+  background:var(--ct-card,#fff)!important;
+  box-shadow:0 1px 0 var(--ct-border,#dce4ef)!important;
+}
+.theme-dark .kpi-region-gerai-view>.panel>.panel-title{
+  background:var(--ct-card,#111827)!important;
+}
