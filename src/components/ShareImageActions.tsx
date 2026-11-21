@@ -75,8 +75,6 @@ export function ShareImageActions({ targetId, filename, size = 'sm' }: ShareImag
         else element.setAttribute('style', style);
       });
     }
-
-    return blob;
   };
 
   const handleCopy = async () => {
