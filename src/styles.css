@@ -3504,3 +3504,12 @@ table td .sla-table-tier {
 .kpi-region-gerai-view .kpi-region-summary-grid{margin-bottom:2px}
 @media(max-width:1050px){.kpi-region-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important}}
 @media(max-width:560px){.kpi-region-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr))!important;gap:8px}.kpi-region-summary-card{padding:11px}.kpi-region-summary-card strong{font-size:17px}.kpi-region-health-strip{gap:8px 12px;padding:10px}.kpi-region-health-strip>strong{width:100%}.kpi-region-area-chart,.kpi-region-ranking{padding:10px}}
+
+/* Gerai KPI daily matrix: indicators as rows, dates as columns */
+.kpi-region-daily-table-wrap .kpi-region-indicator-date-table{width:max-content;min-width:100%;table-layout:auto}
+.kpi-region-daily-table-wrap .kpi-region-indicator-date-table th:first-child,
+.kpi-region-daily-table-wrap .kpi-region-indicator-date-table td:first-child{position:sticky;left:0;min-width:150px;background:var(--ct-card,#fff);z-index:2;text-align:left}
+.kpi-region-daily-table-wrap .kpi-region-indicator-date-table thead th:first-child{z-index:3;background:var(--ct-card2,#f8fafc)}
+.kpi-region-daily-table-wrap .kpi-region-indicator-date-table th:not(:first-child),
+.kpi-region-daily-table-wrap .kpi-region-indicator-date-table td:not(:first-child){min-width:94px;text-align:right}
+@media(max-width:760px){.kpi-region-daily-table-wrap .kpi-region-indicator-date-table th:first-child,.kpi-region-daily-table-wrap .kpi-region-indicator-date-table td:first-child{min-width:125px}.kpi-region-daily-table-wrap .kpi-region-indicator-date-table th:not(:first-child),.kpi-region-daily-table-wrap .kpi-region-indicator-date-table td:not(:first-child){min-width:82px}}
