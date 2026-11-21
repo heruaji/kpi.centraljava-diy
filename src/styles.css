@@ -3543,3 +3543,9 @@ table td .sla-table-tier {
 .kpi-combined-daily-matrix thead th>small{display:block;margin-top:3px;font-size:9px;font-weight:500;color:var(--ct-muted,#718096);white-space:normal}
 .kpi-combined-daily-matrix .penalty-indicator-head{border-left:2px solid var(--ct-border-strong,#94a3b8);background:rgba(245,158,11,.10)}
 .kpi-combined-daily-matrix .penalty-indicator-cell{border-left:2px solid var(--ct-border,#cbd5e1);background:rgba(245,158,11,.04)}
+
+/* Clean date labels in the combined KPI daily matrix */
+.kpi-combined-daily-matrix td.kpi-matrix-date{background:transparent!important;padding-left:12px!important}
+.kpi-combined-daily-matrix td.kpi-matrix-date button{display:inline-flex;align-items:center;padding:0!important;margin:0!important;border:0!important;border-radius:0!important;background:transparent!important;box-shadow:none!important;color:var(--ct-text,#e2e8f0)!important;font:inherit;font-weight:650;text-align:left;cursor:pointer}
+.kpi-combined-daily-matrix td.kpi-matrix-date button:hover{background:transparent!important;text-decoration:underline;text-underline-offset:3px}
+.kpi-combined-daily-matrix td.kpi-matrix-date button.selected{background:transparent!important;color:var(--ct-accent,#60a5fa)!important;text-decoration:underline;text-underline-offset:3px}
