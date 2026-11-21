@@ -47,11 +47,18 @@ export function ExportButton<T>({
       period: period ?? undefined,
     });
 
-    exportToExcel(columns, data, {
-      filename,
-      sheetName,
-      meta,
-    });
+    try {
+      // Excel worksheet names are limited to 31 characters.
+      const safeSheetName = sheetName.replace(/[\\/?*:\\[\\]]/g, ' ').trim().slice(0, 31) || 'Data';
+      exportToExcel(columns, data, {
+        filename,
+        sheetName: safeSheetName,
+        meta,
+      });
+    } catch (error) {
+      console.error('Export Excel gagal:', error);
+      alert('Export Excel gagal. Silakan coba lagi. Jika masih gagal, kirimkan pesan error dari Console.');
+    }
   };
 
   const disabled = !data || data.length === 0;

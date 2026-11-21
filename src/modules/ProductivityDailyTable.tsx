@@ -1,3 +1,4 @@
+import { ShareImageActions } from '../components/ShareImageActions';
 import { ProductivityTierBadge } from './ProductivityTierBadge';
 
 type ProductivityDailyRow = {
@@ -23,7 +24,8 @@ export function ProductivityDailyTable({
   formatNumber,
 }: ProductivityDailyTableProps) {
   return (
-    <div className="table-wrap productivity-daily-table">
+    <>
+      <ShareImageActions targetId="share-productivity-daily" filename="productivity-daily"/><div id="share-productivity-daily" className="table-wrap productivity-daily-table">
       <table>
         <thead>
           <tr>
@@ -50,6 +52,7 @@ export function ProductivityDailyTable({
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
