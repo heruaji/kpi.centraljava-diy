@@ -49,7 +49,7 @@ export function ExportButton<T>({
 
     try {
       // Excel worksheet names are limited to 31 characters.
-      const safeSheetName = sheetName.replace(/[\\\\/?*:[\\]]/g, ' ').trim().slice(0, 31) || 'Data';
+      const safeSheetName = sheetName.replace(/[\\/?*:\\[\\]]/g, ' ').trim().slice(0, 31) || 'Data';
       exportToExcel(columns, data, {
         filename,
         sheetName: safeSheetName,
