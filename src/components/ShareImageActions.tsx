@@ -24,6 +24,7 @@ export function ShareImageActions({ targetId, filename, size = 'sm' }: ShareImag
     const blob = await toBlob(node, {
       cacheBust: true,
       pixelRatio: 2,
+      filter: node => !(node instanceof HTMLElement && node.classList.contains('share-image-actions')),
       width,
       height,
       backgroundColor: backgroundColor === 'rgba(0, 0, 0, 0)' ? '#ffffff' : backgroundColor,
