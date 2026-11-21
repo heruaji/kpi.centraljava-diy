@@ -3573,3 +3573,14 @@ table td .sla-table-tier {
 .kpi-combined-daily-matrix table{table-layout:fixed!important;width:max-content!important;min-width:100%!important}
 .kpi-combined-daily-matrix th.kpi-matrix-date,.kpi-combined-daily-matrix td.kpi-matrix-date{width:190px!important;min-width:190px!important;max-width:190px!important}
 .kpi-combined-daily-matrix thead th:not(.kpi-matrix-date),.kpi-combined-daily-matrix tbody td:not(.kpi-matrix-date){width:112px!important;min-width:112px!important;max-width:112px!important}
+
+/* Shared Copy Image / Download PNG actions */
+.share-image-actions{display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:6px;margin:0 0 8px}
+.share-image-actions button{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:6px 9px;border:1px solid var(--ct-border,#cbd5e1);border-radius:7px;background:var(--ct-card,#fff);color:var(--ct-text,#334155);font-size:10px;font-weight:650;line-height:1.2;cursor:pointer;transition:background .15s,border-color .15s}
+.share-image-actions button:hover:not(:disabled){background:var(--ct-hover,#f1f5f9);border-color:var(--ct-accent,#64748b)}
+.share-image-actions button:disabled{opacity:.55;cursor:wait}
+.share-image-feedback{font-size:10px;color:var(--ct-muted,#64748b)}
+.share-image-spinner{animation:share-image-spin 1s linear infinite}
+@keyframes share-image-spin{to{transform:rotate(360deg)}}
+.share-image-actions-sm button{min-height:28px}
+.share-image-actions-md button{min-height:34px;padding:8px 12px;font-size:11px}
