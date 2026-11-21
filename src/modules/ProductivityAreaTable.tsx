@@ -1,3 +1,4 @@
+import { ShareImageActions } from '../components/ShareImageActions';
 import { ProductivityDelta } from './ProductivityDelta';
 import { ProductivityTierBadge } from './ProductivityTierBadge';
 
@@ -22,7 +23,7 @@ export function ProductivityAreaTable({
   onSelectArea,
 }: ProductivityAreaTableProps) {
   return (
-    <div className="table-wrap productivity-area-table">
+    <ShareImageActions targetId="share-productivity-area-table" filename="productivity-area"/><div id="share-productivity-area-table" className="table-wrap productivity-area-table">
       <table>
         <thead>
           <tr>
