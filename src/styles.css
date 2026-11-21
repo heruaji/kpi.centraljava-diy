@@ -3527,3 +3527,14 @@ table td .sla-table-tier {
 .kpi-region-daily-table-wrap .kpi-region-date-indicator-table th:not(:first-child),
 .kpi-region-daily-table-wrap .kpi-region-date-indicator-table td:not(:first-child){min-width:105px;text-align:right}
 @media(max-width:760px){.kpi-region-gerai-table-toolbar{align-items:flex-start}.kpi-region-export-button{padding:7px 9px}.kpi-region-daily-table-wrap .kpi-region-date-indicator-table{min-width:900px}}
+
+/* Combined daily KPI + penalty matrix */
+.kpi-combined-daily-matrix{max-width:100%;overflow:auto}
+.kpi-combined-daily-matrix table{min-width:max-content;width:100%;border-collapse:separate;border-spacing:0}
+.kpi-combined-daily-matrix th,.kpi-combined-daily-matrix td{min-width:96px}
+.kpi-combined-daily-matrix .kpi-matrix-date{position:sticky;left:0;min-width:132px;text-align:left;background:var(--ct-card,#fff);z-index:2}
+.kpi-combined-daily-matrix thead .kpi-matrix-date{background:var(--ct-card2,#f8fafc);z-index:4}
+.kpi-combined-daily-matrix .kpi-matrix-date button{white-space:nowrap}
+.kpi-combined-daily-matrix .penalty-indicator-head{border-left:2px solid var(--ct-border-strong,#94a3b8);background:rgba(245,158,11,.08)}
+.kpi-combined-daily-matrix .penalty-indicator-cell{border-left:2px solid var(--ct-border,#cbd5e1);background:rgba(245,158,11,.035)}
+.kpi-combined-daily-matrix .penalty-indicator-cell:first-of-type{border-left-width:2px}
