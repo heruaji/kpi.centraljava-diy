@@ -1,3 +1,4 @@
+import { ShareImageActions } from '../components/ShareImageActions';
 type ProductivityRegionTrendPoint = {
   date: string;
   value: number | null;
@@ -27,7 +28,7 @@ export function ProductivityRegionTrend({
   const targetHeight = Math.min(100, (target / max) * 100);
 
   return (
-    <article className="panel wide performance-trend-panel productivity-region-trend-panel">
+    <article id="share-productivity-region-trend" className="panel wide performance-trend-panel productivity-region-trend-panel"><ShareImageActions targetId="share-productivity-region-trend" filename="productivity-region-trend"/>
       <div className="panel-title">
         <div>
           <span>REGION TREND</span>
