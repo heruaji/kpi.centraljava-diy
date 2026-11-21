@@ -21,23 +21,61 @@ export function ShareImageActions({ targetId, filename, size = 'sm' }: ShareImag
     const height = Math.max(node.scrollHeight, node.clientHeight);
     const backgroundColor = getComputedStyle(node).backgroundColor;
 
-    const blob = await toBlob(node, {
-      cacheBust: true,
-      pixelRatio: 2,
-      filter: node => !(node instanceof HTMLElement && node.classList.contains('share-image-actions')),
-      width,
-      height,
-      backgroundColor: backgroundColor === 'rgba(0, 0, 0, 0)' ? '#ffffff' : backgroundColor,
-      style: {
-        width: `${width}px`,
-        height: `${height}px`,
-        maxWidth: 'none',
-        maxHeight: 'none',
-        overflow: 'visible',
-      },
-    });
+    // Inline resolved SVG styles before capture. This preserves theme colors and
+    // SVG class styling when html-to-image serializes the chart outside its CSS tree.
+    const svgStyleProperties = [
+      'fill', 'fill-opacity', 'stroke', 'stroke-width', 'stroke-opacity',
+      'stroke-dasharray', 'stroke-linecap', 'stroke-linejoin', 'opacity',
+      'font-family', 'font-size', 'font-weight', 'text-anchor',
+      'dominant-baseline', 'paint-order', 'color', 'visibility', 'display',
+      'vector-effect', 'shape-rendering', 'letter-spacing',
+    ];
+    const svgElements = Array.from(node.querySelectorAll<SVGElement>('svg, svg *'));
+    const previousSvgStyles = svgElements.map(element => ({
+      element,
+      style: element.getAttribute('style'),
+    }));
 
-    if (!blob) throw new Error('Gambar gagal dibuat. Silakan coba lagi.');
+    try {
+      svgElements.forEach(element => {
+        const computed = window.getComputedStyle(element);
+        svgStyleProperties.forEach(property => {
+          const value = computed.getPropertyValue(property);
+          if (value) element.style.setProperty(property, value);
+        });
+      });
+
+      const blob = await toBlob(node, {
+        cacheBust: true,
+        pixelRatio: 2,
+        filter: element => {
+          if (!(element instanceof Element)) return true;
+          if (element instanceof HTMLElement && element.classList.contains('share-image-actions')) return false;
+          // SVG foreignObject tooltips and hover hit-zones are interactive overlays,
+          // not part of the static chart image.
+          if (element.classList.contains('combo-tooltip-fo') || element.classList.contains('combo-hover-zone')) return false;
+          return true;
+        },
+        width,
+        height,
+        backgroundColor: backgroundColor === 'rgba(0, 0, 0, 0)' ? '#ffffff' : backgroundColor,
+        style: {
+          width: `${width}px`,
+          height: `${height}px`,
+          maxWidth: 'none',
+          maxHeight: 'none',
+          overflow: 'visible',
+        },
+      });
+      if (!blob) throw new Error('Gambar gagal dibuat. Silakan coba lagi.');
+      return blob;
+    } finally {
+      previousSvgStyles.forEach(({ element, style }) => {
+        if (style == null) element.removeAttribute('style');
+        else element.setAttribute('style', style);
+      });
+    }
+
     return blob;
   };
 
