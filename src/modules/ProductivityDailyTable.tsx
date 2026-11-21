@@ -24,7 +24,8 @@ export function ProductivityDailyTable({
   formatNumber,
 }: ProductivityDailyTableProps) {
   return (
-    <ShareImageActions targetId="share-productivity-daily" filename="productivity-daily"/><div id="share-productivity-daily" className="table-wrap productivity-daily-table">
+    <>
+      <ShareImageActions targetId="share-productivity-daily" filename="productivity-daily"/><div id="share-productivity-daily" className="table-wrap productivity-daily-table">
       <table>
         <thead>
           <tr>
@@ -51,6 +52,7 @@ export function ProductivityDailyTable({
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

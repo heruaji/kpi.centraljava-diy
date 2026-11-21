@@ -23,7 +23,8 @@ export function ProductivityBranchTable({
   onSelectBranch,
 }: ProductivityBranchTableProps) {
   return (
-    <ShareImageActions targetId="share-productivity-branch-table" filename="productivity-branch"/><div id="share-productivity-branch-table" className="table-wrap productivity-branch-table">
+    <>
+      <ShareImageActions targetId="share-productivity-branch-table" filename="productivity-branch"/><div id="share-productivity-branch-table" className="table-wrap productivity-branch-table">
       <table>
         <thead>
           <tr>
@@ -50,6 +51,7 @@ export function ProductivityBranchTable({
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }

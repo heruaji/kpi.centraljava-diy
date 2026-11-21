@@ -23,7 +23,8 @@ export function ProductivityAreaTable({
   onSelectArea,
 }: ProductivityAreaTableProps) {
   return (
-    <ShareImageActions targetId="share-productivity-area-table" filename="productivity-area"/><div id="share-productivity-area-table" className="table-wrap productivity-area-table">
+    <>
+      <ShareImageActions targetId="share-productivity-area-table" filename="productivity-area"/><div id="share-productivity-area-table" className="table-wrap productivity-area-table">
       <table>
         <thead>
           <tr>
@@ -50,6 +51,7 @@ export function ProductivityAreaTable({
           )}
         </tbody>
       </table>
-    </div>
+      </div>
+    </>
   );
 }
